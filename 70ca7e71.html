@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-drain_output_buffer"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/70ca7e71.html"/>
+
+
+<meta name="description" content="本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的drain_output_buffer()方法。 关于本方法，主要作用就是从解码器中取出已解码完成的数据。本方法和feed_input_buffer方法一起被ffpipenode_android_mediacodec_vdec.c#func_run_sync()方法所调用，分别完成往解码">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-drain_output_buffer">
+<meta property="og:url" content="https://youngkaaa.github.io/70ca7e71.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的drain_output_buffer()方法。 关于本方法，主要作用就是从解码器中取出已解码完成的数据。本方法和feed_input_buffer方法一起被ffpipenode_android_mediacodec_vdec.c#func_run_sync()方法所调用，分别完成往解码">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-03-08T06:36:20.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.418Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-drain_output_buffer - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-drain_output_buffer
+        
+      </h1>
+
+      <time class="post-time">
+          3月 08 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的drain_output_buffer()方法。</p>
+<p>关于本方法，主要作用就是从解码器中取出已解码完成的数据。本方法和<a href="17303abc.html">feed_input_buffer</a>方法一起被ffpipenode_android_mediacodec_vdec.c#<a href="8876f557.html">func_run_sync()</a>方法所调用，分别完成往解码器中填入待解码数据和从解码器中取出解码后数据。</p>
+<span id="more"></span>
+
+<blockquote>
+<p>TODO:</p>
+<ul>
+<li>关于opaque-&gt;n_buf_out开启后的逻辑分析</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>ffpipenode_android_mediacodec_vdec.c#drain_output_buffer()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">drain_output_buffer</span><span class="params">(JNIEnv *env, IJKFF_Pipenode *node, <span class="type">int64_t</span> timeUs, <span class="type">int</span> *dequeue_count, AVFrame *frame,</span></span><br><span class="line"><span class="params">                               <span class="type">int</span> *got_frame)</span> &#123;</span><br><span class="line">    IJKFF_Pipenode_Opaque *opaque = node-&gt;opaque;</span><br><span class="line">    SDL_LockMutex(opaque-&gt;acodec_mutex);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (opaque-&gt;acodec_flush_request || opaque-&gt;acodec_reconfigure_request) &#123;</span><br><span class="line">        <span class="comment">// <span class="doctag">TODO:</span> invalid picture here?</span></span><br><span class="line">        <span class="comment">// let feed_input_buffer() get mutex</span></span><br><span class="line">        SDL_CondWaitTimeout(opaque-&gt;acodec_cond, opaque-&gt;acodec_mutex, <span class="number">100</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> ret = drain_output_buffer_l(env, node, timeUs, dequeue_count, frame, got_frame);</span><br><span class="line">    SDL_UnlockMutex(opaque-&gt;acodec_mutex);</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，其实在drain_output_buffer()方法中逻辑很简单，主要逻辑是在drain_output_buffer_l()中的。本方法和填入数据逻辑<a href="17303abc.html">feed_input_buffer</a>没有在同一个线程，所以如果在<a href="17303abc.html">feed_input_buffer</a>中读取完数据发现需要重新配置解码器之类的时，那么本方法所对应的线程需要暂停读取解码后数据，等另外一个线程修改完后再开始读取，所以这里暂停线程一会儿。</p>
+</blockquote>
+<p>下面主要分析drain_output_buffer_l()方法：</p>
+<blockquote>
+<p>ffpipenode_android_mediacodec_vdec.c#drain_output_buffer_l()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">drain_output_buffer_l</span><span class="params">(JNIEnv *env, IJKFF_Pipenode *node, <span class="type">int64_t</span> timeUs, <span class="type">int</span> *dequeue_count, AVFrame *frame,</span></span><br><span class="line"><span class="params">                                 <span class="type">int</span> *got_frame)</span> &#123;</span><br><span class="line">    IJKFF_Pipenode_Opaque *opaque = node-&gt;opaque;</span><br><span class="line">    FFPlayer *ffp = opaque-&gt;ffp;</span><br><span class="line">    <span class="type">int</span> ret = <span class="number">0</span>;</span><br><span class="line">    SDL_AMediaCodecBufferInfo bufferInfo;</span><br><span class="line">    <span class="type">ssize_t</span> output_buffer_index = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (dequeue_count)</span><br><span class="line">        *dequeue_count = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (JNI_OK != SDL_JNI_SetupThreadEnv(&amp;env)) &#123;</span><br><span class="line">        ALOGE(<span class="string">&quot;%s:create: SetupThreadEnv failed\n&quot;</span>, __func__);</span><br><span class="line">        <span class="keyword">goto</span> fail;</span><br><span class="line">    &#125;</span><br><span class="line">    output_buffer_index = SDL_AMediaCodecFake_dequeueOutputBuffer(opaque-&gt;acodec, &amp;bufferInfo, timeUs);</span><br><span class="line">    <span class="keyword">if</span> (output_buffer_index == AMEDIACODEC__INFO_OUTPUT_BUFFERS_CHANGED) &#123;</span><br><span class="line">        ALOGI(<span class="string">&quot;AMEDIACODEC__INFO_OUTPUT_BUFFERS_CHANGED\n&quot;</span>);</span><br><span class="line">        <span class="comment">// continue;</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (output_buffer_index == AMEDIACODEC__INFO_OUTPUT_FORMAT_CHANGED) &#123;</span><br><span class="line">        ALOGI(<span class="string">&quot;AMEDIACODEC__INFO_OUTPUT_FORMAT_CHANGED\n&quot;</span>);</span><br><span class="line">        SDL_AMediaFormat_deleteP(&amp;opaque-&gt;output_aformat);</span><br><span class="line">        opaque-&gt;output_aformat = SDL_AMediaCodec_getOutputFormat(opaque-&gt;acodec);</span><br><span class="line">        <span class="keyword">if</span> (opaque-&gt;output_aformat) &#123;</span><br><span class="line">            <span class="type">int</span> width = <span class="number">0</span>;</span><br><span class="line">            <span class="type">int</span> height = <span class="number">0</span>;</span><br><span class="line">            <span class="type">int</span> color_format = <span class="number">0</span>;</span><br><span class="line">            <span class="type">int</span> stride = <span class="number">0</span>;</span><br><span class="line">            <span class="type">int</span> slice_height = <span class="number">0</span>;</span><br><span class="line">            <span class="type">int</span> crop_left = <span class="number">0</span>;</span><br><span class="line">            <span class="type">int</span> crop_top = <span class="number">0</span>;</span><br><span class="line">            <span class="type">int</span> crop_right = <span class="number">0</span>;</span><br><span class="line">            <span class="type">int</span> crop_bottom = <span class="number">0</span>;</span><br><span class="line">            <span class="comment">// 从output_aformat中取key为&quot;width&quot;所对应的值赋值给width</span></span><br><span class="line">            SDL_AMediaFormat_getInt32(opaque-&gt;output_aformat, <span class="string">&quot;width&quot;</span>, &amp;width);</span><br><span class="line">            SDL_AMediaFormat_getInt32(opaque-&gt;output_aformat, <span class="string">&quot;height&quot;</span>, &amp;height);</span><br><span class="line">            SDL_AMediaFormat_getInt32(opaque-&gt;output_aformat, <span class="string">&quot;color-format&quot;</span>, &amp;color_format);</span><br><span class="line"></span><br><span class="line">            SDL_AMediaFormat_getInt32(opaque-&gt;output_aformat, <span class="string">&quot;stride&quot;</span>, &amp;stride);</span><br><span class="line">            SDL_AMediaFormat_getInt32(opaque-&gt;output_aformat, <span class="string">&quot;slice-height&quot;</span>, &amp;slice_height);</span><br><span class="line">            SDL_AMediaFormat_getInt32(opaque-&gt;output_aformat, <span class="string">&quot;crop-left&quot;</span>, &amp;crop_left);</span><br><span class="line">            SDL_AMediaFormat_getInt32(opaque-&gt;output_aformat, <span class="string">&quot;crop-top&quot;</span>, &amp;crop_top);</span><br><span class="line">            SDL_AMediaFormat_getInt32(opaque-&gt;output_aformat, <span class="string">&quot;crop-right&quot;</span>, &amp;crop_right);</span><br><span class="line">            SDL_AMediaFormat_getInt32(opaque-&gt;output_aformat, <span class="string">&quot;crop-bottom&quot;</span>, &amp;crop_bottom);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// TI decoder could crash after reconfigure</span></span><br><span class="line">            <span class="comment">// ffp_notify_msg3(ffp, FFP_MSG_VIDEO_SIZE_CHANGED, width, height);</span></span><br><span class="line">            <span class="comment">// opaque-&gt;frame_width  = width;</span></span><br><span class="line">            <span class="comment">// opaque-&gt;frame_height = height;</span></span><br><span class="line">            ALOGI(</span><br><span class="line">                    <span class="string">&quot;AMEDIACODEC__INFO_OUTPUT_FORMAT_CHANGED\n&quot;</span></span><br><span class="line">                    <span class="string">&quot;    width-height: (%d x %d)\n&quot;</span></span><br><span class="line">                    <span class="string">&quot;    color-format: (%s: 0x%x)\n&quot;</span></span><br><span class="line">                    <span class="string">&quot;    stride:       (%d)\n&quot;</span></span><br><span class="line">                    <span class="string">&quot;    slice-height: (%d)\n&quot;</span></span><br><span class="line">                    <span class="string">&quot;    crop:         (%d, %d, %d, %d)\n&quot;</span>,</span><br><span class="line">                    width, height,</span><br><span class="line">                    SDL_AMediaCodec_getColorFormatName(color_format), color_format,</span><br><span class="line">                    stride,</span><br><span class="line">                    slice_height,</span><br><span class="line">                    crop_left, crop_top, crop_right, crop_bottom);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// continue;</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (output_buffer_index == AMEDIACODEC__INFO_TRY_AGAIN_LATER) &#123;</span><br><span class="line">        AMCTRACE(<span class="string">&quot;AMEDIACODEC__INFO_TRY_AGAIN_LATER\n&quot;</span>);</span><br><span class="line">        <span class="comment">// continue;</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (output_buffer_index &lt; <span class="number">0</span>) &#123; </span><br><span class="line">        SDL_LockMutex(opaque-&gt;any_input_mutex);</span><br><span class="line">        SDL_CondWaitTimeout(opaque-&gt;any_input_cond, opaque-&gt;any_input_mutex, <span class="number">1000</span>);</span><br><span class="line">        SDL_UnlockMutex(opaque-&gt;any_input_mutex);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">goto</span> done;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (output_buffer_index &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">        ffp-&gt;stat.vdps = SDL_SpeedSamplerAdd(&amp;opaque-&gt;sampler, FFP_SHOW_VDPS_MEDIACODEC, <span class="string">&quot;vdps[MediaCodec]&quot;</span>);</span><br><span class="line">        <span class="keyword">if</span> (dequeue_count)</span><br><span class="line">            ++*dequeue_count;</span><br><span class="line">            </span><br><span class="line">        <span class="keyword">if</span> (opaque-&gt;n_buf_out) &#123;</span><br><span class="line">            AMC_Buf_Out *buf_out;</span><br><span class="line">            <span class="keyword">if</span> (opaque-&gt;off_buf_out &lt; opaque-&gt;n_buf_out) &#123;</span><br><span class="line">                <span class="comment">// ALOGD(&quot;filling buffer... %d&quot;, opaque-&gt;off_buf_out);</span></span><br><span class="line">                buf_out = &amp;opaque-&gt;amc_buf_out[opaque-&gt;off_buf_out++];</span><br><span class="line">                buf_out-&gt;acodec_serial = SDL_AMediaCodec_getSerial(opaque-&gt;acodec);</span><br><span class="line">                buf_out-&gt;port = output_buffer_index;</span><br><span class="line">                buf_out-&gt;info = bufferInfo;</span><br><span class="line">                buf_out-&gt;pts = pts_from_buffer_info(node, &amp;bufferInfo);</span><br><span class="line">                sort_amc_buf_out(opaque-&gt;amc_buf_out, opaque-&gt;off_buf_out);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="type">double</span> pts;</span><br><span class="line"></span><br><span class="line">                pts = pts_from_buffer_info(node, &amp;bufferInfo);</span><br><span class="line">                <span class="comment">// 该帧已过时</span></span><br><span class="line">                <span class="keyword">if</span> (opaque-&gt;last_queued_pts != AV_NOPTS_VALUE &amp;&amp;</span><br><span class="line">                    pts &lt; opaque-&gt;last_queued_pts) &#123;</span><br><span class="line">                    <span class="comment">// <span class="doctag">FIXME:</span> drop unordered picture to avoid dither</span></span><br><span class="line">                    <span class="comment">// ALOGE(&quot;early picture, drop!&quot;);</span></span><br><span class="line">                    <span class="comment">// SDL_AMediaCodec_releaseOutputBuffer(opaque-&gt;acodec, output_buffer_index, false);</span></span><br><span class="line">                    <span class="comment">// goto done;</span></span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">/* already sorted */</span></span><br><span class="line">                buf_out = &amp;opaque-&gt;amc_buf_out[opaque-&gt;off_buf_out - <span class="number">1</span>];</span><br><span class="line">                <span class="comment">/* new picture is the most aged, send now */</span></span><br><span class="line">                <span class="keyword">if</span> (pts &lt; buf_out-&gt;pts) &#123;</span><br><span class="line">                    <span class="comment">// 使用SDL_AMediaCodecBufferInfo等来填充对应AVFrame结构体实例</span></span><br><span class="line">                    ret = amc_fill_frame(node, frame, got_frame, output_buffer_index,</span><br><span class="line">                                         SDL_AMediaCodec_getSerial(opaque-&gt;acodec), &amp;bufferInfo);</span><br><span class="line">                    opaque-&gt;last_queued_pts = pts;</span><br><span class="line">                    <span class="comment">// ALOGD(&quot;pts = %f&quot;, pts);</span></span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    <span class="type">int</span> i;</span><br><span class="line"></span><br><span class="line">                    <span class="comment">/* find one to send */</span></span><br><span class="line">                    <span class="keyword">for</span> (i = opaque-&gt;off_buf_out - <span class="number">1</span>; i &gt;= <span class="number">0</span>; i--) &#123;</span><br><span class="line">                        buf_out = &amp;opaque-&gt;amc_buf_out[i];</span><br><span class="line">                        <span class="keyword">if</span> (pts &gt; buf_out-&gt;pts) &#123;</span><br><span class="line">                            ret = amc_fill_frame(node, frame, got_frame, buf_out-&gt;port, buf_out-&gt;acodec_serial,</span><br><span class="line">                                                 &amp;buf_out-&gt;info);</span><br><span class="line">                            opaque-&gt;last_queued_pts = buf_out-&gt;pts;</span><br><span class="line">                            <span class="comment">// ALOGD(&quot;pts = %f&quot;, buf_out-&gt;pts);</span></span><br><span class="line">                            <span class="comment">/* replace for sort later */</span></span><br><span class="line">                            buf_out-&gt;acodec_serial = SDL_AMediaCodec_getSerial(opaque-&gt;acodec);</span><br><span class="line">                            buf_out-&gt;port = output_buffer_index;</span><br><span class="line">                            buf_out-&gt;info = bufferInfo;</span><br><span class="line">                            buf_out-&gt;pts = pts_from_buffer_info(node, &amp;bufferInfo);</span><br><span class="line">                            sort_amc_buf_out(opaque-&gt;amc_buf_out, opaque-&gt;n_buf_out);</span><br><span class="line">                            <span class="keyword">break</span>;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="comment">/* need to discard current buffer */</span></span><br><span class="line">                    <span class="keyword">if</span> (i &lt; <span class="number">0</span>) &#123;</span><br><span class="line">                        <span class="comment">// ALOGE(&quot;buffer too small, drop picture!&quot;);</span></span><br><span class="line">                        <span class="keyword">if</span> (!(bufferInfo.flags &amp; AMEDIACODEC__BUFFER_FLAG_FAKE_FRAME)) &#123;</span><br><span class="line">                            SDL_AMediaCodec_releaseOutputBuffer(opaque-&gt;acodec, output_buffer_index, <span class="literal">false</span>);</span><br><span class="line">                            <span class="keyword">goto</span> done;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            ret = amc_fill_frame(node, frame, got_frame, output_buffer_index, SDL_AMediaCodec_getSerial(opaque-&gt;acodec),</span><br><span class="line">                                 &amp;bufferInfo);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    done:</span><br><span class="line">    <span class="keyword">if</span> (opaque-&gt;decoder-&gt;<span class="built_in">queue</span>-&gt;abort_request)</span><br><span class="line">        ret = <span class="number">-1</span>;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        ret = <span class="number">0</span>;</span><br><span class="line">    fail:</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>先介绍参数列表：</p>
+<ul>
+<li><p>timeUs:调用上层dequeueOutputBuffer()方法时传入的值，表示最长等待时间。在<a href="8876f557.html">func_run_sync</a>中传入。</p>
+</li>
+<li><p>dequeue_count:从解码器中读取出数据的个数，每读取出一个自增1。</p>
+</li>
+<li><p>frame：在<a href="8876f557.html">func_run_sync</a>中创建的aVFrame结构体实例，用于放置从解码器中拿到的解码后数据信息。</p>
+</li>
+<li><p>got_frame：在<a href="8876f557.html">func_run_sync</a>中创建的int值，判断是否成功获取到解码后数据并且填充到入参frame中。</p>
+</li>
+</ul>
+<p>上面方法虽然有点长，但是逻辑上并不复杂，下面就顺序往下分析:</p>
+<ol>
+<li><p>先定义bufferInfo，也就是SDL_AMediaCodecBufferInfo。而关于SDL_AMediaCodecBufferInfo:</p>
+<blockquote>
+<p>Ijksdl_codec_android_mediacodec.h</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">SDL_AMediaCodecBufferInfo</span> &#123;</span></span><br><span class="line">    <span class="type">int32_t</span> offset;</span><br><span class="line">    <span class="type">int32_t</span> size;</span><br><span class="line">    <span class="type">int64_t</span> presentationTimeUs;</span><br><span class="line">    <span class="type">uint32_t</span> flags;</span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+<p>看到这个结构体就很熟悉了吧，这个结构体就是对应着上层的BufferInfo类。</p>
+</blockquote>
+</li>
+<li><p>然后调用SDL_AMediaCodecFake_dequeueOutputBuffer()方法来从解码器中读取出解码后数据，存入到刚定义的bufferInfo中去：</p>
+<blockquote>
+<p>Ijksdl_codec_android_mediacodec.c#SDL_AMediaCodecFake_dequeueOutputBuffer()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ssize_t</span> <span class="title function_">SDL_AMediaCodecFake_dequeueOutputBuffer</span><span class="params">(SDL_AMediaCodec* acodec, SDL_AMediaCodecBufferInfo *info, <span class="type">int64_t</span> timeoutUs)</span></span><br><span class="line">&#123;    </span><br><span class="line">    <span class="keyword">if</span> (SDL_AMediaCodec_FakeFifo_size(&amp;acodec-&gt;common-&gt;fake_fifo) &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="type">ssize_t</span> ret = SDL_AMediaCodec_FakeFifo_dequeueOutputBuffer(&amp;acodec-&gt;common-&gt;fake_fifo, info, <span class="number">0</span>);</span><br><span class="line">        <span class="keyword">if</span> (ret &gt;= <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">return</span> ret;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    assert(acodec-&gt;func_dequeueOutputBuffer);</span><br><span class="line">    <span class="keyword">return</span> acodec-&gt;func_dequeueOutputBuffer(acodec, info, timeoutUs);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>关于本方法，需要简单解释下，可以看到本方法先调用SDL_AMediaCodec_FakeFifo_size()方法来判断acodec-&gt;common-&gt;fake_fifo中是否有内容，有的话就直接调用SDL_AMediaCodec_FakeFifo_dequeueOutputBuffer()方法来从acodec-&gt;common-&gt;fake_fifo中推出数据，而不走MediaCodec的dequeueOutputBuffer()方法了。这里的acodec-&gt;common-&gt;fake_fifo啥时候会有内容呢？在<a href="17303abc.html">feed_input_buffer</a>方法中第3.2步的最后可能能找到答案。简单来说一般第一个if不会满足的。</p>
+</blockquote>
+<p>而其实调用就是acodec-&gt;func_dequeueOutputBuffer()方法，也就是:</p>
+<blockquote>
+<p>Ijksdl_codec_android_mediacodec_java.c#SDL_AMediaCodecJava_dequeueOutputBuffer()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ssize_t</span></span><br><span class="line"><span class="title function_">SDL_AMediaCodecJava_dequeueOutputBuffer</span><span class="params">(SDL_AMediaCodec *acodec, SDL_AMediaCodecBufferInfo *info, <span class="type">int64_t</span> timeoutUs)</span> &#123;</span><br><span class="line">    JNIEnv *env = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="keyword">if</span> (JNI_OK != SDL_JNI_SetupThreadEnv(&amp;env)) &#123;</span><br><span class="line">        <span class="keyword">return</span> AMEDIACODEC__UNKNOWN_ERROR;</span><br><span class="line">    &#125;</span><br><span class="line">    SDL_AMediaCodec_Opaque *opaque = (SDL_AMediaCodec_Opaque *) acodec-&gt;opaque;</span><br><span class="line">    jobject android_media_codec = opaque-&gt;android_media_codec;</span><br><span class="line">    <span class="keyword">if</span> (!opaque-&gt;output_buffer_info) &#123;</span><br><span class="line">        opaque-&gt;output_buffer_info = J4AC_MediaCodec__BufferInfo__BufferInfo__asGlobalRef__catchAll(env);</span><br><span class="line">        <span class="keyword">if</span> (!opaque-&gt;output_buffer_info)</span><br><span class="line">            <span class="keyword">return</span> AMEDIACODEC__UNKNOWN_ERROR;</span><br><span class="line">    &#125;</span><br><span class="line">    jint idx = AMEDIACODEC__UNKNOWN_ERROR;</span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">        idx = J4AC_MediaCodec__dequeueOutputBuffer(env, android_media_codec, opaque-&gt;output_buffer_info,(jlong) timeoutUs);</span><br><span class="line">        <span class="keyword">if</span> (J4A_ExceptionCheck__catchAll(env)) &#123;</span><br><span class="line">            <span class="keyword">return</span> AMEDIACODEC__UNKNOWN_ERROR;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (idx == AMEDIACODEC__INFO_OUTPUT_BUFFERS_CHANGED) &#123;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (idx == AMEDIACODEC__INFO_OUTPUT_FORMAT_CHANGED) &#123;</span><br><span class="line">          </span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (idx &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">if</span> (info) &#123;</span><br><span class="line">                info-&gt;offset = J4AC_MediaCodec__BufferInfo__offset__get__catchAll(env, opaque-&gt;output_buffer_info);</span><br><span class="line">                info-&gt;size = J4AC_MediaCodec__BufferInfo__size__get__catchAll(env, opaque-&gt;output_buffer_info);</span><br><span class="line">                info-&gt;presentationTimeUs = J4AC_MediaCodec__BufferInfo__presentationTimeUs__get__catchAll(env,</span><br><span class="line">                                                                                                          opaque-&gt;output_buffer_info);</span><br><span class="line">                info-&gt;flags = J4AC_MediaCodec__BufferInfo__flags__get__catchAll(env, opaque-&gt;output_buffer_info);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> idx;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到在SDL_AMediaCodecJava_dequeueOutputBuffer()方法中主要逻辑是调用上层的dequeueOutputBuffer()方法，然后将获取到的BufferInfo对象(也就是opaque-&gt;output_buffer_info)转换成SDL_AMediaCodecBufferInfo结构体实例，然后填充到入参info中去。</p>
+</blockquote>
+</li>
+<li><p>第3步就是根据第2步中调用的SDL_AMediaCodecFake_dequeueOutputBuffer()方法的返回值output_buffer_index来做一些判断，比如当output_buffer_index&#x3D;AMEDIACODEC__INFO_OUTPUT_FORMAT_CHANGED(对应上层MediaCodec中的INFO_OUTPUT_FORMAT_CHANGED)表示解码器的输出格式发生变化，那么此时会调用SDL_AMediaCodec_getOutputFormat()方法来获取最新的输出格式并保存到opaque-&gt;output_aformat中。</p>
+</li>
+<li><p>当返回值大于等于0时，表示获取解码数据成功，相关信息存储在bufferInfo中，此时会先判断opaque-&gt;n_buf_out是否为1，然后做一些操作。关于opaque-&gt;n_buf_out这里暂时不清楚，留个todo，而opaque-&gt;n_buf_out的赋值在ffpipenode_android_mediacodec_vdec.c#configure_codec_l()和create_codec_l()中:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="number">0</span> == strncasecmp(mcc-&gt;codec_name, <span class="string">&quot;OMX.TI.DUCATI1.&quot;</span>, <span class="number">15</span>)) &#123;</span><br><span class="line">            <span class="comment">/* this is the only acceptable value on Nexus S */</span></span><br><span class="line">            opaque-&gt;n_buf_out = <span class="number">1</span>;</span><br><span class="line">            ALOGD(<span class="string">&quot;using buffered output for %s&quot;</span>, mcc-&gt;codec_name);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>也就是当编解码器的名称是OMX.TI.DUCATI1.时，会将其置为1。</p>
+</li>
+<li><p>最后就是调用amc_fill_frame()方法来将获取到的BufferInfo数据保存到入参frame(AVFrame)中。</p>
+<blockquote>
+<p>ffpipenode_android_mediacodec_vdec.c#amc_fill_frame()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">amc_fill_frame</span><span class="params">(IJKFF_Pipenode *node,AVFrame *frame,<span class="type">int</span> *got_frame,<span class="type">int</span> output_buffer_index,<span class="type">int</span> acodec_serial,SDL_AMediaCodecBufferInfo *buffer_info)</span> &#123;</span><br><span class="line">    IJKFF_Pipenode_Opaque *opaque = node-&gt;opaque;</span><br><span class="line">    FFPlayer *ffp = opaque-&gt;ffp;</span><br><span class="line">    VideoState *is = ffp-&gt;is;</span><br><span class="line">    frame-&gt;opaque = SDL_VoutAndroid_obtainBufferProxy(opaque-&gt;weak_vout, acodec_serial, output_buffer_index,buffer_info);</span><br><span class="line">    <span class="keyword">if</span> (!frame-&gt;opaque)</span><br><span class="line">        <span class="keyword">goto</span> fail;</span><br><span class="line">    frame-&gt;width = opaque-&gt;frame_width;</span><br><span class="line">    frame-&gt;height = opaque-&gt;frame_height;</span><br><span class="line">    frame-&gt;format = IJK_AV_PIX_FMT__ANDROID_MEDIACODEC;</span><br><span class="line">    frame-&gt;sample_aspect_ratio = opaque-&gt;codecpar-&gt;sample_aspect_ratio;</span><br><span class="line">    frame-&gt;pts = av_rescale_q(buffer_info-&gt;presentationTimeUs, AV_TIME_BASE_Q, is-&gt;video_st-&gt;time_base);</span><br><span class="line">    <span class="keyword">if</span> (frame-&gt;pts &lt; <span class="number">0</span>)</span><br><span class="line">        frame-&gt;pts = AV_NOPTS_VALUE;</span><br><span class="line">    *got_frame = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    fail:</span><br><span class="line">    *got_frame = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>先解释下本方法的入参:</p>
+<ul>
+<li><p>frame：同上面本方法的frame入参解释</p>
+</li>
+<li><p>got_frame：同上面本方法的got_frame入参解释</p>
+</li>
+<li><p>output_buffer_index：上面调用SDL_AMediaCodecFake_dequeueOutputBuffer()方法，也就是MediaCodec中dequeueOutputBuffer()方法的返回值。</p>
+</li>
+<li><p>acodec_serial：opaque-&gt;acodec，也就是SDL_AMediaCodec实例中的object_serial值。</p>
+<blockquote>
+<p>object_serial</p>
+<p>每个SDL_AMediaCodec实例都有一个对应的object_serial值，每次创建SDL_AMediaCodec实例时赋值(原先序列号基础上自增)，调用其flush方法和stop方法时都会自增。全局会保存一个序列号，每次都是在该序列号基础上自增并返回赋值给object_serial。</p>
+</blockquote>
+</li>
+<li><p>buffer_info：同上面本方法的buffer_info入参解释。</p>
+</li>
+</ul>
+<p>接下来就是一些赋值操作了:</p>
+<ol>
+<li><p>调用SDL_VoutAndroid_obtainBufferProxy()方法，用入参output_buffer_index、acodec_serial和buffer_info生成一个SDL_AMediaCodecBufferProxy结构体实例。而SDL_AMediaCodecBufferProxy结构体其实就是讲上面三个属性封装在了一起，可以看作是SDL_AMediaCodecBufferInfo的又一层包装，而为何要再包装一层呢？是因为当前MediaCodec和Surface是绑定的，输出渲染都直接通过Surface的，是拿不到解码后的源数据的，只能拿到对应数据BufferInfo所对应的index，后面需要渲染某一帧时，使用的就是index(releaseOutputBuffer方法)，所以这里将index和bufferInfo封装在一次，后续渲染时，只需要将SDL_AMediaCodecBufferProxy传入即可。而且这里的AVFrame中数据是存储在frame-&gt;opaque中的，和原ffmeg中数据存储不影响。</p>
+<p>关于SDL_AMediaCodecBufferProxy结构体实例的生成和回收都牵扯一套复用机制。详见SDL_VoutAndroid_obtainBufferProxy_l方法中的逻辑，这里不再展开。</p>
+</li>
+<li><p>给frame的width和height赋值，赋值为opaque-&gt;frame_width和opaque-&gt;frame_height。而opaque-&gt;frame_width和opaque-&gt;frame_height其实就是解码器的宽高。具体在解码器创建时，也就是ffpipenode_android_mediacodec_vdec.c#configure_codec_l()和create_codec_l()中。</p>
+</li>
+<li><p>给frame的format赋值IJK_AV_PIX_FMT__ANDROID_MEDIACODEC。表示是andriod硬解码的帧数据。该格式在之后视频展示时，<a href="6c4c2c27.html">SDL_Vout</a>中调用create_overlay方法来创建<a href="e0c53a8e.html">SDL_VoutOverlay</a>时要用到。</p>
+</li>
+<li><p>给frame的sample_aspect_ratio赋值成解码器的宽高比。</p>
+</li>
+<li><p>给frame的pts，也就是展示时间戳赋值。我们在<a href="17303abc.html">feed_input_buffer</a>方法中的第3.2步中可以知道，当时在调用SDL_AMediaCodec_queueInputBuffer()方法将待解码数据推入解码器时，要提供一个展示时间，当时是将AVPacket的pts从is-&gt;video_st-&gt;time_base时间基转换成了AV_TIME_BASE_Q时间基，所以此时从解码器中拿出来的buffer_info中的presentationTimeUs也是基于AV_TIME_BASE_Q为时间基的，所以我们需要将其再转回来，也就是将buffer_info中的presentationTimeUs从AV_TIME_BASE_Q时间基转为is-&gt;video_st-&gt;time_base时间基。这里的转换不细述了，在<a href="17303abc.html">feed_input_buffer</a>方法中的第3.2步中能找到相关解释。</p>
+</li>
+<li><p>最后一步就是将入参got_frame置为1，表示frame填充完毕。</p>
+</li>
+</ol>
+</li>
+</ol>
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>关于本方法，主要是从解码器中读取出解码后数据BufferInfo,将其转换为c层的SDL_AMediaCodecBufferInfo结构体存储起来，然后再将其转换为SDL_AMediaCodecBufferProxy（此时多了output_buffer_index，acodec_serial），然后将SDL_AMediaCodecBufferProxy等赋值给本方法的入参frame，并将入参got_frame置为1。</p>
+<p>而具体frame的定义以及本方法将其填充之后的入队操作都可以在<a href="8876f557.html">func_run_sync()</a>中看到。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/65dc31d5.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-func_open_video_decoder</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/64d79e1a.html">
+        <span class="next-text nav-default">Ijkplayer-func_run_sync_loop</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

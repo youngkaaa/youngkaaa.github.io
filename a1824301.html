@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-SDL_Aout"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/a1824301.html"/>
+
+
+<meta name="description" content="本文主要介绍位于ijksdl_aout.h文件中的SDL_Aout结构体。该结构体主要是负责音频的输出。与之对应的视频帧输出的相关结构体为SDL_Vout。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-SDL_Aout">
+<meta property="og:url" content="https://youngkaaa.github.io/a1824301.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍位于ijksdl_aout.h文件中的SDL_Aout结构体。该结构体主要是负责音频的输出。与之对应的视频帧输出的相关结构体为SDL_Vout。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-04-12T04:16:14.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.430Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-SDL_Aout - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-SDL_Aout
+        
+      </h1>
+
+      <time class="post-time">
+          4月 12 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍位于ijksdl_aout.h文件中的SDL_Aout结构体。该结构体主要是负责音频的输出。与之对应的视频帧输出的相关结构体为<a href="6c4c2c27.html">SDL_Vout</a>。</p>
+<span id="more"></span>
+
+
+
+<blockquote>
+<p>Ijksdl_aout.h#SDL_Aout</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">SDL_Aout</span> &#123;</span></span><br><span class="line">    SDL_mutex *mutex;</span><br><span class="line">    <span class="type">double</span>     minimal_latency_seconds;</span><br><span class="line"></span><br><span class="line">    SDL_Class       *opaque_class;</span><br><span class="line">    SDL_Aout_Opaque *opaque;</span><br><span class="line">    <span class="type">void</span> (*free_l)(SDL_Aout *vout);</span><br><span class="line">    <span class="type">int</span> (*open_audio)(SDL_Aout *aout, <span class="type">const</span> SDL_AudioSpec *desired, SDL_AudioSpec *obtained);</span><br><span class="line">    <span class="type">void</span> (*pause_audio)(SDL_Aout *aout, <span class="type">int</span> pause_on);</span><br><span class="line">    <span class="type">void</span> (*flush_audio)(SDL_Aout *aout);</span><br><span class="line">    <span class="type">void</span> (*set_volume)(SDL_Aout *aout, <span class="type">float</span> left, <span class="type">float</span> right);</span><br><span class="line">    <span class="type">void</span> (*close_audio)(SDL_Aout *aout);</span><br><span class="line">    <span class="type">double</span> (*func_get_latency_seconds)(SDL_Aout *aout);</span><br><span class="line">    <span class="type">void</span>   (*func_set_default_latency_seconds)(SDL_Aout *aout, <span class="type">double</span> latency);</span><br><span class="line"></span><br><span class="line">    <span class="type">void</span>   (*func_set_playback_rate)(SDL_Aout *aout, <span class="type">float</span> playbackRate);</span><br><span class="line">    <span class="type">void</span>   (*func_set_playback_volume)(SDL_Aout *aout, <span class="type">float</span> playbackVolume);</span><br><span class="line">    <span class="type">int</span>    (*func_get_audio_persecond_callbacks)(SDL_Aout *aout);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Android only </span></span><br><span class="line">    <span class="type">int</span>    (*func_get_audio_session_id)(SDL_Aout *aout);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="1、实例的创建"><a href="#1、实例的创建" class="headerlink" title="1、实例的创建"></a>1、实例的创建</h4><p>SDL_Aout结构体表示着ijkplayer中的音频输出控制，其主要包括两个实现:Android <a href="b8be9048.html">AudioTrack</a>版本的实现以及<a href="289044cb.html">OpenSLES</a>版本的实现。而其具体的创建时机为:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">IjkMediaPlayer.java#prepareAsync()</span><br><span class="line"> -&gt;ijkplayer_jni.c#IjkMediaPlayer_prepareAsync()</span><br><span class="line">  -&gt;省略中间</span><br><span class="line">   -&gt;ff_ffplay.c#ffp_prepare_async_l() </span><br><span class="line">    -&gt;ff_ffplay.c#ffpipeline_open_audio_output()</span><br><span class="line">     -&gt;IJKFF_Pipeline#func_open_audio_output</span><br></pre></td></tr></table></figure>
+
+<p>所以可以看出，调用起点是上层IjkMediaPlayer调用prepareAsync()方法prepare时，最终调用到<a href="d2a3d8a6.html">IJKFF_Pipeline</a>中的func_open_audio_output()函数，而在<a href="d2a3d8a6.html">IJKFF_Pipeline</a>中介绍过这个方法了如下：</p>
+<blockquote>
+<p>IJKFF_Pipeline#func_open_audio_output</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> SDL_Aout *<span class="title function_">func_open_audio_output</span><span class="params">(IJKFF_Pipeline *pipeline, FFPlayer *ffp)</span> &#123;</span><br><span class="line">    SDL_Aout *aout = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="keyword">if</span> (ffp-&gt;opensles) &#123;</span><br><span class="line">        aout = SDL_AoutAndroid_CreateForOpenSLES();</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        aout = SDL_AoutAndroid_CreateForAudioTrack();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (aout)</span><br><span class="line">        SDL_AoutSetStereoVolume(aout, pipeline-&gt;opaque-&gt;left_volume, pipeline-&gt;opaque-&gt;right_volume);</span><br><span class="line">    <span class="keyword">return</span> aout;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里不做展开介绍，具体的请分别查看 <a href="b8be9048.html">AudioTrack</a>版本的实现以及<a href="289044cb.html">OpenSLES</a>版本的实现。</p>
+<h4 id="2、字段解释"><a href="#2、字段解释" class="headerlink" title="2、字段解释"></a>2、字段解释</h4><h5 id="minimal-latency-seconds"><a href="#minimal-latency-seconds" class="headerlink" title="minimal_latency_seconds:"></a>minimal_latency_seconds:</h5><p>待补充</p>
+<h5 id="opaque"><a href="#opaque" class="headerlink" title="opaque"></a>opaque</h5><p>SDL_Aout_Opaque结构体实例，用于存储一些控制字段等，比如音量值、播放状态等。</p>
+<p>而对于SDL_Aout_Opaque结构体，在ijksdl_aout_android_audiotrack.c和ijksdl_aout_android_opensles.c中各有一个SDL_Aout_Opaque的定义，内部字段不一样，但是都可以指向opaque。具体分别可以看 <a href="b8be9048.html">AudioTrack</a>版本以及<a href="289044cb.html">OpenSLES</a>版本中关于本字段的实现解释。</p>
+<p>以下的指针函数都可以在 <a href="b8be9048.html">AudioTrack</a>版本以及<a href="289044cb.html">OpenSLES</a>版本中找到。这里就不再介绍了。</p>
+<h4 id="3、小结"><a href="#3、小结" class="headerlink" title="3、小结"></a>3、小结</h4><p>关于SDL_Aout，其主要作用是用于处理音频输出控制逻辑，其包括两个实现: <a href="b8be9048.html">AudioTrack</a>版本以及<a href="289044cb.html">OpenSLES</a>版本，其中这俩各自实现了SDL_Aout结构体，用于不同方式的音频输出。与之对应的视频帧输出是<a href="6c4c2c27.html">SDL_Vout。</a></p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/b8be9048.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-SDL_Aout-For-AudioTrack</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/c0d7c607.html">
+        <span class="next-text nav-default">Ijkplayer-audio_thread</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

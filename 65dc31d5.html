@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-func_open_video_decoder"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/65dc31d5.html"/>
+
+
+<meta name="description" content="本文主要介绍ijkplayer中位于ffpipeline_android.c中的func_open_video_decoder()方法。 该方法是IJKFF_Pipeline结构体中func_open_video_decoder指针函数的主要执行逻辑。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-func_open_video_decoder">
+<meta property="og:url" content="https://youngkaaa.github.io/65dc31d5.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍ijkplayer中位于ffpipeline_android.c中的func_open_video_decoder()方法。 该方法是IJKFF_Pipeline结构体中func_open_video_decoder指针函数的主要执行逻辑。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-03-08T07:36:20.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.419Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-func_open_video_decoder - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-func_open_video_decoder
+        
+      </h1>
+
+      <time class="post-time">
+          3月 08 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍ijkplayer中位于ffpipeline_android.c中的func_open_video_decoder()方法。</p>
+<p>该方法是IJKFF_Pipeline结构体中func_open_video_decoder指针函数的主要执行逻辑。</p>
+<span id="more"></span>
+
+<p>func_open_video_decoder()方法主要执行逻辑就是根据用户设置的一些属性来打开对应视频解码器(包括初始化和配置)，然后返回对应<a href="86c88415.html">IJKFF_Pipenode</a>实现。下面开始分析func_open_video_decoder()方法:</p>
+<blockquote>
+<p><code>ffpipeline_android.c#func_open_video_decoder()</code></p>
+</blockquote>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">static IJKFF_Pipenode *func_open_video_decoder(IJKFF_Pipeline *pipeline, FFPlayer *ffp) &#123;</span><br><span class="line">    IJKFF_Pipeline_Opaque *opaque = pipeline-&gt;opaque;</span><br><span class="line">    IJKFF_Pipenode *node = NULL;</span><br><span class="line"></span><br><span class="line">    if (ffp-&gt;mediacodec_all_videos || ffp-&gt;mediacodec_avc || ffp-&gt;mediacodec_hevc || ffp-&gt;mediacodec_mpeg2) &#123;</span><br><span class="line">        node = ffpipenode_create_video_decoder_from_android_mediacodec(ffp, pipeline, opaque-&gt;weak_vout);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    if (!node) &#123;</span><br><span class="line">        node = ffpipenode_create_video_decoder_from_ffplay(ffp);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return node;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li><p>先判断mediacodec_all_videos、mediacodec_avc、mediacodec_hevc、mediacodec_mpeg2四个属性如果有打开其中一个的话就执行ffpipenode_create_video_decoder_from_android_mediacodec()方法，也就是启用<code>硬解</code>方式。而关于这四个选项的具体值含义可以看ff_ffplay_options.h#ffp_context_options中的定义，而ffp_context_options其实就是上层调用setOption()方法后，将上层传入的key(String)来映射到底层的一些value(Int)上去并且赋值。比如关于mediacodec_avc字段，上层可以通过key&#x3D;“mediacodec”来设置。</p>
+</li>
+<li><p>如果node还为空，那么可能是<code>硬解</code>开启失败，或者没有设置<code>硬解</code>,所以此时走<code>软解</code>,也就是调用<a href="f38a2dac.html">ffpipenode_create_video_decoder_from_ffplay</a>方法。</p>
+</li>
+</ol>
+<p><strong>本文只分析第一步中的<code>硬解</code>方式。</strong></p>
+<p>也就是ffpipenode_create_video_decoder_from_android_mediacodec()方法</p>
+<blockquote>
+<p><code>ffpipenode_android_mediacodec_vdec.c#ffpipenode_create_video_decoder_from_android_mediacodec()</code></p>
+</blockquote>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br></pre></td><td class="code"><pre><span class="line">IJKFF_Pipenode * ffpipenode_create_video_decoder_from_android_mediacodec(FFPlayer *ffp, IJKFF_Pipeline *pipeline,</span><br><span class="line">        SDL_Vout *vout) &#123;</span><br><span class="line">    // 第一步</span><br><span class="line">    if (SDL_Android_GetApiLevel() &lt; IJK_API_16_JELLY_BEAN)</span><br><span class="line">        return NULL;</span><br><span class="line"></span><br><span class="line">    if (!ffp || !ffp-&gt;is)</span><br><span class="line">        return NULL;</span><br><span class="line"></span><br><span class="line">    IJKFF_Pipenode *node = ffpipenode_alloc(sizeof(IJKFF_Pipenode_Opaque));</span><br><span class="line">    if (!node)</span><br><span class="line">        return node;</span><br><span class="line"></span><br><span class="line">    VideoState *is = ffp-&gt;is;</span><br><span class="line">    IJKFF_Pipenode_Opaque *opaque = node-&gt;opaque;</span><br><span class="line">    JNIEnv *env = NULL;</span><br><span class="line">    int ret = 0;</span><br><span class="line">    jobject jsurface = NULL;</span><br><span class="line"></span><br><span class="line">    node-&gt;func_destroy = func_destroy;</span><br><span class="line">    if (ffp-&gt;mediacodec_sync) &#123;</span><br><span class="line">        node-&gt;func_run_sync = func_run_sync_loop;</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        node-&gt;func_run_sync = func_run_sync;</span><br><span class="line">    &#125;</span><br><span class="line">    node-&gt;func_flush = func_flush;</span><br><span class="line">    opaque-&gt;pipeline = pipeline;</span><br><span class="line">    opaque-&gt;ffp = ffp;</span><br><span class="line">    opaque-&gt;decoder = &amp;is-&gt;viddec;</span><br><span class="line">    opaque-&gt;weak_vout = vout;</span><br><span class="line"></span><br><span class="line">    // 第二步</span><br><span class="line">    opaque-&gt;codecpar = avcodec_parameters_alloc();</span><br><span class="line">    if (!opaque-&gt;codecpar)</span><br><span class="line">        goto fail;</span><br><span class="line"></span><br><span class="line">    ret = avcodec_parameters_from_context(opaque-&gt;codecpar, opaque-&gt;decoder-&gt;avctx);</span><br><span class="line">    if (ret)</span><br><span class="line">        goto fail;</span><br><span class="line"></span><br><span class="line">    switch (opaque-&gt;codecpar-&gt;codec_id) &#123;</span><br><span class="line">        case AV_CODEC_ID_H264:</span><br><span class="line">            // 如果H264未启用</span><br><span class="line">            if (!ffp-&gt;mediacodec_avc &amp;&amp; !ffp-&gt;mediacodec_all_videos) &#123;</span><br><span class="line">                ALOGE(&quot;%s: MediaCodec: AVC/H264 is disabled. codec_id:%d \n&quot;, __func__, opaque-&gt;codecpar-&gt;codec_id);</span><br><span class="line">                goto fail;</span><br><span class="line">            &#125;</span><br><span class="line">            switch (opaque-&gt;codecpar-&gt;profile) &#123;</span><br><span class="line">                case FF_PROFILE_H264_BASELINE:</span><br><span class="line">                    ALOGI(&quot;%s: MediaCodec: H264_BASELINE: enabled\n&quot;, __func__);</span><br><span class="line">                    break;</span><br><span class="line">                case FF_PROFILE_H264_CONSTRAINED_BASELINE:</span><br><span class="line">                    ALOGI(&quot;%s: MediaCodec: H264_CONSTRAINED_BASELINE: enabled\n&quot;, __func__);</span><br><span class="line">                    break;</span><br><span class="line">                case FF_PROFILE_H264_MAIN:</span><br><span class="line">                    ALOGI(&quot;%s: MediaCodec: H264_MAIN: enabled\n&quot;, __func__);</span><br><span class="line">                    break;</span><br><span class="line">                case FF_PROFILE_H264_EXTENDED:</span><br><span class="line">                    ALOGI(&quot;%s: MediaCodec: H264_EXTENDED: enabled\n&quot;, __func__);</span><br><span class="line">                    break;</span><br><span class="line">                case FF_PROFILE_H264_HIGH:</span><br><span class="line">                    ALOGI(&quot;%s: MediaCodec: H264_HIGH: enabled\n&quot;, __func__);</span><br><span class="line">                    break;</span><br><span class="line">                case FF_PROFILE_H264_HIGH_10:</span><br><span class="line">                    ALOGW(&quot;%s: MediaCodec: H264_HIGH_10: disabled\n&quot;, __func__);</span><br><span class="line">                    goto fail;</span><br><span class="line">                case FF_PROFILE_H264_HIGH_10_INTRA:</span><br><span class="line">                    ALOGW(&quot;%s: MediaCodec: H264_HIGH_10_INTRA: disabled\n&quot;, __func__);</span><br><span class="line">                    goto fail;</span><br><span class="line">                case FF_PROFILE_H264_HIGH_422:</span><br><span class="line">                    ALOGW(&quot;%s: MediaCodec: H264_HIGH_10_422: disabled\n&quot;, __func__);</span><br><span class="line">                    goto fail;</span><br><span class="line">                case FF_PROFILE_H264_HIGH_422_INTRA:</span><br><span class="line">                    ALOGW(&quot;%s: MediaCodec: H264_HIGH_10_INTRA: disabled\n&quot;, __func__);</span><br><span class="line">                    goto fail;</span><br><span class="line">                case FF_PROFILE_H264_HIGH_444:</span><br><span class="line">                    ALOGW(&quot;%s: MediaCodec: H264_HIGH_10_444: disabled\n&quot;, __func__);</span><br><span class="line">                    goto fail;</span><br><span class="line">                case FF_PROFILE_H264_HIGH_444_PREDICTIVE:</span><br><span class="line">                    ALOGW(&quot;%s: MediaCodec: H264_HIGH_444_PREDICTIVE: disabled\n&quot;, __func__);</span><br><span class="line">                    goto fail;</span><br><span class="line">                case FF_PROFILE_H264_HIGH_444_INTRA:</span><br><span class="line">                    ALOGW(&quot;%s: MediaCodec: H264_HIGH_444_INTRA: disabled\n&quot;, __func__);</span><br><span class="line">                    goto fail;</span><br><span class="line">                case FF_PROFILE_H264_CAVLC_444:</span><br><span class="line">                    ALOGW(&quot;%s: MediaCodec: H264_CAVLC_444: disabled\n&quot;, __func__);</span><br><span class="line">                    goto fail;</span><br><span class="line">                default:</span><br><span class="line">                    ALOGW(&quot;%s: MediaCodec: (%d) unknown profile: disabled\n&quot;, __func__, opaque-&gt;codecpar-&gt;profile);</span><br><span class="line">                    goto fail;</span><br><span class="line">            &#125;</span><br><span class="line">            strcpy(opaque-&gt;mcc.mime_type, SDL_AMIME_VIDEO_AVC);</span><br><span class="line">            opaque-&gt;mcc.profile = opaque-&gt;codecpar-&gt;profile;</span><br><span class="line">            opaque-&gt;mcc.level = opaque-&gt;codecpar-&gt;level;</span><br><span class="line">            break;</span><br><span class="line">        case AV_CODEC_ID_HEVC:</span><br><span class="line">            if (!ffp-&gt;mediacodec_hevc &amp;&amp; !ffp-&gt;mediacodec_all_videos) &#123;</span><br><span class="line">                ALOGE(&quot;%s: MediaCodec/HEVC is disabled. codec_id:%d \n&quot;, __func__, opaque-&gt;codecpar-&gt;codec_id);</span><br><span class="line">                goto fail;</span><br><span class="line">            &#125;</span><br><span class="line">            strcpy(opaque-&gt;mcc.mime_type, SDL_AMIME_VIDEO_HEVC);</span><br><span class="line">            opaque-&gt;mcc.profile = opaque-&gt;codecpar-&gt;profile;</span><br><span class="line">            opaque-&gt;mcc.level = opaque-&gt;codecpar-&gt;level;</span><br><span class="line">            break;</span><br><span class="line">        case AV_CODEC_ID_MPEG2VIDEO:</span><br><span class="line">            if (!ffp-&gt;mediacodec_mpeg2 &amp;&amp; !ffp-&gt;mediacodec_all_videos) &#123;</span><br><span class="line">                ALOGE(&quot;%s: MediaCodec/MPEG2VIDEO is disabled. codec_id:%d \n&quot;, __func__, opaque-&gt;codecpar-&gt;codec_id);</span><br><span class="line">                goto fail;</span><br><span class="line">            &#125;</span><br><span class="line">            strcpy(opaque-&gt;mcc.mime_type, SDL_AMIME_VIDEO_MPEG2VIDEO);</span><br><span class="line">            opaque-&gt;mcc.profile = opaque-&gt;codecpar-&gt;profile;</span><br><span class="line">            opaque-&gt;mcc.level = opaque-&gt;codecpar-&gt;level;</span><br><span class="line">            break;</span><br><span class="line">        case AV_CODEC_ID_MPEG4:</span><br><span class="line">            if (!ffp-&gt;mediacodec_mpeg4 &amp;&amp; !ffp-&gt;mediacodec_all_videos) &#123;</span><br><span class="line">                ALOGE(&quot;%s: MediaCodec/MPEG4 is disabled. codec_id:%d \n&quot;, __func__, opaque-&gt;codecpar-&gt;codec_id);</span><br><span class="line">                goto fail;</span><br><span class="line">            &#125;</span><br><span class="line">            if ((opaque-&gt;codecpar-&gt;codec_tag &amp; 0x0000FFFF) == 0x00005844) &#123;</span><br><span class="line">                ALOGE(&quot;%s: divx is not supported \n&quot;, __func__);</span><br><span class="line">                goto fail;</span><br><span class="line">            &#125;</span><br><span class="line">            strcpy(opaque-&gt;mcc.mime_type, SDL_AMIME_VIDEO_MPEG4);</span><br><span class="line">            opaque-&gt;mcc.profile = opaque-&gt;codecpar-&gt;profile &gt;= 0 ? opaque-&gt;codecpar-&gt;profile : 0;</span><br><span class="line">            opaque-&gt;mcc.level = opaque-&gt;codecpar-&gt;level &gt;= 0 ? opaque-&gt;codecpar-&gt;level : 1;</span><br><span class="line">            break;</span><br><span class="line"></span><br><span class="line">        default:</span><br><span class="line">            ALOGE(&quot;%s:create: not H264 or H265/HEVC, codec_id:%d \n&quot;, __func__, opaque-&gt;codecpar-&gt;codec_id);</span><br><span class="line">            goto fail;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    if (JNI_OK != SDL_JNI_SetupThreadEnv(&amp;env)) &#123;</span><br><span class="line">        ALOGE(&quot;%s:create: SetupThreadEnv failed\n&quot;, __func__);</span><br><span class="line">        goto fail;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    opaque-&gt;acodec_mutex = SDL_CreateMutex();</span><br><span class="line">    opaque-&gt;acodec_cond = SDL_CreateCond();</span><br><span class="line">    opaque-&gt;acodec_first_dequeue_output_mutex = SDL_CreateMutex();</span><br><span class="line">    opaque-&gt;acodec_first_dequeue_output_cond = SDL_CreateCond();</span><br><span class="line">    opaque-&gt;any_input_mutex = SDL_CreateMutex();</span><br><span class="line">    opaque-&gt;any_input_cond = SDL_CreateCond();</span><br><span class="line"></span><br><span class="line">    if (!opaque-&gt;acodec_cond || !opaque-&gt;acodec_cond || !opaque-&gt;acodec_first_dequeue_output_mutex ||</span><br><span class="line">        !opaque-&gt;acodec_first_dequeue_output_cond) &#123;</span><br><span class="line">        ALOGE(&quot;%s:open_video_decoder: SDL_CreateCond() failed\n&quot;, __func__);</span><br><span class="line">        goto fail;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 第三步</span><br><span class="line">    ret = recreate_format_l(env, node);</span><br><span class="line">    if (ret) &#123;</span><br><span class="line">        ALOGE(&quot;amc: recreate_format_l failed\n&quot;);</span><br><span class="line">        goto fail;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 第四步</span><br><span class="line">    if (!ffpipeline_select_mediacodec_l(pipeline, &amp;opaque-&gt;mcc) || !opaque-&gt;mcc.codec_name[0]) &#123;</span><br><span class="line">        ALOGE(&quot;amc: no suitable codec\n&quot;);</span><br><span class="line">        goto fail;</span><br><span class="line">    &#125;</span><br><span class="line">    // 第五步</span><br><span class="line">    jsurface = ffpipeline_get_surface_as_global_ref(env, pipeline);</span><br><span class="line">    ret = reconfigure_codec_l(env, node, jsurface);</span><br><span class="line">    J4A_DeleteGlobalRef__p(env, &amp;jsurface);</span><br><span class="line">    if (ret != 0)</span><br><span class="line">        goto fail;</span><br><span class="line">    // 省略相关不重要代码</span><br><span class="line">    return node;</span><br><span class="line">    fail:</span><br><span class="line">    ffpipenode_free_p(&amp;node);</span><br><span class="line">    return NULL;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>第一步基本就是初始化，比如先开始调用<code>ffpipenode_alloc</code>方法来为<code>IJKFF_Pipenode</code>分配地址，然后给刚分配好地址的<code>IJKFF_Pipenode</code>中的指针函数赋值。其中需要注意下面这句:</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">if (ffp-&gt;mediacodec_sync) &#123;</span><br><span class="line">    node-&gt;func_run_sync = func_run_sync_loop;</span><br><span class="line">&#125; else &#123;</span><br><span class="line">    node-&gt;func_run_sync = func_run_sync;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>  如果开启了<code>mediacodec_sync</code>开关，那么会使用<code>func_run_sync_loop</code>方法，否则使用<code>func_run_sync</code>。而这个属性也可以在<code>ff_ffplay_options.h#ffp_context_options</code>中查到，其实该属性开启了就会同步方式解码，也就是将解码逻辑(往解码器中塞入待解码数据和从解码器中读取解码后的数据)循环执行，也就是在同一个线程(主线程)中同步方式解码。而没有开启这个开关是就是解码逻辑异步执行的，往解码器中塞入数据在单独的线程，从解码器中读取解码后数据在主线程。</p>
+<ol start="2">
+<li>第二步中首先调用avcodec_parameters_alloc()方法为opaque-&gt;codecpar(AVCodecParameters)分配地址，然后调用avcodec_parameters_from_context()方法将opaque-&gt;decoder-&gt;avctx中的值复制到<code>opaque-&gt;codecpar</code>中去，也就是将AVCodecContext中字段复制到<code>AVCodecParameters</code>中相应的字段中去，关于这两个结构体都是<code>编解码器</code>相关的，好像前者是老版本的，后者是现在新的官方推荐使用的，而官方提供了相关方法来进行这两个结构体之间的转换。而<code>opaque-&gt;decoder-&gt;avctx</code>其实就是在上面第一步中赋值了，其实指向的就是<code>is-&gt;viddec</code>，而<code>is-&gt;viddec</code>的赋值流程为:</li>
+</ol>
+<blockquote>
+<p>ff_ffplay.c#read_thread()<br>在数据读取线程read_thread中,通过avformat_open_input()方法读取文件的header信息，然后填充到对应的AVFormatContext中，一般此时轨道数AVFormatContext-&gt;nb_streams以及每个stream里的codecpar也就是AVFormatContext-&gt;stream[index]-&gt;codecpar(AVCodecParameters)都有值了(此时可以看出，官方其实对于codec还是用的AVCodecParameters)，然后在后面调用stream_component_open()方法来打开相应轨道，在此方法中会现调用avcodec_parameters_to_context()方法将相应stream中的codecpar转换为AVCodecContext，然后同样在本方法中的decoder_init()方法将刚才转换好的AVCodecContext赋值到VideoState结构体中相应的Decoder上去，比如音频的话就是auddec,视频的话就是viddec。所以到这里，就保证了is-&gt;viddec以及is-&gt;viddec-&gt;avctx有值了。而read_thread()方法会在上层调用prepareAsync()时启动执行，这里不再分析。</p>
+</blockquote>
+<p>  所以回到原来的分析中，这里通过<code>avcodec_parameters_from_context()</code>方法将刚才的的AVCodecContext又转换为AVCodecParameters。<br>  接下来就是一个大的switch语句，很长。但是主要逻辑其实就是下面几句</p>
+  <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">strcpy(opaque-&gt;mcc.mime_type, SDL_AMIME_VIDEO_AVC);</span><br><span class="line">opaque-&gt;mcc.profile = opaque-&gt;codecpar-&gt;profile;</span><br><span class="line">opaque-&gt;mcc.level = opaque-&gt;codecpar-&gt;level;</span><br></pre></td></tr></table></figure>
+
+<p>  根据刚才拿到的转换好的AVCodecParameters中的codec_id类型来判断视频类型，然后给opaque-&gt;mcc中对应值赋值，比如当codec_id&#x3D;AV_CODEC_ID_H264时，给视频的mime赋值为SDL_AMIME_VIDEO_AVC(video&#x2F;avc)等。其中opaque-&gt;mcc主要存储着视频的相关信息以及对应编解码器名。<br>  然后就是创建一些锁以及信号量，比如acodec_mutex以及acodec_cond等，这里不细述。</p>
+<ol start="3">
+<li>第三步中首先就是调用recreate_format_l()方法，而且第三步中也就这一个方法所以着重分析一下本方法:</li>
+</ol>
+<blockquote>
+<p>ffpipenode_android_mediacodec_vdec.c#recreate_format_l()</p>
+</blockquote>
+  <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">static int recreate_format_l(JNIEnv *env, IJKFF_Pipenode *node) &#123;</span><br><span class="line">  IJKFF_Pipenode_Opaque *opaque = node-&gt;opaque;</span><br><span class="line">  FFPlayer *ffp = opaque-&gt;ffp;</span><br><span class="line">  int rotate_degrees = 0;</span><br><span class="line"></span><br><span class="line">  SDL_AMediaFormat_deleteP(&amp;opaque-&gt;output_aformat);</span><br><span class="line">  opaque-&gt;input_aformat = SDL_AMediaFormatJava_createVideoFormat(env, opaque-&gt;mcc.mime_type, opaque-&gt;codecpar-&gt;width,</span><br><span class="line">                                                                 opaque-&gt;codecpar-&gt;height);</span><br><span class="line">  if (opaque-&gt;codecpar-&gt;extradata &amp;&amp; opaque-&gt;codecpar-&gt;extradata_size &gt; 0) &#123;</span><br><span class="line">      // 省略无关代码</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">      ALOGE(&quot;no buffer(%d)\n&quot;, opaque-&gt;codecpar-&gt;extradata_size);</span><br><span class="line">  &#125;</span><br><span class="line">  rotate_degrees = ffp_get_video_rotate_degrees(ffp);</span><br><span class="line">  // 如果mediacodec_auto_rotate已开启，详见:ff_ffplay.c-&gt;ffp_context_options中的定义</span><br><span class="line">  if (ffp-&gt;mediacodec_auto_rotate &amp;&amp;</span><br><span class="line">      rotate_degrees != 0 &amp;&amp;</span><br><span class="line">      SDL_Android_GetApiLevel() &gt;= IJK_API_21_LOLLIPOP) &#123;</span><br><span class="line">      ALOGI(&quot;amc: rotate in decoder: %d\n&quot;, rotate_degrees);</span><br><span class="line">      opaque-&gt;frame_rotate_degrees = rotate_degrees;</span><br><span class="line">      SDL_AMediaFormat_setInt32(opaque-&gt;input_aformat, &quot;rotation-degrees&quot;, rotate_degrees);</span><br><span class="line">      ffp_notify_msg2(ffp, FFP_MSG_VIDEO_ROTATION_CHANGED, 0);</span><br><span class="line">  &#125; else &#123; // 不自动处理旋转，那么把视频旋转角度回调出去</span><br><span class="line">      ALOGI(&quot;amc: rotate notify: %d\n&quot;, rotate_degrees);</span><br><span class="line">      ffp_notify_msg2(ffp, FFP_MSG_VIDEO_ROTATION_CHANGED, rotate_degrees);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  return 0;</span><br><span class="line">  fail:</span><br><span class="line">  return -1;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>  可以看到本方法首先调用了SDL_AMediaFormatJava_createVideoFormat()方法来创建了一个SDL_AMediaFormat结构体实例，其实就是调用上层MediaFormat中的createVideoFormat()方法，将刚才第二步中switch中赋值的mcc.mime_type等作为参数传进去，而SDL_AMediaFormat结构体其实就是将上层MediaFormat封装了一层，暂时可以按照MediaFormat来理解。然后创建完成会判断如果codecpar-&gt;extradata有值，那么调用MediaFormat中的setByteBuffer()方法来设置一些值，比如csd-0等。详细可以搜索网上文章查看。然后最后一个逻辑就是获取视频的旋转角度，然后调用MediaFormat中的setInteger()方法将角度设置进去(key为rotation-degrees)，这样视频在解码时就会被自动旋转，而这里需要注意只有当Android版本大于21时才会设置，小于时需要用户自己处理旋转(记得在用ExoPlayer播放视频时就有遇到这个问题)。</p>
+<p>  所以总的来说第三步就是创建MediaFormat。</p>
+<ol start="4">
+<li>第四步调用了ffpipeline_select_mediacodec_l()方法,如果ffpipeline_select_mediacodec_l()方法返回为false或者mcc.codec_name为空，那么就直接失败，我们先看ffpipeline_select_mediacodec_l()方法，看完这个方法这个判断也就懂了。</li>
+</ol>
+<blockquote>
+<p>ff_pipeline_android.c#ffpipeline_select_mediacodec_l()</p>
+</blockquote>
+  <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">bool</span> <span class="title function_">ffpipeline_select_mediacodec_l</span><span class="params">(IJKFF_Pipeline *pipeline, ijkmp_mediacodecinfo_context *mcc)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (!check_ffpipeline(pipeline, __func__))</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!mcc || !pipeline-&gt;opaque-&gt;mediacodec_select_callback)</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> pipeline-&gt;opaque-&gt;mediacodec_select_callback(pipeline-&gt;opaque-&gt;mediacodec_select_callback_opaque, mcc);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>  本方法其实就是调用了pipeline-&gt;opaque-&gt;mediacodec_select_callback指针函数，而其赋值最终是在ijkplayer_jni.c#IjkMediaPlayer_native_setup()方法中的ijkmp_android_set_mediacodec_select_callback()。最终指向的实现是ijkplayer_jni.c#mediacodec_select_callback()方法:</p>
+<blockquote>
+<p>ijkplayer_jni.c#mediacodec_select_callback()</p>
+</blockquote>
+<pre><code>&gt; <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">static bool mediacodec_select_callback(void *opaque, ijkmp_mediacodecinfo_context *mcc) &#123;</span><br><span class="line"> JNIEnv *env = NULL;</span><br><span class="line">    jobject weak_this = (jobject) opaque;</span><br><span class="line">    const char *found_codec_name = NULL;</span><br><span class="line">    if (JNI_OK != SDL_JNI_SetupThreadEnv(&amp;env)) &#123;</span><br><span class="line">        ALOGE(&quot;%s: SetupThreadEnv failed\n&quot;, __func__);</span><br><span class="line">        return -1;</span><br><span class="line">    &#125;</span><br><span class="line">    found_codec_name = J4AC_IjkMediaPlayer__onSelectCodec__withCString__asCBuffer(env, weak_this, mcc-&gt;mime_type,mcc-&gt;profile, mcc-&gt;level,mcc-&gt;codec_name,sizeof(mcc-&gt;codec_name));</span><br><span class="line">    if (J4A_ExceptionCheck__catchAll(env) || !found_codec_name) &#123;</span><br><span class="line">        ALOGE(&quot;%s: onSelectCodec failed\n&quot;, __func__);</span><br><span class="line">        goto fail;</span><br><span class="line">    &#125;</span><br><span class="line">    fail:</span><br><span class="line">    return found_codec_name;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+其实就是回调到上层IjkMediaPlayer中onSelectCodec()方法，注意这里的J4AC_IjkMediaPlayer__onSelectCodec__withCString__asCBuffer()方法是通过[jni4android](https://github.com/bilibili/jni4android)生成的，对应的头文件为IjkMediaPlayer.h,具体实现文件为IjkMediaPlayer.c。可以在项目中搜索该文件查看下，其实本方法在调用执行完毕会将返回值赋值给codec_name的，这也就是为什么本方法最后要传入sizeof(mcc-&gt;codec_name)了。而且mcc-&gt;codec_name唯一的赋值时机就是在这里。而方法的作用就是将mime传到上层，然后上层找到对应的编解码器名称返回回来赋值给mcc-&gt;codec_name，如果找到了就返回true反之返回false。
+
+所以回到第四步刚开始分析的地方，先调用ffpipeline_select_mediacodec_l()方法来通知上层寻找和mcc.mime相匹配的编解码器，找到了就赋值给mcc.codec_name，没找到就跳到fail处表示失败。
+</code></pre>
+<ol start="5">
+<li>第五步就很简单了，先调用ffpipeline_get_surface_as_global_ref()方法返回用户设置的Surface对象，然后调用reconfigure_codec_l()方法将其传入。而reconfigure_codec_l()方法其实主要就是创建一个MediaCodec对象实例,然后调用其configure()方法将Surface对象设置额配置进去。具体分析如下：</li>
+</ol>
+<blockquote>
+<p>ffpipenode_android_mediacodec_vdec.c#reconfigure_codec_l()</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line">&gt;static int reconfigure_codec_l(JNIEnv *env, IJKFF_Pipenode *node, jobject new_surface) &#123;</span><br><span class="line">&gt;IJKFF_Pipenode_Opaque *opaque = node-&gt;opaque;</span><br><span class="line">&gt;int ret = 0;</span><br><span class="line">&gt;sdl_amedia_status_t amc_ret = 0;</span><br><span class="line">&gt;jobject prev_jsurface = NULL;</span><br><span class="line">&gt;prev_jsurface = opaque-&gt;jsurface;</span><br><span class="line">&gt;if (new_surface) &#123;</span><br><span class="line">  opaque-&gt;jsurface = (*env)-&gt;NewGlobalRef(env, new_surface);</span><br><span class="line">  if (J4A_ExceptionCheck__catchAll(env) || !opaque-&gt;jsurface)</span><br><span class="line">      goto fail;</span><br><span class="line">&gt;&#125; else &#123;</span><br><span class="line">  opaque-&gt;jsurface = NULL;</span><br><span class="line">&gt;&#125;</span><br><span class="line">&gt;SDL_JNI_DeleteGlobalRefP(env, &amp;prev_jsurface);</span><br><span class="line">&gt;if (!opaque-&gt;acodec) &#123;</span><br><span class="line">  opaque-&gt;acodec = create_codec_l(env, node);</span><br><span class="line">  if (!opaque-&gt;acodec) &#123;</span><br><span class="line">      ALOGE(&quot;%s:open_video_decoder: create_codec failed\n&quot;, __func__);</span><br><span class="line">      ret = -1;</span><br><span class="line">      goto fail;</span><br><span class="line">  &#125;</span><br><span class="line">&gt;&#125;</span><br><span class="line">&gt;if (SDL_AMediaCodec_isConfigured(opaque-&gt;acodec)) &#123;</span><br><span class="line">  if (opaque-&gt;acodec) &#123;</span><br><span class="line">      if (SDL_AMediaCodec_isStarted(opaque-&gt;acodec)) &#123;</span><br><span class="line">          SDL_VoutAndroid_invalidateAllBuffers(opaque-&gt;weak_vout);</span><br><span class="line">          SDL_AMediaCodec_stop(opaque-&gt;acodec);</span><br><span class="line">      &#125;</span><br><span class="line">      if (opaque-&gt;quirk_reconfigure_with_new_codec) &#123;</span><br><span class="line">          ALOGI(&quot;quirk: reconfigure with new codec&quot;);</span><br><span class="line">          SDL_AMediaCodec_decreaseReferenceP(&amp;opaque-&gt;acodec);</span><br><span class="line">          SDL_VoutAndroid_setAMediaCodec(opaque-&gt;weak_vout, NULL);</span><br><span class="line">          opaque-&gt;acodec = create_codec_l(env, node);</span><br><span class="line">          if (!opaque-&gt;acodec) &#123;</span><br><span class="line">              ALOGE(&quot;%s:open_video_decoder: create_codec failed\n&quot;, __func__);</span><br><span class="line">              ret = -1;</span><br><span class="line">              goto fail;</span><br><span class="line">          &#125;</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  assert(opaque-&gt;weak_vout);</span><br><span class="line">&gt;&#125;</span><br><span class="line">&gt;amc_ret = SDL_AMediaCodec_configure_surface(env, opaque-&gt;acodec, opaque-&gt;input_aformat, opaque-&gt;jsurface, NULL, 0);</span><br><span class="line">&gt;if (amc_ret != SDL_AMEDIA_OK) &#123;</span><br><span class="line">  ALOGE(&quot;%s:configure_surface: failed\n&quot;, __func__);</span><br><span class="line">  ret = -1;</span><br><span class="line">  goto fail;</span><br><span class="line">&gt;&#125;</span><br><span class="line">&gt;amc_ret = SDL_AMediaCodec_start(opaque-&gt;acodec);</span><br><span class="line">&gt;if (amc_ret != SDL_AMEDIA_OK) &#123;</span><br><span class="line">  ALOGE(&quot;%s:SDL_AMediaCodec_start: failed\n&quot;, __func__);</span><br><span class="line">  ret = -1;</span><br><span class="line">  goto fail;</span><br><span class="line">&gt;&#125;</span><br><span class="line">&gt;opaque-&gt;acodec_first_dequeue_output_request = true;</span><br><span class="line">&gt;ALOGI(&quot;%s:new acodec: %p\n&quot;, __func__, opaque-&gt;acodec);</span><br><span class="line">&gt;SDL_VoutAndroid_setAMediaCodec(opaque-&gt;weak_vout, opaque-&gt;acodec);</span><br><span class="line">&gt;ret = 0;</span><br><span class="line">&gt;fail:</span><br><span class="line">&gt;return ret;</span><br><span class="line">&gt;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>该方法第一步是替换IJKFF_Pipenode_Opaque中的jsurface指针的指向，保证其指向的始终是最新的Suraface对象实例。然后判断如果IJKFF_Pipenode_Opaque中的acodec为空(不为空则复用之前的)，那么调用create_codec_l()方法创建来创建一个SDL_AMediaCodec(其实就是MediaCodec包装了一层)。</p>
+</blockquote>
+<pre><code>&gt; ffpipenode_android_mediacodec_vdec.c#create_codec_l()
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">static SDL_AMediaCodec *create_codec_l(JNIEnv *env, IJKFF_Pipenode *node) &#123;</span><br><span class="line">    IJKFF_Pipenode_Opaque *opaque = node-&gt;opaque;</span><br><span class="line">    ijkmp_mediacodecinfo_context *mcc = &amp;opaque-&gt;mcc;</span><br><span class="line">    SDL_AMediaCodec *acodec = NULL;</span><br><span class="line">    if (opaque-&gt;jsurface == NULL) &#123;</span><br><span class="line">        // we don&#x27;t need real codec if we don&#x27;t have a surface</span><br><span class="line">        acodec = SDL_AMediaCodecDummy_create();</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        acodec = SDL_AMediaCodecJava_createByCodecName(env, mcc-&gt;codec_name);</span><br><span class="line">        if (acodec) &#123;</span><br><span class="line">            strncpy(opaque-&gt;acodec_name, mcc-&gt;codec_name, sizeof(opaque-&gt;acodec_name) / sizeof(*opaque-&gt;acodec_name));</span><br><span class="line">            opaque-&gt;acodec_name[sizeof(opaque-&gt;acodec_name) / sizeof(*opaque-&gt;acodec_name) - 1] = 0;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    // 省略无用代码</span><br><span class="line">    return acodec;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+本方法贴出来主要是想解释当没有设置Surface对象时，ijkplayer会创建一个假的SDL_AMediaCodec，它看起来和其他SDL_AMediaCodec没啥不同，唯一就是它不干活(不解码)。
+</code></pre>
+<p>  下面回归正常，接下来执行SDL_AMediaCodec_isConfigured()方法，用于判断该SDL_AMediaCodec(也就是MediaCodec)是否已经被配置过了(因为SDL_AMediaCodec可能复用了之前的)，然后根据该SDL_AMediaCodec(也就是MediaCodec)当前的状态来做一些刷新操作。然后就是调用SDL_AMediaCodec_configure_surface()方法(也就是对应上层MediaCodec中的configure方法)来将jsurface(上层Surface对象实例)设置进去。然后调用SDL_AMediaCodec_start()方法(也就是上层MediaCodec中的start方法)来开始解码。然后将acodec_first_dequeue_output_request置为true，该变量会在后面的从解码器中读取解码后的数据时用到，表示后面的视频帧是当前解码视频第一帧。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结:"></a>总结:</h3><p>func_open_video_decoder()(也就是ffpipenode_create_video_decoder_from_android_mediacodec())方法主要作用：</p>
+<ol>
+<li><p>创建IJKFF_Pipenode并且赋值</p>
+</li>
+<li><p>根据AVCodecContext初始化opaque-&gt;mcc中相关变量</p>
+</li>
+<li><p>创建SDL_AMediaFormat(对应上层的MediaFormat类)实例</p>
+</li>
+<li><p>通知上层根据mime拿到对应编解码器名称</p>
+</li>
+<li><p>创建SDL_AMediaCodec(对应上层MediaCodec类)实例，并且调用其configure()方法将用户设置的jsurface(Surface对象实例)配置进去，以供后面调用MediaCodec中releaseOutputBuffer()方法来展示解码后视频帧。</p>
+</li>
+</ol>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/fe1f1f62.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-queue_picture</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/70ca7e71.html">
+        <span class="next-text nav-default">Ijkplayer-drain_output_buffer</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

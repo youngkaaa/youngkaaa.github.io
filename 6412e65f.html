@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-func_config_video_decoder"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/6412e65f.html"/>
+
+
+<meta name="description" content="本文主要介绍ijkplayer中位于ffpipeline_android.c中的func_config_video_decoder()方法。 func_config_video_decoder()方法是IJKFF_Pipeline中func_config_video_decoder指针函数对应的硬解实现，而func_config_video_decoder主要是用于异步打开(初始化+配置)解码器的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-func_config_video_decoder">
+<meta property="og:url" content="https://youngkaaa.github.io/6412e65f.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍ijkplayer中位于ffpipeline_android.c中的func_config_video_decoder()方法。 func_config_video_decoder()方法是IJKFF_Pipeline中func_config_video_decoder指针函数对应的硬解实现，而func_config_video_decoder主要是用于异步打开(初始化+配置)解码器的">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-03-08T11:02:42.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.421Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-func_config_video_decoder - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-func_config_video_decoder
+        
+      </h1>
+
+      <time class="post-time">
+          3月 08 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍ijkplayer中位于ffpipeline_android.c中的func_config_video_decoder()方法。</p>
+<p>func_config_video_decoder()方法是<a href="d2a3d8a6.html">IJKFF_Pipeline</a>中func_config_video_decoder指针函数对应的硬解实现，而func_config_video_decoder主要是用于异步打开(初始化+配置)解码器的，详细分析可以翻看<a href="d2a3d8a6.html">IJKFF_Pipeline</a>中的分析。</p>
+<span id="more"></span>
+
+<blockquote>
+<p>ffpipeline_android.c#func_config_video_decoder()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">func_config_video_decoder</span><span class="params">(IJKFF_Pipeline *pipeline, FFPlayer *ffp)</span> &#123;</span><br><span class="line">    IJKFF_Pipeline_Opaque *opaque = pipeline-&gt;opaque;</span><br><span class="line">    <span class="type">int</span> ret = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ffp-&gt;node_vdec) &#123;</span><br><span class="line">        ret = ffpipenode_config_from_android_mediacodec(ffp, pipeline, opaque-&gt;weak_vout, ffp-&gt;node_vdec);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>很简单，本方法就是在当node_vdec不为空时调用ffpipenode_config_from_android_mediacodec()方法，而node_vdec的创建就是通过func_init_video_decoder。</p>
+<blockquote>
+<p> ffpipenode_android_mediacodec_vdec.c#ffpipenode_config_from_android_mediacodec()</p>
+ <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">ffpipenode_config_from_android_mediacodec</span><span class="params">(FFPlayer *ffp, IJKFF_Pipeline *pipeline, SDL_Vout *vout,</span></span><br><span class="line"><span class="params">                                           IJKFF_Pipenode *node)</span> &#123;</span><br><span class="line"> <span class="type">int</span> ret = <span class="number">0</span>;</span><br><span class="line"> VideoState *is = ffp-&gt;is;</span><br><span class="line"> IJKFF_Pipenode_Opaque *opaque = node-&gt;opaque;</span><br><span class="line"> JNIEnv *env = <span class="literal">NULL</span>;</span><br><span class="line"> jobject jsurface = <span class="literal">NULL</span>;</span><br><span class="line"> opaque-&gt;decoder = &amp;is-&gt;viddec;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">if</span> (JNI_OK != SDL_JNI_SetupThreadEnv(&amp;env)) &#123;</span><br><span class="line">     ALOGE(<span class="string">&quot;%s:create: SetupThreadEnv failed\n&quot;</span>, __func__);</span><br><span class="line">     <span class="keyword">goto</span> fail;</span><br><span class="line"> &#125;</span><br><span class="line"> ret = avcodec_parameters_from_context(opaque-&gt;codecpar, opaque-&gt;decoder-&gt;avctx);</span><br><span class="line"> <span class="keyword">if</span> (ret)</span><br><span class="line">     <span class="keyword">goto</span> fail;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">switch</span> (opaque-&gt;codecpar-&gt;codec_id) &#123;</span><br><span class="line">     <span class="keyword">case</span> AV_CODEC_ID_H264:</span><br><span class="line">         <span class="keyword">if</span> (!ffp-&gt;mediacodec_avc &amp;&amp; !ffp-&gt;mediacodec_all_videos) &#123;</span><br><span class="line">             ALOGE(<span class="string">&quot;%s: MediaCodec: AVC/H264 is disabled. codec_id:%d \n&quot;</span>, __func__, opaque-&gt;codecpar-&gt;codec_id);</span><br><span class="line">             <span class="keyword">goto</span> fail;</span><br><span class="line">         &#125;</span><br><span class="line">         <span class="keyword">switch</span> (opaque-&gt;codecpar-&gt;profile) &#123;</span><br><span class="line">             <span class="keyword">case</span> FF_PROFILE_H264_BASELINE:</span><br><span class="line">                 ALOGI(<span class="string">&quot;%s: MediaCodec: H264_BASELINE: enabled\n&quot;</span>, __func__);</span><br><span class="line">                 <span class="keyword">break</span>;</span><br><span class="line">             <span class="keyword">case</span> FF_PROFILE_H264_CONSTRAINED_BASELINE:</span><br><span class="line">                 ALOGI(<span class="string">&quot;%s: MediaCodec: H264_CONSTRAINED_BASELINE: enabled\n&quot;</span>, __func__);</span><br><span class="line">                 <span class="keyword">break</span>;</span><br><span class="line">             <span class="keyword">case</span> FF_PROFILE_H264_MAIN:</span><br><span class="line">                 ALOGI(<span class="string">&quot;%s: MediaCodec: H264_MAIN: enabled\n&quot;</span>, __func__);</span><br><span class="line">                 <span class="keyword">break</span>;</span><br><span class="line">             <span class="keyword">case</span> FF_PROFILE_H264_EXTENDED:</span><br><span class="line">                 ALOGI(<span class="string">&quot;%s: MediaCodec: H264_EXTENDED: enabled\n&quot;</span>, __func__);</span><br><span class="line">                 <span class="keyword">break</span>;</span><br><span class="line">             <span class="keyword">case</span> FF_PROFILE_H264_HIGH:</span><br><span class="line">                 ALOGI(<span class="string">&quot;%s: MediaCodec: H264_HIGH: enabled\n&quot;</span>, __func__);</span><br><span class="line">                 <span class="keyword">break</span>;</span><br><span class="line">             <span class="keyword">case</span> FF_PROFILE_H264_HIGH_10:</span><br><span class="line">                 ALOGW(<span class="string">&quot;%s: MediaCodec: H264_HIGH_10: disabled\n&quot;</span>, __func__);</span><br><span class="line">                 <span class="keyword">goto</span> fail;</span><br><span class="line">             <span class="keyword">case</span> FF_PROFILE_H264_HIGH_10_INTRA:</span><br><span class="line">                 ALOGW(<span class="string">&quot;%s: MediaCodec: H264_HIGH_10_INTRA: disabled\n&quot;</span>, __func__);</span><br><span class="line">                 <span class="keyword">goto</span> fail;</span><br><span class="line">             <span class="keyword">case</span> FF_PROFILE_H264_HIGH_422:</span><br><span class="line">                 ALOGW(<span class="string">&quot;%s: MediaCodec: H264_HIGH_10_422: disabled\n&quot;</span>, __func__);</span><br><span class="line">                 <span class="keyword">goto</span> fail;</span><br><span class="line">             <span class="keyword">case</span> FF_PROFILE_H264_HIGH_422_INTRA:</span><br><span class="line">                 ALOGW(<span class="string">&quot;%s: MediaCodec: H264_HIGH_10_INTRA: disabled\n&quot;</span>, __func__);</span><br><span class="line">                 <span class="keyword">goto</span> fail;</span><br><span class="line">             <span class="keyword">case</span> FF_PROFILE_H264_HIGH_444:</span><br><span class="line">                 ALOGW(<span class="string">&quot;%s: MediaCodec: H264_HIGH_10_444: disabled\n&quot;</span>, __func__);</span><br><span class="line">                 <span class="keyword">goto</span> fail;</span><br><span class="line">             <span class="keyword">case</span> FF_PROFILE_H264_HIGH_444_PREDICTIVE:</span><br><span class="line">                 ALOGW(<span class="string">&quot;%s: MediaCodec: H264_HIGH_444_PREDICTIVE: disabled\n&quot;</span>, __func__);</span><br><span class="line">                 <span class="keyword">goto</span> fail;</span><br><span class="line">             <span class="keyword">case</span> FF_PROFILE_H264_HIGH_444_INTRA:</span><br><span class="line">                 ALOGW(<span class="string">&quot;%s: MediaCodec: H264_HIGH_444_INTRA: disabled\n&quot;</span>, __func__);</span><br><span class="line">                 <span class="keyword">goto</span> fail;</span><br><span class="line">             <span class="keyword">case</span> FF_PROFILE_H264_CAVLC_444:</span><br><span class="line">                 ALOGW(<span class="string">&quot;%s: MediaCodec: H264_CAVLC_444: disabled\n&quot;</span>, __func__);</span><br><span class="line">                 <span class="keyword">goto</span> fail;</span><br><span class="line">             <span class="keyword">default</span>:</span><br><span class="line">                 ALOGW(<span class="string">&quot;%s: MediaCodec: (%d) unknown profile: disabled\n&quot;</span>, __func__, opaque-&gt;codecpar-&gt;profile);</span><br><span class="line">                 <span class="keyword">goto</span> fail;</span><br><span class="line">         &#125;</span><br><span class="line">         <span class="built_in">strcpy</span>(opaque-&gt;mcc.mime_type, SDL_AMIME_VIDEO_AVC);</span><br><span class="line">         opaque-&gt;mcc.profile = opaque-&gt;codecpar-&gt;profile;</span><br><span class="line">         opaque-&gt;mcc.level = opaque-&gt;codecpar-&gt;level;</span><br><span class="line">         <span class="keyword">break</span>;</span><br><span class="line">     <span class="keyword">case</span> AV_CODEC_ID_HEVC:</span><br><span class="line">         <span class="keyword">if</span> (!ffp-&gt;mediacodec_hevc &amp;&amp; !ffp-&gt;mediacodec_all_videos) &#123;</span><br><span class="line">             ALOGE(<span class="string">&quot;%s: MediaCodec/HEVC is disabled. codec_id:%d \n&quot;</span>, __func__, opaque-&gt;codecpar-&gt;codec_id);</span><br><span class="line">             <span class="keyword">goto</span> fail;</span><br><span class="line">         &#125;</span><br><span class="line">         <span class="built_in">strcpy</span>(opaque-&gt;mcc.mime_type, SDL_AMIME_VIDEO_HEVC);</span><br><span class="line">         opaque-&gt;mcc.profile = opaque-&gt;codecpar-&gt;profile;</span><br><span class="line">         opaque-&gt;mcc.level = opaque-&gt;codecpar-&gt;level;</span><br><span class="line">         <span class="keyword">break</span>;</span><br><span class="line">     <span class="keyword">case</span> AV_CODEC_ID_MPEG2VIDEO:</span><br><span class="line">         <span class="keyword">if</span> (!ffp-&gt;mediacodec_mpeg2 &amp;&amp; !ffp-&gt;mediacodec_all_videos) &#123;</span><br><span class="line">             ALOGE(<span class="string">&quot;%s: MediaCodec/MPEG2VIDEO is disabled. codec_id:%d \n&quot;</span>, __func__, opaque-&gt;codecpar-&gt;codec_id);</span><br><span class="line">             <span class="keyword">goto</span> fail;</span><br><span class="line">         &#125;</span><br><span class="line">         <span class="built_in">strcpy</span>(opaque-&gt;mcc.mime_type, SDL_AMIME_VIDEO_MPEG2VIDEO);</span><br><span class="line">         opaque-&gt;mcc.profile = opaque-&gt;codecpar-&gt;profile;</span><br><span class="line">         opaque-&gt;mcc.level = opaque-&gt;codecpar-&gt;level;</span><br><span class="line">         <span class="keyword">break</span>;</span><br><span class="line">     <span class="keyword">case</span> AV_CODEC_ID_MPEG4:</span><br><span class="line">         <span class="keyword">if</span> (!ffp-&gt;mediacodec_mpeg4 &amp;&amp; !ffp-&gt;mediacodec_all_videos) &#123;</span><br><span class="line">             ALOGE(<span class="string">&quot;%s: MediaCodec/MPEG4 is disabled. codec_id:%d \n&quot;</span>, __func__, opaque-&gt;codecpar-&gt;codec_id);</span><br><span class="line">             <span class="keyword">goto</span> fail;</span><br><span class="line">         &#125;</span><br><span class="line">         <span class="keyword">if</span> ((opaque-&gt;codecpar-&gt;codec_tag &amp; <span class="number">0x0000FFFF</span>) == <span class="number">0x00005844</span>) &#123;</span><br><span class="line">             ALOGE(<span class="string">&quot;%s: divx is not supported \n&quot;</span>, __func__);</span><br><span class="line">             <span class="keyword">goto</span> fail;</span><br><span class="line">         &#125;</span><br><span class="line">         <span class="built_in">strcpy</span>(opaque-&gt;mcc.mime_type, SDL_AMIME_VIDEO_MPEG4);</span><br><span class="line">         opaque-&gt;mcc.profile = opaque-&gt;codecpar-&gt;profile &gt;= <span class="number">0</span> ? opaque-&gt;codecpar-&gt;profile : <span class="number">0</span>;</span><br><span class="line">         opaque-&gt;mcc.level = opaque-&gt;codecpar-&gt;level &gt;= <span class="number">0</span> ? opaque-&gt;codecpar-&gt;level : <span class="number">1</span>;</span><br><span class="line">         <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">     <span class="keyword">default</span>:</span><br><span class="line">         ALOGE(<span class="string">&quot;%s:create: not H264 or H265/HEVC, codec_id:%d \n&quot;</span>, __func__, opaque-&gt;codecpar-&gt;codec_id);</span><br><span class="line">         <span class="keyword">goto</span> fail;</span><br><span class="line"> &#125;</span><br><span class="line"> <span class="keyword">if</span> (<span class="built_in">strcmp</span>(opaque-&gt;mcc.mime_type, ffp-&gt;video_mime_type)) &#123;</span><br><span class="line">     ALOGW(<span class="string">&quot;amc: video_mime_type error opaque-&gt;mcc.mime_type = %s\n&quot;</span>, opaque-&gt;mcc.mime_type);</span><br><span class="line">     <span class="keyword">goto</span> fail;</span><br><span class="line"> &#125;</span><br><span class="line"> ret = recreate_format_l(env, node);</span><br><span class="line"> <span class="keyword">if</span> (ret) &#123;</span><br><span class="line">     ALOGE(<span class="string">&quot;amc: recreate_format_l failed\n&quot;</span>);</span><br><span class="line">     <span class="keyword">goto</span> fail;</span><br><span class="line"> &#125;</span><br><span class="line"> jsurface = ffpipeline_get_surface_as_global_ref(env, pipeline);</span><br><span class="line"> ret = configure_codec_l(env, node, jsurface);</span><br><span class="line"> J4A_DeleteGlobalRef__p(env, &amp;jsurface);</span><br><span class="line"> <span class="keyword">if</span> (ret != <span class="number">0</span>)</span><br><span class="line">     <span class="keyword">goto</span> fail;</span><br><span class="line"></span><br><span class="line"> ffp_set_video_codec_info(ffp, MEDIACODEC_MODULE_NAME, opaque-&gt;mcc.codec_name);</span><br><span class="line"></span><br><span class="line"> opaque-&gt;off_buf_out = <span class="number">0</span>;</span><br><span class="line"> <span class="comment">// 详见create_codec_l()方法</span></span><br><span class="line"> <span class="keyword">if</span> (opaque-&gt;n_buf_out) &#123;</span><br><span class="line">     <span class="type">int</span> i;</span><br><span class="line"></span><br><span class="line">     opaque-&gt;amc_buf_out = <span class="built_in">calloc</span>(opaque-&gt;n_buf_out, <span class="keyword">sizeof</span>(*opaque-&gt;amc_buf_out));</span><br><span class="line">     assert(opaque-&gt;amc_buf_out != <span class="literal">NULL</span>);</span><br><span class="line">     <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; opaque-&gt;n_buf_out; i++)</span><br><span class="line">         opaque-&gt;amc_buf_out[i].pts = AV_NOPTS_VALUE;</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line"> SDL_SpeedSamplerReset(&amp;opaque-&gt;sampler);</span><br><span class="line"> ffp-&gt;stat.vdec_type = FFP_PROPV_DECODER_MEDIACODEC;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"> fail:</span><br><span class="line"> ret = <span class="number">-1</span>;</span><br><span class="line"> ffpipenode_free_p(&amp;node);</span><br><span class="line"> <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p> 这里主要解释几点:</p>
+<ol>
+<li>&#96;&#96;&#96;c<br> if (strcmp(opaque-&gt;mcc.mime_type, ffp-&gt;video_mime_type)) {<br>   ALOGW(“amc: video_mime_type error opaque-&gt;mcc.mime_type &#x3D; %s\n”, opaque-&gt;mcc.mime_type);<br>   goto fail;<br>   }  <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">  ```</span><br><span class="line"></span><br><span class="line">  这里的video_mime_type是用户指定的，关于该字段在[IJKFF_Pipeline](d2a3d8a6.html)中func_config_video_decoder中有解释。这里的逻辑就是如果用户设置的视频mime类型和当前准备播放的视频的mime类型不一致，表示之前通过func_init_video_decoder()方法创建的编解码器可能和当前视频不匹配,那么就直接失败，返回-1,所以也就是回到了stream_component_open方法中，（调用路径为:ff_ffplay.c#read_thread()-&gt;ff_ffplay.c#stream_component_open()）,所以此时会重新走ffpipeline_open_video_decoder()方法来重新初始化和配置编解码器以保证该视频的播放。该逻辑在[IJKFF_Pipeline](d2a3d8a6.html)中func_config_video_decoder中有解释。</span><br><span class="line"></span><br><span class="line">2. 调用的是configure_codec_l()方法，而不是[func_open_video_decoder](65dc31d5.html)方法中的reconfigure_codec_l()，具体这两个方法的区别这里暂不展开，后面有空会单独分析。</span><br><span class="line"></span><br><span class="line">3. 本方法返回的是int，0成功，-1失败。这点需要注意，因为在[func_open_video_decoder](65dc31d5.html)方法和[func_init_video_decoder](b99add2a.html)方法都是返回[IJKFF_Pipenode](86c88415.html)的。</span><br><span class="line"></span><br><span class="line">  </span><br><span class="line"></span><br><span class="line">  其他的逻辑基本和[func_open_video_decoder](65dc31d5.html)方法一样，这里不再赘述。</span><br></pre></td></tr></table></figure></li>
+</ol>
+</blockquote>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/b99add2a.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-func_init_video_decoder</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/fe1f1f62.html">
+        <span class="next-text nav-default">Ijkplayer-queue_picture</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

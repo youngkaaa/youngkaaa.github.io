@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="ijkplayer-IJKFF_Pipeline"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/d2a3d8a6.html"/>
+
+
+<meta name="description" content="本文主要介绍ijkplayer中位于ff_ffpipeline.h中的IJKFF_Pipeline结构体。 关于IJKFF_Pipeline,它是ijkplayer独有的，区别于ffmpeg的一套音视频解码实现。该结构体的定义主要是用来实现对应的视频解码器实现以及音频输出实现。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ijkplayer-IJKFF_Pipeline">
+<meta property="og:url" content="https://youngkaaa.github.io/d2a3d8a6.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍ijkplayer中位于ff_ffpipeline.h中的IJKFF_Pipeline结构体。 关于IJKFF_Pipeline,它是ijkplayer独有的，区别于ffmpeg的一套音视频解码实现。该结构体的定义主要是用来实现对应的视频解码器实现以及音频输出实现。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-03-07T09:19:18.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.417Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> ijkplayer-IJKFF_Pipeline - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          ijkplayer-IJKFF_Pipeline
+        
+      </h1>
+
+      <time class="post-time">
+          3月 07 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍ijkplayer中位于ff_ffpipeline.h中的IJKFF_Pipeline结构体。</p>
+<p>关于IJKFF_Pipeline,它是ijkplayer独有的，区别于ffmpeg的一套音视频解码实现。该结构体的定义主要是用来实现对应的<code>视频解码器实现</code>以及<code>音频输出实现</code>。</p>
+<span id="more"></span>
+
+<p>关于IJKFF_Pipeline的初始化是在ffpipeline_android.c中的ffpipeline_create_from_android()方法中执行的。而本方法的调用信息是ijkplayer_jni.c#IjkMediaPlayer_native_setup()-&gt;ijkplayer_android.c#ijkmp_android_create()-&gt;jkplayer_android.c#ffpipeline_create_from_android()。</p>
+<p><strong><big>所以可以看出在上层调用<code>native_setup()</code>方法时，底层就会去创建<code>IJKFF_Pipeline</code>。</big></strong></p>
+<p>其实关于IJKFF_Pipeline的初始化不止是在ffpipeline_android.c#ffpipeline_create_from_android()中，在ffpipeline_ffplay.c#ffpipeline_create_from_ffplay()中也会有IJKFF_Pipeline的初始化，前者是针对<code>Android</code>的IJKFF_Pipeline实现，后者是使用原<code>ffplay</code>的实现,也就是纯<code>软解</code>实现，然而对于后者没有看到有相关调用信息，应该已经废弃，所以对于后者不分析。<strong>并且现在在前者的实现中已经将后者纳入了其中</strong>(详细见后面分析)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">struct IJKFF_Pipeline &#123;</span><br><span class="line">    SDL_Class             *opaque_class;</span><br><span class="line">    IJKFF_Pipeline_Opaque *opaque;</span><br><span class="line"></span><br><span class="line">    void            (*func_destroy)        (IJKFF_Pipeline *pipeline);</span><br><span class="line"></span><br><span class="line">    IJKFF_Pipenode *(*func_open_video_decoder)  (IJKFF_Pipeline *pipeline, FFPlayer *ffp);</span><br><span class="line"></span><br><span class="line">    SDL_Aout       *(*func_open_audio_output)   (IJKFF_Pipeline *pipeline, FFPlayer *ffp);</span><br><span class="line"></span><br><span class="line">    IJKFF_Pipenode *(*func_init_video_decoder)  (IJKFF_Pipeline *pipeline, FFPlayer *ffp);</span><br><span class="line"></span><br><span class="line">    int           (*func_config_video_decoder)  (IJKFF_Pipeline *pipeline, FFPlayer *ffp);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h3 id="opaque"><a href="#opaque" class="headerlink" title="opaque"></a>opaque</h3><p><code>IJKFF_Pipeline_Opaque</code>类型的值。而<code>IJKFF_Pipeline_Opaque</code>主要是一些上层信息的承载(ijkplayer中好多以<code>Opaque</code>结尾的结构体我觉得大都和上层信息有关)，关于<code>IJKFF_Pipeline_Opaque</code>后面会有解释。</p>
+<h3 id="func-destroy"><a href="#func-destroy" class="headerlink" title="func_destroy"></a>func_destroy</h3><p>主要是用于做一些销毁回收操作。关于本指针函数的赋值实现如下：</p>
+<blockquote>
+<p><code>ffpipeline_android.c#func_destroy()</code></p>
+</blockquote>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">static void func_destroy(IJKFF_Pipeline *pipeline) &#123;</span><br><span class="line">    IJKFF_Pipeline_Opaque *opaque = pipeline-&gt;opaque;</span><br><span class="line">    JNIEnv *env = NULL;</span><br><span class="line"></span><br><span class="line">    SDL_DestroyMutexP(&amp;opaque-&gt;surface_mutex);</span><br><span class="line"></span><br><span class="line">    if (JNI_OK != SDL_JNI_SetupThreadEnv(&amp;env)) &#123;</span><br><span class="line">        ALOGE(&quot;amediacodec-pipeline:destroy: SetupThreadEnv failed\n&quot;);</span><br><span class="line">        goto fail;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    SDL_JNI_DeleteGlobalRefP(env, &amp;opaque-&gt;jsurface);</span><br><span class="line">    fail:</span><br><span class="line">    return;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>很简单就是做一些销毁的工作，这里不做分析。</p>
+<h3 id="func-open-video-decoder"><a href="#func-open-video-decoder" class="headerlink" title="func_open_video_decoder"></a>func_open_video_decoder</h3><p>执行<code>初始化解码器</code>并且将其<code>配置</code>完成，为后面的解码做好准备。返回具体对应的<code>视频解码器实现</code>,也就是返回<a href="86c88415.html">IJKFF_Pipenode</a>结构体实例。而本指针函数具体所对应的方法为ffpipeline_android.c#<a href="65dc31d5.html">func_open_video_decoder</a>。</p>
+<p>注意本方法最终的调用是在ff_ffplay.c#read_thread()-&gt;ff_ffplay.c#stream_component_open()方法中，也就是在打开视频轨道流时会去调用本方法创建打开解码器，此时创建和配置是在同一个线程中执行的，也就是同步方式。而后面另外两个指针函数func_init_video_decoder和func_config_video_decoder就是将初始化和配置拆分开来，以实现异步打开解码器。</p>
+<h3 id="func-init-video-decoder"><a href="#func-init-video-decoder" class="headerlink" title="func_init_video_decoder"></a>func_init_video_decoder</h3><p>执行<code>初始化解码器</code>逻辑，还是返回<a href="86c88415.html">IJKFF_Pipenode</a>结构体实例。其实本方法和上面的<a href="65dc31d5.html">func_open_video_decoder</a>类似，大部分逻辑都是一样的，就是少了configure()配置的操作。那么为什么需要提供这么个方法呢？原因是异步创建解码器。具体方法为ffpipeline_android.c#func_init_video_decoder。详见<a href="b99add2a.html">func_init_video_decoder</a></p>
+<p>注意本方法唯一调用路径为:ijkplayer_jni.c#IjkMediaPlayer_prepareAsync()-&gt;ijkplayer.c#ijkmp_prepare_async()-&gt;ijkplayer.c#ijkmp_prepare_async_l()-&gt;ff_ffplay.c#ffp_prepare_async_l()-&gt;ff_ffplay.c#stream_open()中，相关代码如下:</p>
+<blockquote>
+<p>ff_ffplay.c#stream_open()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 省略部分无关代码</span></span><br><span class="line"></span><br><span class="line">is-&gt;initialized_decoder = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">is-&gt;read_tid = SDL_CreateThreadEx(&amp;is-&gt;_read_tid, read_thread, ffp, <span class="string">&quot;ff_read&quot;</span>);</span><br><span class="line"><span class="keyword">if</span> (!is-&gt;read_tid) &#123;</span><br><span class="line">av_log(<span class="literal">NULL</span>, AV_LOG_FATAL, <span class="string">&quot;SDL_CreateThread(): %s\n&quot;</span>, SDL_GetError());</span><br><span class="line"><span class="keyword">goto</span> fail;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 如果开启了异步初始化解码器</span></span><br><span class="line"><span class="comment">// async_init_decoder、video_disable、video_mime_type、mediacodec_default_name都是用户来设置的</span></span><br><span class="line"><span class="keyword">if</span> (ffp-&gt;async_init_decoder &amp;&amp; !ffp-&gt;video_disable &amp;&amp; ffp-&gt;video_mime_type &amp;&amp;<span class="built_in">strlen</span>(ffp-&gt;video_mime_type) &gt; <span class="number">0</span>&amp;&amp; ffp-&gt;mediacodec_default_name &amp;&amp; <span class="built_in">strlen</span>(ffp-&gt;mediacodec_default_name) &gt; <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (ffp-&gt;mediacodec_all_videos || ffp-&gt;mediacodec_avc || ffp-&gt;mediacodec_hevc || ffp-&gt;mediacodec_mpeg2) &#123;</span><br><span class="line">        decoder_init(&amp;is-&gt;viddec, <span class="literal">NULL</span>, &amp;is-&gt;videoq, is-&gt;continue_read_thread); <span class="comment">// 初始化is-&gt;viddec</span></span><br><span class="line">        ffp-&gt;node_vdec = ffpipeline_init_video_decoder(ffp-&gt;pipeline, ffp);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">is-&gt;initialized_decoder = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 省略部分无关代码</span></span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>这里只展示部分相关代码。可以看到：</p>
+<ol>
+<li><p>第一步先将initialized_decoder置为0，表示解码器还没有初始化，因为本方法是在prepare()中执行的，本方法一般情况下只会被调用一次。</p>
+</li>
+<li><p>第二步创建了新线程用于执行read_thread()方法(func_open_video_decoder()方法就是在这个线程中执行)，</p>
+</li>
+<li><p>判断async_init_decoder开关是否打开，如果打开了表示需要异步初始化解码器，然后这里需要处理初始化工作。而我们知道创建解码器时需要相关信息，比如编解码器名等，而这些正常情况下一般是在read_thread()方法中的avformat_open_input()方法执行之后才能知道对应的编解码器名，所以这里提前需要用户额外提供编解码器名等，所以需要判断video_mime_type和mediacodec_default_name。其中video_mime_type是配置编解码器时要用(详见<a href="6412e65f.html">func_config_video_decoder</a>)，mediacodec_default_name是初始化编解码器时要用（详见<a href="b99add2a.html">func_init_video_decoder</a>）。</p>
+<p>这几个条件之外正常还有硬解判断，比如mediacodec_all_videos等，详见<a href="65dc31d5.html">func_open_video_decoder</a>，所以异步打开解码器只对开启硬解这种情况才生效。</p>
+</li>
+<li><p>将initialized_decoder置为1。这里关于initialized_decoder其实只要时执行了ff_ffplay.c#stream_open()方法都会置为1。</p>
+<p><strong>小结</strong>：func_init_video_decoder指针函数的作用是初始化硬解解码器，而主要作用是当用户开启了异步初始化async_init_decoder开关后执行的，要想生效得有几个条件:指定了video_mime_type和mediacodec_default_name，以及开启了硬解。</p>
+</li>
+</ol>
+<h3 id="func-config-video-decoder"><a href="#func-config-video-decoder" class="headerlink" title="func_config_video_decoder"></a>func_config_video_decoder</h3><p>配置编解码器逻辑，返回配置结果码-1失败，0成功。和上面<a href="65dc31d5.html">func_open_video_decoder</a>类似，就是少了初始化解码器的逻辑，就只是将MediaCodec重新配置下。详细分析看<a href="6412e65f.html">func_config_video_decoder</a>。</p>
+<p>注意本方法唯一的调用路径为:ff_ffplay.c#read_thread()-&gt;ff_ffplay.c#stream_component_open()。我们知道read_thread()方法是在单独线程中执行的(至少和上面刚才分析的func_init_video_decoder没在一个线程)。相关部分代码如下:</p>
+<blockquote>
+<p>ff_ffplay.c#stream_component_open()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 省略部分代码</span></span><br><span class="line"><span class="keyword">if</span> (ffp-&gt;async_init_decoder) &#123;</span><br><span class="line">    <span class="keyword">while</span> (!is-&gt;initialized_decoder) &#123;</span><br><span class="line">    		SDL_Delay(<span class="number">5</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (ffp-&gt;node_vdec) &#123;</span><br><span class="line">        is-&gt;viddec.avctx = avctx;</span><br><span class="line">        ret = ffpipeline_config_video_decoder(ffp-&gt;pipeline, ffp);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 如果node_vdec不为空且重新配置时失败了   或者node_vdec为空，那么就调</span></span><br><span class="line">    <span class="comment">// 用pipeline中func_config_video_decoder方法重新创建一个IJKFF_Pipenode</span></span><br><span class="line">    <span class="keyword">if</span> (ret || !ffp-&gt;node_vdec) &#123;</span><br><span class="line">        decoder_init(&amp;is-&gt;viddec, avctx, &amp;is-&gt;videoq, is-&gt;continue_read_thread);</span><br><span class="line">        ffp-&gt;node_vdec = ffpipeline_open_video_decoder(ffp-&gt;pipeline, ffp);</span><br><span class="line">        <span class="keyword">if</span> (!ffp-&gt;node_vdec)</span><br><span class="line">        	<span class="keyword">goto</span> fail;</span><br><span class="line">    	&#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123; <span class="comment">// 不是异步，那就直接重新创建就行了</span></span><br><span class="line">        decoder_init(&amp;is-&gt;viddec, avctx, &amp;is-&gt;videoq, is-&gt;continue_read_thread);</span><br><span class="line">        ffp-&gt;node_vdec = ffpipeline_open_video_decoder(ffp-&gt;pipeline, ffp);</span><br><span class="line">        <span class="keyword">if</span> (!ffp-&gt;node_vdec)</span><br><span class="line">        		<span class="keyword">goto</span> fail;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 省略部分代码</span></span><br></pre></td></tr></table></figure>
+</blockquote>
+<ol>
+<li>第一步判断如果打开了async_init_decoder开关（上面func_init_video_decoder中刚分析过这个），那么判断initialized_decoder是否已置为1，也就是说判断上面ff_ffplay.c#stream_open()中的func_init_video_decoder()方法有没有执行，没有执行那么就一直等待。所以我理解这就是为什么在上面stream_open()中没有把async_init_decoder&#x3D;1的逻辑放在if里面执行了，因为如果用户少配置一个条件，那么这里就会无限等待播放失败。</li>
+<li>如果node_vdec创建成功(也就是func_init_video_decoder成功执行返回了，初始化成功了)，那么此时调用func_config_video_decoder来配置编解码器。即此时完成配置工作。我们知道编解码器准备好其实有两个过程:初始化和配置，只有这两个工作成功了才能开始解码。而async_init_decoder开关打开后（其他mediacodec_default_name等条件先省略）,会将这两个过程拆分到两个不同的线程中执行，也就是异步。而这两个过程同步执行的逻辑是<a href="65dc31d5.html">func_open_video_decoder</a>来实现的。</li>
+<li>后面步骤就不解释了，有注释。简单来说就是兜底操作，异步不成功就使用<a href="65dc31d5.html">func_open_video_decoder</a>同步打开。</li>
+</ol>
+<h3 id="func-open-audio-output"><a href="#func-open-audio-output" class="headerlink" title="func_open_audio_output"></a>func_open_audio_output</h3><p>创建音频输出器SDL_Aout，主要作用是播放音频(解码后PCM数据)，不包括音频解码，关于音频解码逻辑后面会有介绍。func_open_audio_output具体指向的函数为:</p>
+<blockquote>
+<p>ffpipeline_android.c#func_open_audio_output</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> SDL_Aout *<span class="title function_">func_open_audio_output</span><span class="params">(IJKFF_Pipeline *pipeline, FFPlayer *ffp)</span> &#123;</span><br><span class="line">      SDL_Aout *aout = <span class="literal">NULL</span>;</span><br><span class="line">      <span class="keyword">if</span> (ffp-&gt;opensles) &#123;</span><br><span class="line">          aout = SDL_AoutAndroid_CreateForOpenSLES();</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          aout = SDL_AoutAndroid_CreateForAudioTrack();</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> (aout)</span><br><span class="line">          SDL_AoutSetStereoVolume(aout, pipeline-&gt;opaque-&gt;left_volume, pipeline-&gt;opaque-&gt;right_volume);</span><br><span class="line">      <span class="keyword">return</span> aout;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到<a href="a1824301.html">SDL_Aout</a>有两种实现，<a href="289044cb.html">OpenSLES</a>方式的和Android的<a href="b8be9048.html">AudioTrack</a>方式，而具体是通过ffp-&gt;opensles开关来判断，该开关的设置可以看ff_ffplay_options.h#ffp_context_options中的定义。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>IJKFF_Pipeline其实是ijkplayer中封装的编解码逻辑的承载。通过其中指定方法为视频解码做准备工作以及返回相应解码逻辑实现(IJKFF_Pipenode)，也可以通过指定方法获取音频输出实现(SDL_Aout)。关于<a href="86c88415.html">IJKFF_Pipenode</a>和SDL_Aout后面文章会有介绍分析。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/86c88415.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">ijkplayer-IJKFF_Pipenode</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/7f796fe4.html">
+        <span class="next-text nav-default">ijkplayer之IjkMediaPlayer</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

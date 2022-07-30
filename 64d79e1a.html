@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-func_run_sync_loop"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/64d79e1a.html"/>
+
+
+<meta name="description" content="本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的func_run_sync_loop()方法。 该方法是IJKFF_Pipenode结构体中func_run_sync指针函数的主要执行逻辑(前提是开启mediacodec_sync开关)。本方法主要逻辑为：在同一线程中(同步方式)往视频解码器中填入待解码数据和从中读取出解码后数据。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-func_run_sync_loop">
+<meta property="og:url" content="https://youngkaaa.github.io/64d79e1a.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的func_run_sync_loop()方法。 该方法是IJKFF_Pipenode结构体中func_run_sync指针函数的主要执行逻辑(前提是开启mediacodec_sync开关)。本方法主要逻辑为：在同一线程中(同步方式)往视频解码器中填入待解码数据和从中读取出解码后数据。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-03-08T03:36:20.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.419Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-func_run_sync_loop - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-func_run_sync_loop
+        
+      </h1>
+
+      <time class="post-time">
+          3月 08 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的func_run_sync_loop()方法。</p>
+<p>该方法是IJKFF_Pipenode结构体中func_run_sync指针函数的主要执行逻辑(前提是开启mediacodec_sync开关)。本方法主要逻辑为：在同一线程中(同步方式)往视频解码器中填入待解码数据和从中读取出解码后数据。</p>
+<span id="more"></span>
+
+<blockquote>
+<p>ffpipenode_android_mediacodec_vdec.c#func_run_sync()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">func_run_sync_loop</span><span class="params">(IJKFF_Pipenode *node)</span> &#123;</span><br><span class="line">    JNIEnv *env = <span class="literal">NULL</span>;</span><br><span class="line">    IJKFF_Pipenode_Opaque *opaque = node-&gt;opaque;</span><br><span class="line">    FFPlayer *ffp = opaque-&gt;ffp;</span><br><span class="line">    VideoState *is = ffp-&gt;is;</span><br><span class="line">    Decoder *d = &amp;is-&gt;viddec;</span><br><span class="line">    PacketQueue *q = d-&gt;<span class="built_in">queue</span>;</span><br><span class="line">    <span class="type">int</span> ret = <span class="number">0</span>;</span><br><span class="line">    <span class="type">int</span> dequeue_count = <span class="number">0</span>;</span><br><span class="line">    <span class="type">int</span> enqueue_count = <span class="number">0</span>;</span><br><span class="line">    AVFrame *frame = <span class="literal">NULL</span>;</span><br><span class="line">    AVRational frame_rate = av_guess_frame_rate(is-&gt;ic, is-&gt;video_st, <span class="literal">NULL</span>);</span><br><span class="line">    <span class="keyword">if</span> (!opaque-&gt;acodec) &#123;</span><br><span class="line">        <span class="keyword">return</span> ffp_video_thread(ffp);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (JNI_OK != SDL_JNI_SetupThreadEnv(&amp;env)) &#123;</span><br><span class="line">        ALOGE(<span class="string">&quot;%s: SetupThreadEnv failed\n&quot;</span>, __func__);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    frame = av_frame_alloc();</span><br><span class="line">    <span class="keyword">if</span> (!frame)</span><br><span class="line">        <span class="keyword">goto</span> fail;</span><br><span class="line">    <span class="keyword">while</span> (!q-&gt;abort_request) &#123;</span><br><span class="line">        ret = drain_output_buffer2(env, node, AMC_SYNC_OUTPUT_TIMEOUT_US, &amp;dequeue_count, frame, frame_rate);</span><br><span class="line">        ret = feed_input_buffer2(env, node, AMC_SYNC_INPUT_TIMEOUT_US, &amp;enqueue_count);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fail:</span><br><span class="line">    av_frame_free(&amp;frame);</span><br><span class="line">    opaque-&gt;<span class="built_in">abort</span> = <span class="literal">true</span>;</span><br><span class="line">    <span class="keyword">if</span> (opaque-&gt;n_buf_out) &#123;</span><br><span class="line">        <span class="built_in">free</span>(opaque-&gt;amc_buf_out);</span><br><span class="line">        opaque-&gt;n_buf_out = <span class="number">0</span>;</span><br><span class="line">        opaque-&gt;amc_buf_out = <span class="literal">NULL</span>;</span><br><span class="line">        opaque-&gt;off_buf_out = <span class="number">0</span>;</span><br><span class="line">        opaque-&gt;last_queued_pts = AV_NOPTS_VALUE;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (opaque-&gt;acodec) &#123;</span><br><span class="line">        SDL_VoutAndroid_invalidateAllBuffers(opaque-&gt;weak_vout);</span><br><span class="line">    &#125;</span><br><span class="line">    SDL_AMediaCodec_stop(opaque-&gt;acodec);</span><br><span class="line">    SDL_AMediaCodec_decreaseReferenceP(&amp;opaque-&gt;acodec);</span><br><span class="line">    ALOGI(<span class="string">&quot;MediaCodec: %s: exit: %d&quot;</span>, __func__, ret);</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>本方法和<a href="8876f557.html">func_run_sync</a>方法中大部分逻辑是一样的，所以这里不做赘述。</p>
+<p>唯一不同的就是本方法中往解码器填入待解码数据(<a href="d8157190.html">feed_input_buffer2</a>)和从解码器中拿到解码后的数据(<a href="d8157190.html">drain_output_buffer2</a>)逻辑是在同一线程中执行的，也就是同步方式。这点需要区分。</p>
+<p><strong>小结：</strong></p>
+<p>本方法主要逻辑就是视频解码，包括往解码器中填入待解码数据(<a href="17303abc.html">feed_input_buffer</a>)和从解码器中拿到解码后的数据(<a href="70ca7e71.html">drain_output_buffer</a>)，需注意两者是在同一线程中(同步方式)执行的，这也是<a href="8876f557.html">func_run_sync</a>方法和本方法的主要差别。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/70ca7e71.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-drain_output_buffer</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/17303abc.html">
+        <span class="next-text nav-default">Ijkplayer-feed_input_buffer</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

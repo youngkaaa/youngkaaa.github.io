@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-SDL_Vout"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/6c4c2c27.html"/>
+
+
+<meta name="description" content="本文主要介绍位于ijksdl_vout.h文件中的SDL_Vout结构体。 SDL_Vout结构体主要作用是用来做视频帧展示的，更准确的来说是SDL_Vout控制SDL_VoutOverlay来实现视频帧展示的，SDL_VoutOverlay中有相关要展示绘制的帧数据，而SDL_Vout就是将这些数据妥善处理以展示出来的。与之对应的音频输出为SDL_Aout。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-SDL_Vout">
+<meta property="og:url" content="https://youngkaaa.github.io/6c4c2c27.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍位于ijksdl_vout.h文件中的SDL_Vout结构体。 SDL_Vout结构体主要作用是用来做视频帧展示的，更准确的来说是SDL_Vout控制SDL_VoutOverlay来实现视频帧展示的，SDL_VoutOverlay中有相关要展示绘制的帧数据，而SDL_Vout就是将这些数据妥善处理以展示出来的。与之对应的音频输出为SDL_Aout。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-03-21T01:10:47.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.427Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-SDL_Vout - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-SDL_Vout
+        
+      </h1>
+
+      <time class="post-time">
+          3月 21 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍位于ijksdl_vout.h文件中的SDL_Vout结构体。</p>
+<p>SDL_Vout结构体主要作用是用来做视频帧展示的，更准确的来说是SDL_Vout控制<a href="e0c53a8e.html">SDL_VoutOverlay</a>来实现视频帧展示的，<a href="e0c53a8e.html">SDL_VoutOverlay</a>中有相关要展示绘制的帧数据，而SDL_Vout就是将这些数据妥善处理以展示出来的。与之对应的音频输出为<a href="a1824301.html">SDL_Aout</a>。</p>
+<span id="more"></span>
+
+<blockquote>
+<p>TODO:</p>
+<p>1、opaque-&gt;egl，EGL了解</p>
+</blockquote>
+<blockquote>
+<p>ijksdl_vout.h#SDL_Vout</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">SDL_Vout</span> &#123;</span></span><br><span class="line">    SDL_mutex *mutex;</span><br><span class="line"></span><br><span class="line">    SDL_Class *opaque_class;</span><br><span class="line">    SDL_Vout_Opaque *opaque;</span><br><span class="line">    SDL_VoutOverlay *(*create_overlay)(<span class="type">int</span> width, <span class="type">int</span> height, <span class="type">int</span> frame_format, SDL_Vout *vout);</span><br><span class="line">    <span class="type">void</span> (*free_l)(SDL_Vout *vout);</span><br><span class="line">    <span class="type">int</span> (*display_overlay)(SDL_Vout *vout, SDL_VoutOverlay *overlay);</span><br><span class="line">    Uint32 overlay_format;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h4 id="1、初始化"><a href="#1、初始化" class="headerlink" title="1、初始化"></a>1、初始化</h4><p>SDL_Vout的初始化调用信息如下:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">IjkMediaPlayer.java#IjkMediaPlayer()</span><br><span class="line">	-&gt;IjkMediaPlayer.java#initPlayer()</span><br><span class="line">		-&gt;IjkMediaPlayer.java#native_setup()</span><br><span class="line">  		-&gt;ijkplayer_jni.c#IjkMediaPlayer_native_setup()</span><br><span class="line">  			-&gt;ijkplayer_android.c#ijkmp_android_create()</span><br><span class="line">  				-&gt;ijksdl_vout_android_surface.c#SDL_VoutAndroid_CreateForAndroidSurface()</span><br><span class="line">  					-&gt;ijksdl_vout_android_nativewindow.c#SDL_VoutAndroid_CreateForANativeWindow()</span><br></pre></td></tr></table></figure>
+
+<p>由上面调用信息可知，SDL_Vout的初始化是在上层IjkMediaPlayer构造方法初始化时，而最终的SDL_VoutAndroid_CreateForANativeWindow()方法这里就不分析了，在下面的字段分析中会将本方法才分开分析。</p>
+<h4 id="2、字段分析"><a href="#2、字段分析" class="headerlink" title="2、字段分析"></a>2、字段分析</h4><h5 id="mutex："><a href="#mutex：" class="headerlink" title="mutex："></a>mutex：</h5><p>略过！</p>
+<h5 id="opaque-class"><a href="#opaque-class" class="headerlink" title="opaque_class:"></a>opaque_class:</h5><p>其实就是SDL_Class结构体的实例，SDL_Class结构体就一个字段name，用于表示当前类名。在ijkplayer中有好多结构体都有这个字段。</p>
+<h5 id="opaque："><a href="#opaque：" class="headerlink" title="opaque："></a>opaque：</h5><p><a href="6093ab9f.html">SDL_Vout_Opaque</a>中主要是一些上层数据的集合，详见另外一篇文章关于<a href="6093ab9f.html">SDL_Vout_Opaque</a>的分析。</p>
+<h5 id="overlay-format："><a href="#overlay-format：" class="headerlink" title="overlay_format："></a>overlay_format：</h5><p>用户指定的展示格式。可以通过IjkMediaPlayer中的setOption()方法来指定，key为”overlay-format”。setOption()方法只会将值赋给FFPlayer结构体实例中的overlay_format，然后在后面每次创建<a href="e0c53a8e.html">SDL_VoutOverlay</a>时将ffp-&gt;overlay_format先赋值给ffp-&gt;vout-&gt;overlay_format。然后再调用create_overlay()方法来创建<a href="e0c53a8e.html">SDL_VoutOverlay</a>，在创建<a href="e0c53a8e.html">SDL_VoutOverlay</a>时会根据vout-&gt;overlay_format的类型来决定<a href="e0c53a8e.html">SDL_VoutOverlay</a>的format。当然该逻辑只对创建软解<a href="e0c53a8e.html">SDL_VoutOverlay</a>时时有效，硬解的<a href="e0c53a8e.html">SDL_VoutOverlay</a>的format永远都是SDL_FCC__AMC，不受vout-&gt;overlay_format的影响。</p>
+<h5 id="create-overlay"><a href="#create-overlay" class="headerlink" title="create_overlay:"></a>create_overlay:</h5><p>用来创建<a href="e0c53a8e.html">SDL_VoutOverlay</a>结构体实例的方法，也就是<a href="e0c53a8e.html">SDL_VoutOverlay</a>的创建需要依赖于SDL_Vout，这是两者之间的一个关系。下面看下该方法的参数:</p>
+<blockquote>
+<p>width</p>
+<p>当前要展示帧的宽度</p>
+</blockquote>
+<blockquote>
+<p>height</p>
+<p>当前要展示帧的高度</p>
+</blockquote>
+<blockquote>
+<p>frame_format</p>
+<p>当前要展示帧的格式，如果该帧是视频硬解产生的话，那么就是IJK_AV_PIX_FMT__ANDROID_MEDIACODEC(详见[drain_output_buffer中第5步中的分析)，否则就是视频软解的，那么frame_format就很多了。</p>
+</blockquote>
+<blockquote>
+<p>vout</p>
+<p>SDL_Vout实例，存储在overlay-&gt;opaque-&gt;vout中。用于后续从<a href="e0c53a8e.html">SDL_VoutOverlay</a>中拿到其对应的SDL_Vout。全局只有一个SDL_Vout实例，其初始化时机在上面第部分见过了，其初始化完后是存储在mp-&gt;ffplayer-&gt;vout中的，后面SDL_Vout实例基本都是该实例，所以说全局一个SDL_Vout，对一个若干个<a href="e0c53a8e.html">SDL_VoutOverlay</a>，然后在每个<a href="e0c53a8e.html">SDL_VoutOverlay</a>的opaque中又都指向同一个SDL_Vout实例。</p>
+</blockquote>
+<p>该指针函数的唯一赋值为：</p>
+<blockquote>
+<p>ijksdl_vout_android_nativewindow.c#func_create_overlay_l()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> SDL_VoutOverlay *<span class="title function_">func_create_overlay_l</span><span class="params">(<span class="type">int</span> width, <span class="type">int</span> height, <span class="type">int</span> frame_format, SDL_Vout *vout)</span> &#123;</span><br><span class="line">    <span class="keyword">switch</span> (frame_format) &#123;</span><br><span class="line">        <span class="keyword">case</span> IJK_AV_PIX_FMT__ANDROID_MEDIACODEC:</span><br><span class="line">            <span class="keyword">return</span> SDL_VoutAMediaCodec_CreateOverlay(width, height, vout);</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            <span class="keyword">return</span> SDL_VoutFFmpeg_CreateOverlay(width, height, frame_format, vout);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>可以看到，其实就是根据传入的frame_format来创建不同的<a href="e0c53a8e.html">SDL_VoutOverlay</a>，上面提到的IJK_AV_PIX_FMT__ANDROID_MEDIACODEC对应着硬解的数据，所以SDL_VoutAMediaCodec_CreateOverlay创建的就是硬解的<a href="e0c53a8e.html">SDL_VoutOverlay</a>实例，反之另外一个对应的就是软解的实现了。关于这两个方法内是如何创建<a href="e0c53a8e.html">SDL_VoutOverlay</a>实例的在<a href="e0c53a8e.html">SDL_VoutOverlay</a>中会有介绍，这里不再赘述。</p>
+<h5 id="free-l"><a href="#free-l" class="headerlink" title="free_l:"></a>free_l:</h5><p>用于释放该SDL_Vout实例。其唯一方法实现为:</p>
+<blockquote>
+<p>ijksdl_vout_android_nativewindow.c#func_free_l()</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">func_free_l</span><span class="params">(SDL_Vout *vout)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (!vout)</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    SDL_Vout_Opaque *opaque = vout-&gt;opaque;</span><br><span class="line">    <span class="keyword">if</span> (opaque) &#123;</span><br><span class="line">        SDL_AMediaCodecBufferProxy **begin = (SDL_AMediaCodecBufferProxy **) ISDL_Array__begin(</span><br><span class="line">                &amp;opaque-&gt;overlay_manager);</span><br><span class="line">        SDL_AMediaCodecBufferProxy **end = (SDL_AMediaCodecBufferProxy **) ISDL_Array__end(&amp;opaque-&gt;overlay_manager);</span><br><span class="line">        <span class="keyword">for</span> (; begin &lt; end; ++begin) &#123;</span><br><span class="line">            SDL_AMediaCodecBufferProxy_destroyP(begin);</span><br><span class="line">        &#125;</span><br><span class="line">        ISDL_Array__clear(&amp;opaque-&gt;overlay_pool);</span><br><span class="line">        ISDL_Array__clear(&amp;opaque-&gt;overlay_manager);</span><br><span class="line">        <span class="keyword">if</span> (opaque-&gt;native_window) &#123;</span><br><span class="line">            ANativeWindow_release(opaque-&gt;native_window);</span><br><span class="line">            opaque-&gt;native_window = <span class="literal">NULL</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        IJK_EGL_freep(&amp;opaque-&gt;egl);</span><br><span class="line"></span><br><span class="line">        SDL_AMediaCodec_decreaseReferenceP(&amp;opaque-&gt;acodec);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    SDL_Vout_FreeInternal(vout);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其实最重要的还是释放SDL_Vout中的<a href="6093ab9f.html">SDL_Vout_Opaque</a>里的overlay_manager和overlay_pool。具体的看<a href="6093ab9f.html">SDL_Vout_Opaque</a>中关于这两个字段的分析。</p>
+<h5 id="display-overlay"><a href="#display-overlay" class="headerlink" title="display_overlay:"></a>display_overlay:</h5><p>使用SDL_Vout来展示对应<a href="e0c53a8e.html">SDL_VoutOverlay</a>实例，该方法是视频帧展示的主要逻辑，其对应的实现为:</p>
+<blockquote>
+<p>ijksdl_vout_android_nativewindow.c#func_display_overlay_l()</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">func_display_overlay_l</span><span class="params">(SDL_Vout *vout, SDL_VoutOverlay *overlay)</span> &#123;</span><br><span class="line">    SDL_Vout_Opaque *opaque = vout-&gt;opaque;</span><br><span class="line">    ANativeWindow *native_window = opaque-&gt;native_window;</span><br><span class="line">    <span class="keyword">if</span> (!native_window) &#123;</span><br><span class="line">        <span class="keyword">if</span> (!opaque-&gt;null_native_window_warned) &#123;</span><br><span class="line">            opaque-&gt;null_native_window_warned = <span class="number">1</span>;</span><br><span class="line">            ALOGW(<span class="string">&quot;func_display_overlay_l: NULL native_window&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        opaque-&gt;null_native_window_warned = <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (!overlay) &#123;</span><br><span class="line">        ALOGE(<span class="string">&quot;func_display_overlay_l: NULL overlay&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (overlay-&gt;w &lt;= <span class="number">0</span> || overlay-&gt;h &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">        ALOGE(<span class="string">&quot;func_display_overlay_l: invalid overlay dimensions(%d, %d)&quot;</span>, overlay-&gt;w, overlay-&gt;h);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">switch</span> (overlay-&gt;format) &#123;</span><br><span class="line">        <span class="keyword">case</span> SDL_FCC__AMC: &#123; <span class="comment">// 硬解显示方式</span></span><br><span class="line">            <span class="comment">// only ANativeWindow support</span></span><br><span class="line">            IJK_EGL_terminate(opaque-&gt;egl);</span><br><span class="line">            <span class="keyword">return</span> SDL_VoutOverlayAMediaCodec_releaseFrame_l(overlay, <span class="literal">NULL</span>, <span class="literal">true</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">case</span> SDL_FCC_RV24:</span><br><span class="line">        <span class="keyword">case</span> SDL_FCC_I420:</span><br><span class="line">        <span class="keyword">case</span> SDL_FCC_I444P10LE: &#123;</span><br><span class="line">            <span class="comment">// only GLES support</span></span><br><span class="line">            <span class="keyword">if</span> (opaque-&gt;egl) &#123;</span><br><span class="line">                <span class="keyword">return</span> IJK_EGL_display(opaque-&gt;egl, native_window, overlay);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">case</span> SDL_FCC_YV12:</span><br><span class="line">        <span class="keyword">case</span> SDL_FCC_RV16:</span><br><span class="line">        <span class="keyword">case</span> SDL_FCC_RV32: &#123;</span><br><span class="line">            <span class="comment">// both GLES &amp; ANativeWindow support</span></span><br><span class="line">            <span class="keyword">if</span> (vout-&gt;overlay_format == SDL_FCC__GLES2 &amp;&amp; opaque-&gt;egl) &#123;</span><br><span class="line">                <span class="keyword">return</span> IJK_EGL_display(opaque-&gt;egl, native_window, overlay);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// fallback to ANativeWindow</span></span><br><span class="line">    IJK_EGL_terminate(opaque-&gt;egl);</span><br><span class="line">    <span class="keyword">return</span> SDL_Android_NativeWindow_display_l(native_window, overlay);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>本方法中，首先判断存储在vout-&gt;opaque-&gt;native_window是否为空，也就是<a href="6093ab9f.html">SDL_Vout_Opaque</a>中的native_window，它和上层的Surface对象实例等价，然后判断其如果为空那么就返回-1，其中null_native_window_warned是用来输出警告提示信息的，用其防止多次输出警告信息。</p>
+<p>接着判断入参overlay，也就是<a href="e0c53a8e.html">SDL_VoutOverlay</a>是否为空，为空则还是返回-1表示渲染失败，当然返回值基本没用到过。接着还是判断overlay中的宽高是否合法，overlay中的宽高其实就是帧的宽高，详见<a href="e0c53a8e.html">SDL_VoutOverlay</a>的创建。</p>
+<p>如果这些都合法了，那么下面开始根据<a href="e0c53a8e.html">SDL_VoutOverlay</a>的格式format来做不同的展示策略：</p>
+<ul>
+<li>是SDL_FCC_AMC类型那么就调用SDL_VoutOverlayAMediaCodec_releaseFrame_l()方法，也就是上层MediaCodec中的releaseOutputBuffer()方法来渲染对应的帧数据，关于SDL_FCC_AMC的话其表示的就是当前<a href="e0c53a8e.html">SDL_VoutOverlay</a>是硬解格式的，具体可以看<a href="e0c53a8e.html">SDL_VoutOverlay</a>中的创建逻辑。</li>
+<li>如果是其他的类型符合条件的就使用opaque中的egl来处理展示，关于EGL的解释我暂时也不太了解，留个TODO吧。</li>
+<li>条件都不满足那么兜底使用SDL_Android_NativeWindow_display_l()方法来展示，当然大多数应该都走的这个。本方法内主要就是利用ANativeWindow的一些api来将<a href="e0c53a8e.html">SDL_VoutOverlay</a>中的数据经过转换后放入其中，然后通知ANativeWindow来展示。</li>
+</ul>
+<p>上面提及的一些格式都是帧图像的一些存储方式，YUV呀RGB呀之类的。后面这些有空再学习，这里只大致分析流程。</p>
+<h4 id="3、小结"><a href="#3、小结" class="headerlink" title="3、小结"></a>3、小结</h4><p>通过上面的分析可以大致了解到SDL_Vout和<a href="e0c53a8e.html">SDL_VoutOverlay</a>的联系和差别了。当然SDL_Vout中另外一个重要的角色就是<a href="6093ab9f.html">SDL_Vout_Opaque</a>。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/e0c53a8e.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-SDL_VoutOverlay</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/57193a84.html">
+        <span class="next-text nav-default">Ijkplayer-VideoDecodeGuide</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

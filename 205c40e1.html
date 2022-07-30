@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-video_display2"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/205c40e1.html"/>
+
+
+<meta name="description" content="本文主要介绍位于ff_ffplay.c文件中的video_display2()方法。 该方法主要的作用是用来刷新展示视频帧的，具体调用路径分析详见video_refresh_thread。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-video_display2">
+<meta property="og:url" content="https://youngkaaa.github.io/205c40e1.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍位于ff_ffplay.c文件中的video_display2()方法。 该方法主要的作用是用来刷新展示视频帧的，具体调用路径分析详见video_refresh_thread。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-03-22T09:51:08.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.424Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-video_display2 - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-video_display2
+        
+      </h1>
+
+      <time class="post-time">
+          3月 22 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍位于ff_ffplay.c文件中的video_display2()方法。</p>
+<p>该方法主要的作用是用来刷新展示视频帧的，具体调用路径分析详见<a href="e1139ab6.html">video_refresh_thread</a>。</p>
+<span id="more"></span>
+
+<blockquote>
+<p>ff_ffplay.c#video_display2()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">video_display2</span><span class="params">(FFPlayer *ffp)</span> &#123;</span><br><span class="line">    VideoState *is = ffp-&gt;is;</span><br><span class="line">    <span class="keyword">if</span> (is-&gt;video_st)</span><br><span class="line">        video_image_display2(ffp);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>可以看出，本方法的主要逻辑是在video_image_display2()中的，所以下面着重分析这个方法:</p>
+<blockquote>
+<p>ff_ffplay.c#video_image_display2()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">video_image_display2</span><span class="params">(FFPlayer *ffp)</span> &#123;</span><br><span class="line">    VideoState *is = ffp-&gt;is;</span><br><span class="line">    Frame *vp;</span><br><span class="line">    Frame *sp = <span class="literal">NULL</span>;</span><br><span class="line">  	<span class="comment">// 第1步</span></span><br><span class="line">    vp = frame_queue_peek_last(&amp;is-&gt;pictq);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (vp-&gt;bmp) &#123;</span><br><span class="line">      	<span class="comment">// 第2步</span></span><br><span class="line">        <span class="keyword">if</span> (is-&gt;subtitle_st) &#123;</span><br><span class="line">            <span class="keyword">if</span> (frame_queue_nb_remaining(&amp;is-&gt;subpq) &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                sp = frame_queue_peek(&amp;is-&gt;subpq);</span><br><span class="line">                <span class="keyword">if</span> (vp-&gt;pts &gt;= sp-&gt;pts + ((<span class="type">float</span>) sp-&gt;sub.start_display_time / <span class="number">1000</span>)) &#123;</span><br><span class="line">                    <span class="keyword">if</span> (!sp-&gt;uploaded) &#123;</span><br><span class="line">                        <span class="keyword">if</span> (sp-&gt;sub.num_rects &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                            <span class="type">char</span> buffered_text[<span class="number">4096</span>];</span><br><span class="line">                            <span class="keyword">if</span> (sp-&gt;sub.rects[<span class="number">0</span>]-&gt;text) &#123;</span><br><span class="line">                                <span class="built_in">strncpy</span>(buffered_text, sp-&gt;sub.rects[<span class="number">0</span>]-&gt;text, <span class="number">4096</span>);</span><br><span class="line">                            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (sp-&gt;sub.rects[<span class="number">0</span>]-&gt;ass) &#123;</span><br><span class="line">                                parse_ass_subtitle(sp-&gt;sub.rects[<span class="number">0</span>]-&gt;ass, buffered_text);</span><br><span class="line">                            &#125;</span><br><span class="line">                            ffp_notify_msg4(ffp, FFP_MSG_TIMED_TEXT, <span class="number">0</span>, <span class="number">0</span>, buffered_text, <span class="keyword">sizeof</span>(buffered_text));</span><br><span class="line">                        &#125;</span><br><span class="line">                        sp-&gt;uploaded = <span class="number">1</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      	<span class="comment">// 第3步</span></span><br><span class="line">        <span class="keyword">if</span> (ffp-&gt;render_wait_start &amp;&amp; !ffp-&gt;start_on_prepared &amp;&amp; is-&gt;pause_req) &#123;</span><br><span class="line">            <span class="keyword">if</span> (!ffp-&gt;first_video_frame_rendered) &#123;</span><br><span class="line">                ffp-&gt;first_video_frame_rendered = <span class="number">1</span>;</span><br><span class="line">                ffp_notify_msg1(ffp, FFP_MSG_VIDEO_RENDERING_START);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">while</span> (is-&gt;pause_req &amp;&amp; !is-&gt;abort_request) &#123;</span><br><span class="line">                SDL_Delay(<span class="number">20</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      	<span class="comment">// 第4步</span></span><br><span class="line">        SDL_VoutDisplayYUVOverlay(ffp-&gt;vout, vp-&gt;bmp);</span><br><span class="line">        ffp-&gt;stat.vfps = SDL_SpeedSamplerAdd(&amp;ffp-&gt;vfps_sampler, FFP_SHOW_VFPS_FFPLAY, <span class="string">&quot;vfps[ffplay]&quot;</span>);</span><br><span class="line">      	<span class="comment">// 第5步</span></span><br><span class="line">        <span class="keyword">if</span> (!ffp-&gt;first_video_frame_rendered) &#123;</span><br><span class="line">            ffp-&gt;first_video_frame_rendered = <span class="number">1</span>;</span><br><span class="line">            ffp_notify_msg1(ffp, FFP_MSG_VIDEO_RENDERING_START);</span><br><span class="line">        &#125;</span><br><span class="line">      	<span class="comment">// 第6步</span></span><br><span class="line">        <span class="keyword">if</span> (is-&gt;latest_video_seek_load_serial == vp-&gt;serial) &#123;</span><br><span class="line">            <span class="type">int</span> latest_video_seek_load_serial = __atomic_exchange_n(&amp;(is-&gt;latest_video_seek_load_serial), <span class="number">-1</span>,memory_order_seq_cst);</span><br><span class="line">            <span class="keyword">if</span> (latest_video_seek_load_serial == vp-&gt;serial) &#123;</span><br><span class="line">                ffp-&gt;stat.latest_seek_load_duration = (av_gettime() - is-&gt;latest_seek_load_start_at) / <span class="number">1000</span>;</span><br><span class="line">                <span class="keyword">if</span> (ffp-&gt;av_sync_type == AV_SYNC_VIDEO_MASTER) &#123;</span><br><span class="line">                    ffp_notify_msg2(ffp, FFP_MSG_VIDEO_SEEK_RENDERING_START, <span class="number">1</span>);</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    ffp_notify_msg2(ffp, FFP_MSG_VIDEO_SEEK_RENDERING_START, <span class="number">0</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</blockquote>
+<p>精简下代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">video_image_display2</span><span class="params">(FFPlayer *ffp)</span> &#123;</span><br><span class="line">	<span class="comment">// 第1步</span></span><br><span class="line"> <span class="keyword">if</span> (vp-&gt;bmp) &#123;</span><br><span class="line">   	<span class="comment">// 第2步</span></span><br><span class="line">   	<span class="comment">// 第3步</span></span><br><span class="line">   	<span class="comment">// 第4步</span></span><br><span class="line">   	<span class="comment">// 第5步</span></span><br><span class="line">   	<span class="comment">// 第6步</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以说，后面的2-6步的执行前提是bmp不为空，关于bmp的创建在<a href="fe1f1f62.html">queue_picture</a>中的第3步内有介绍过。</p>
+<h5 id="第1步："><a href="#第1步：" class="headerlink" title="第1步："></a>第1步：</h5><p>需注意，在<a href="e1139ab6.html">video_refresh_thread</a>中最终调用本方法前，已经调用了<a href="866c32fa.html">frame_queue_next</a>方法来将lastvp丢掉了，所以此时调用<a href="866c32fa.html">frame_queue_peek_last</a>方法获取的就是<a href="e1139ab6.html">video_refresh_thread</a>中的vp，也就是合法的当前该展示的帧了。</p>
+<h5 id="第2步："><a href="#第2步：" class="headerlink" title="第2步："></a>第2步：</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (is-&gt;subtitle_st) &#123;</span><br><span class="line">    <span class="keyword">if</span> (frame_queue_nb_remaining(&amp;is-&gt;subpq) &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        sp = frame_queue_peek(&amp;is-&gt;subpq);</span><br><span class="line">        <span class="keyword">if</span> (vp-&gt;pts &gt;= sp-&gt;pts + ((<span class="type">float</span>) sp-&gt;sub.start_display_time / <span class="number">1000</span>)) &#123;</span><br><span class="line">            <span class="keyword">if</span> (!sp-&gt;uploaded) &#123;</span><br><span class="line">                <span class="keyword">if</span> (sp-&gt;sub.num_rects &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                    <span class="type">char</span> buffered_text[<span class="number">4096</span>];</span><br><span class="line">                    <span class="keyword">if</span> (sp-&gt;sub.rects[<span class="number">0</span>]-&gt;text) &#123;</span><br><span class="line">                        <span class="built_in">strncpy</span>(buffered_text, sp-&gt;sub.rects[<span class="number">0</span>]-&gt;text, <span class="number">4096</span>);</span><br><span class="line">                    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (sp-&gt;sub.rects[<span class="number">0</span>]-&gt;ass) &#123;</span><br><span class="line">                        parse_ass_subtitle(sp-&gt;sub.rects[<span class="number">0</span>]-&gt;ass, buffered_text);</span><br><span class="line">                    &#125;</span><br><span class="line">                    ffp_notify_msg4(ffp, FFP_MSG_TIMED_TEXT, <span class="number">0</span>, <span class="number">0</span>, buffered_text, <span class="keyword">sizeof</span>(buffered_text));</span><br><span class="line">                &#125;</span><br><span class="line">                sp-&gt;uploaded = <span class="number">1</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>处理字幕相关的，主要是字幕内容回调。</p>
+<h5 id="第3步："><a href="#第3步：" class="headerlink" title="第3步："></a>第3步：</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (ffp-&gt;render_wait_start &amp;&amp; !ffp-&gt;start_on_prepared &amp;&amp; is-&gt;pause_req) &#123;</span><br><span class="line">    <span class="keyword">if</span> (!ffp-&gt;first_video_frame_rendered) &#123;</span><br><span class="line">        ffp-&gt;first_video_frame_rendered = <span class="number">1</span>;</span><br><span class="line">        ffp_notify_msg1(ffp, FFP_MSG_VIDEO_RENDERING_START);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">while</span> (is-&gt;pause_req &amp;&amp; !is-&gt;abort_request) &#123;</span><br><span class="line">        SDL_Delay(<span class="number">20</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>ffp-&gt;render_wait_start</p>
+<p>官方注释为:render wait start😂，等开始播放时再绘制渲染。由用户指定，默认为0。在音频和视频输出的方法中都有如上判断，我的理解是:当其开启时，只要没开始播放，那么就不渲染(音频输出和视频展示)，尽管有数据可渲染也不会渲染而是一直等待，等开始播放时才渲染。</p>
+</blockquote>
+<blockquote>
+<p>ffp-&gt;start_on_prepared</p>
+<p>是否在准备好之后自动开始播放。由用户指定，默认为0。如果开关打开，那么当prepare成功时，会在消息处理体中自动开始播放，详见ijkplayer.c#ijkmp_get_msg()方法。</p>
+</blockquote>
+<blockquote>
+<p>is-&gt;pause_req</p>
+<p>当前是否是暂停。暂停是会将其置为1，否则置为0。</p>
+</blockquote>
+<p>所以这里就是如果条件满足时，就一直等待休眠直到开始播放了，也就是is-&gt;pause_req&#x3D;0了。这里还有个first_video_frame_rendered的判断:</p>
+<blockquote>
+<p>ffp-&gt;first_video_frame_rendered</p>
+<p>当前视频轨道是否已渲染过第一帧。主要起标识作用，用来判断是否已渲染过第一个视频帧，如果没有的话那么当前准备渲染的就是第一帧，那么将会发送FFP_MSG_VIDEO_RENDERING_START消息。</p>
+</blockquote>
+<p>所以我认为这里判断first_video_frame_rendered并返回FFP_MSG_VIDEO_RENDERING_START没有必要，完全可以挪到后面等正式展示绘制了再展示，因为在下面第5步中还会有一个判断。</p>
+<h5 id="第4步："><a href="#第4步：" class="headerlink" title="第4步："></a>第4步：</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">SDL_VoutDisplayYUVOverlay(ffp-&gt;vout, vp-&gt;bmp);</span><br><span class="line">ffp-&gt;stat.vfps = SDL_SpeedSamplerAdd(&amp;ffp-&gt;vfps_sampler, FFP_SHOW_VFPS_FFPLAY, <span class="string">&quot;vfps[ffplay]&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>这一步中的SDL_VoutDisplayYUVOverlay()就是本方法的主要逻辑实现，其他的都是一些合法性等判断。SDL_VoutDisplayYUVOverlay()方法的主要作用就是展示该帧数据。传入的是ffp-&gt;vout和vp-&gt;bmp，也就是<a href="6c4c2c27.html">SDL_Vout</a>和<a href="e0c53a8e.html">SDL_VoutOverlay</a>，最终调用的是<a href="6c4c2c27.html">SDL_Vout</a>中的display_overlay()方法来展示<a href="e0c53a8e.html">SDL_VoutOverlay</a>中的数据。而关于bmp的创建在前面的<a href="fe1f1f62.html">queue_picture</a>中的第3步内有介绍过。</p>
+<h5 id="第5步："><a href="#第5步：" class="headerlink" title="第5步："></a>第5步：</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (!ffp-&gt;first_video_frame_rendered) &#123;</span><br><span class="line">    ffp-&gt;first_video_frame_rendered = <span class="number">1</span>;</span><br><span class="line">    ffp_notify_msg1(ffp, FFP_MSG_VIDEO_RENDERING_START);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这一步在上面第3步中提到过了。而在第3步中也说过感觉第3步中的first_video_frame_rendered判断完全可以挪到这里来，等真正的渲染操作执行了再发送FFP_MSG_VIDEO_RENDERING_START也行。</p>
+<h5 id="第6步："><a href="#第6步：" class="headerlink" title="第6步："></a>第6步：</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">    <span class="keyword">if</span> (is-&gt;latest_video_seek_load_serial == vp-&gt;serial) &#123;</span><br><span class="line">        <span class="type">int</span> latest_video_seek_load_serial = __atomic_exchange_n(&amp;(is-&gt;latest_video_seek_load_serial), <span class="number">-1</span>,memory_order_seq_cst);</span><br><span class="line">        <span class="keyword">if</span> (latest_video_seek_load_serial == vp-&gt;serial) &#123;</span><br><span class="line">            ffp-&gt;stat.latest_seek_load_duration = (av_gettime() - is-&gt;latest_seek_load_start_at) / <span class="number">1000</span>;</span><br><span class="line">            <span class="keyword">if</span> (ffp-&gt;av_sync_type == AV_SYNC_VIDEO_MASTER) &#123;</span><br><span class="line">                ffp_notify_msg2(ffp, FFP_MSG_VIDEO_SEEK_RENDERING_START, <span class="number">1</span>);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                ffp_notify_msg2(ffp, FFP_MSG_VIDEO_SEEK_RENDERING_START, <span class="number">0</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>第6步主要处理seek完毕的消息通知工作。</p>
+<blockquote>
+<p>is-&gt;latest_video_seek_load_serial</p>
+<p>记录当前seek发生时，videoq也就是存储视频待解码数据的<a href="b5aae3f7.html">PacketQueue</a>队列中的serial。在ff_ffplay.c中的<a href="f13bb020.html">read_thread()</a>中，发生了seek之后，会往视频、音频和字幕的<a href="b5aae3f7.html">PacketQueue</a>队列分别放入一个flush_pkt，用于表示当前发生过seek，然后<a href="b5aae3f7.html">PacketQueue</a>队列的serial会自增(之后放入队列的AVPacket的serial都会是自增之后的serial)，自增完serial之后会将对应<a href="b5aae3f7.html">PacketQueue</a>队列的serial保存到对应的值中，比如视频的就是保存到latest_video_seek_load_serial中，音频的保存到latest_audio_seek_load_serial中，用于后续使用。如果没有seek，那么默认就是-1，如果不是-1，那么表示当前是seek的。</p>
+</blockquote>
+<p>所以这里判断如果latest_video_seek_load_serial和当前要展示的vp的serial相等，表示当前vp是seek成功后视频帧，那么再发送FFP_MSG_VIDEO_SEEK_RENDERING_START消息。注意这里判断完就立马将其重置为-1了。</p>
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>本方法主要用于展示frame_queue_peek_last(&amp;is-&gt;pictq)位置的视频帧数据，主要展示逻辑是SDL_VoutDisplayYUVOverlay()方法，也就是调用<a href="6c4c2c27.html">SDL_Vout</a>中的display_overlay()方法来展示<a href="e0c53a8e.html">SDL_VoutOverlay</a>中的数据。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/b5aae3f7.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-PacketQueue</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/217ddfcf.html">
+        <span class="next-text nav-default">Ijkplayer-Clock</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

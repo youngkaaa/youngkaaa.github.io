@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-decoder_decode_frame"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/4dc50342.html"/>
+
+
+<meta name="description" content="本文主要介绍位于ff_ffplay.c文件中的decoder_decode_frame()方法。 该方法是视频软解、音频解码、字幕解码的主要执行逻辑，主要逻辑包括从解码器中读取出解码后的数据以及往解码器中放入下一个待解码数据。类似于视频硬解(异步)逻辑中feed_input_buffer的drain_output_buffer方法的逻辑总和。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-decoder_decode_frame">
+<meta property="og:url" content="https://youngkaaa.github.io/4dc50342.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍位于ff_ffplay.c文件中的decoder_decode_frame()方法。 该方法是视频软解、音频解码、字幕解码的主要执行逻辑，主要逻辑包括从解码器中读取出解码后的数据以及往解码器中放入下一个待解码数据。类似于视频硬解(异步)逻辑中feed_input_buffer的drain_output_buffer方法的逻辑总和。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-03-14T01:32:46.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.422Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-decoder_decode_frame - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-decoder_decode_frame
+        
+      </h1>
+
+      <time class="post-time">
+          3月 14 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍位于ff_ffplay.c文件中的decoder_decode_frame()方法。</p>
+<p>该方法是视频软解、音频解码、字幕解码的主要执行逻辑，主要逻辑包括从解码器中读取出解码后的数据以及往解码器中放入下一个待解码数据。类似于视频硬解(异步)逻辑中<a href="17303abc">feed_input_buffer</a>的<a href="70ca7e71.html">drain_output_buffer</a>方法的逻辑总和。</p>
+<span id="more"></span>
+
+<blockquote>
+<p>TODO:</p>
+<ol>
+<li>avcodec_receive_frame()方法分析</li>
+<li>avcodec_send_packet()方法分析</li>
+<li>avcodec_decode_subtitle2()方法分析</li>
+</ol>
+</blockquote>
+<blockquote>
+<p>ff_ffplay.c#decoder_decode_frame()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">decoder_decode_frame</span><span class="params">(FFPlayer *ffp, Decoder *d, AVFrame *frame, AVSubtitle *sub)</span> &#123;</span><br><span class="line">    <span class="type">int</span> ret = AVERROR(EAGAIN);</span><br><span class="line">  	</span><br><span class="line">    <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">        AVPacket pkt;</span><br><span class="line">      	<span class="comment">// 第1步</span></span><br><span class="line">        <span class="keyword">if</span> (d-&gt;<span class="built_in">queue</span>-&gt;serial == d-&gt;pkt_serial) &#123;</span><br><span class="line">            <span class="keyword">do</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (d-&gt;<span class="built_in">queue</span>-&gt;abort_request) &#123;</span><br><span class="line">                    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">switch</span> (d-&gt;avctx-&gt;codec_type) &#123;</span><br><span class="line">                    <span class="keyword">case</span> AVMEDIA_TYPE_VIDEO:</span><br><span class="line">                        ret = avcodec_receive_frame(d-&gt;avctx, frame);</span><br><span class="line">                        <span class="keyword">if</span> (ret &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">                            ffp-&gt;stat.vdps = SDL_SpeedSamplerAdd(&amp;ffp-&gt;vdps_sampler, FFP_SHOW_VDPS_AVCODEC,</span><br><span class="line">                                                                 <span class="string">&quot;vdps[avcodec]&quot;</span>);</span><br><span class="line">                            <span class="keyword">if</span> (ffp-&gt;decoder_reorder_pts == <span class="number">-1</span>) &#123;</span><br><span class="line">                                frame-&gt;pts = frame-&gt;best_effort_timestamp;</span><br><span class="line">                            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!ffp-&gt;decoder_reorder_pts) &#123;</span><br><span class="line">                                frame-&gt;pts = frame-&gt;pkt_dts;</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    <span class="keyword">case</span> AVMEDIA_TYPE_AUDIO:</span><br><span class="line">                        ret = avcodec_receive_frame(d-&gt;avctx, frame);</span><br><span class="line">                        <span class="keyword">if</span> (ret &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">                            AVRational tb = (AVRational) &#123;<span class="number">1</span>, frame-&gt;sample_rate&#125;;</span><br><span class="line">                            <span class="keyword">if</span> (frame-&gt;pts != AV_NOPTS_VALUE)</span><br><span class="line">                                frame-&gt;pts = av_rescale_q(frame-&gt;pts, av_codec_get_pkt_timebase(d-&gt;avctx), tb);</span><br><span class="line">                            <span class="keyword">else</span> <span class="keyword">if</span> (d-&gt;next_pts != AV_NOPTS_VALUE)</span><br><span class="line">                                frame-&gt;pts = av_rescale_q(d-&gt;next_pts, d-&gt;next_pts_tb, tb);</span><br><span class="line">                            <span class="keyword">if</span> (frame-&gt;pts != AV_NOPTS_VALUE) &#123;</span><br><span class="line">                                d-&gt;next_pts = frame-&gt;pts + frame-&gt;nb_samples;</span><br><span class="line">                                d-&gt;next_pts_tb = tb;</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    <span class="keyword">default</span>:</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (ret == AVERROR_EOF) &#123;</span><br><span class="line">                    d-&gt;finished = d-&gt;pkt_serial;</span><br><span class="line">                    avcodec_flush_buffers(d-&gt;avctx);</span><br><span class="line">                    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (ret &gt;= <span class="number">0</span>)</span><br><span class="line">                    <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">                <span class="comment">// EAGAIN:output is not available in this state - user must try to send new input</span></span><br><span class="line">                <span class="comment">// 获取解码数据完成，请重新放入新的待解码数据后再来获取解码后的数据。</span></span><br><span class="line">                <span class="comment">// 所以do while中就是一直循环调用avcodec_receive_frame读取解码后的帧，直到返回了EAGAIN表示获取解码数据完成了</span></span><br><span class="line">                <span class="comment">// AVERROR(EAGAIN):   output is not available in this state - user must try to send new input</span></span><br><span class="line">            &#125; <span class="keyword">while</span> (ret != AVERROR(EAGAIN));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 第2步</span></span><br><span class="line">        <span class="keyword">do</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (d-&gt;<span class="built_in">queue</span>-&gt;nb_packets == <span class="number">0</span>)</span><br><span class="line">                SDL_CondSignal(d-&gt;empty_queue_cond);</span><br><span class="line">            <span class="keyword">if</span> (d-&gt;packet_pending) &#123;</span><br><span class="line">                av_packet_move_ref(&amp;pkt, &amp;d-&gt;pkt);</span><br><span class="line">                d-&gt;packet_pending = <span class="number">0</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (packet_queue_get_or_buffering(ffp, d-&gt;<span class="built_in">queue</span>, &amp;pkt, &amp;d-&gt;pkt_serial, &amp;d-&gt;finished) &lt; <span class="number">0</span>)</span><br><span class="line">                    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">while</span> (d-&gt;<span class="built_in">queue</span>-&gt;serial != d-&gt;pkt_serial); </span><br><span class="line"></span><br><span class="line">        <span class="comment">// 第3步</span></span><br><span class="line">        <span class="keyword">if</span> (pkt.data == flush_pkt.data) &#123;</span><br><span class="line">            avcodec_flush_buffers(d-&gt;avctx);</span><br><span class="line">            d-&gt;finished = <span class="number">0</span>;</span><br><span class="line">            d-&gt;next_pts = d-&gt;start_pts;</span><br><span class="line">            d-&gt;next_pts_tb = d-&gt;start_pts_tb;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (d-&gt;avctx-&gt;codec_type == AVMEDIA_TYPE_SUBTITLE) &#123;</span><br><span class="line">                <span class="type">int</span> got_frame = <span class="number">0</span>;</span><br><span class="line">                ret = avcodec_decode_subtitle2(d-&gt;avctx, sub, &amp;got_frame, &amp;pkt);</span><br><span class="line">                <span class="keyword">if</span> (ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line">                    ret = AVERROR(EAGAIN);</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    <span class="keyword">if</span> (got_frame &amp;&amp; !pkt.data) &#123;</span><br><span class="line">                        d-&gt;packet_pending = <span class="number">1</span>;</span><br><span class="line">                        av_packet_move_ref(&amp;d-&gt;pkt, &amp;pkt);</span><br><span class="line">                    &#125;</span><br><span class="line">                    ret = got_frame ? <span class="number">0</span> : (pkt.data ? AVERROR(EAGAIN) : AVERROR_EOF);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (avcodec_send_packet(d-&gt;avctx, &amp;pkt) == AVERROR(EAGAIN)) &#123;</span><br><span class="line">                    av_log(d-&gt;avctx, AV_LOG_ERROR,</span><br><span class="line">                           <span class="string">&quot;Receive_frame and send_packet both returned EAGAIN, which is an API violation.\n&quot;</span>);</span><br><span class="line">                    d-&gt;packet_pending = <span class="number">1</span>;</span><br><span class="line">                    av_packet_move_ref(&amp;d-&gt;pkt, &amp;pkt);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            av_packet_unref(&amp;pkt);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>可以看到上面主要分为3步，所以精简后结构为:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (;;) &#123;</span><br><span class="line">		<span class="comment">// 第1步;</span></span><br><span class="line">		<span class="comment">// 第2步;</span></span><br><span class="line">		<span class="comment">// 第3步;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>下面分开介绍这3步：</p>
+<h4 id="第1步"><a href="#第1步" class="headerlink" title="第1步:"></a>第1步:</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (d-&gt;<span class="built_in">queue</span>-&gt;serial == d-&gt;pkt_serial) &#123;</span><br><span class="line">            <span class="keyword">do</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (d-&gt;<span class="built_in">queue</span>-&gt;abort_request) &#123;</span><br><span class="line">                    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">switch</span> (d-&gt;avctx-&gt;codec_type) &#123;</span><br><span class="line">                    <span class="keyword">case</span> AVMEDIA_TYPE_VIDEO:</span><br><span class="line">                        ret = avcodec_receive_frame(d-&gt;avctx, frame);</span><br><span class="line">                        <span class="keyword">if</span> (ret &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">                            ffp-&gt;stat.vdps = SDL_SpeedSamplerAdd(&amp;ffp-&gt;vdps_sampler, FFP_SHOW_VDPS_AVCODEC,</span><br><span class="line">                                                                 <span class="string">&quot;vdps[avcodec]&quot;</span>);</span><br><span class="line">                            <span class="keyword">if</span> (ffp-&gt;decoder_reorder_pts == <span class="number">-1</span>) &#123;</span><br><span class="line">                                frame-&gt;pts = frame-&gt;best_effort_timestamp;</span><br><span class="line">                            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!ffp-&gt;decoder_reorder_pts) &#123;</span><br><span class="line">                                frame-&gt;pts = frame-&gt;pkt_dts;</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    <span class="keyword">case</span> AVMEDIA_TYPE_AUDIO:</span><br><span class="line">                        ret = avcodec_receive_frame(d-&gt;avctx, frame);</span><br><span class="line">                        <span class="keyword">if</span> (ret &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">                            AVRational tb = (AVRational) &#123;<span class="number">1</span>, frame-&gt;sample_rate&#125;;</span><br><span class="line">                            <span class="keyword">if</span> (frame-&gt;pts != AV_NOPTS_VALUE)</span><br><span class="line">                                frame-&gt;pts = av_rescale_q(frame-&gt;pts, av_codec_get_pkt_timebase(d-&gt;avctx), tb);</span><br><span class="line">                            <span class="keyword">else</span> <span class="keyword">if</span> (d-&gt;next_pts != AV_NOPTS_VALUE)</span><br><span class="line">                                frame-&gt;pts = av_rescale_q(d-&gt;next_pts, d-&gt;next_pts_tb, tb);</span><br><span class="line">                            <span class="keyword">if</span> (frame-&gt;pts != AV_NOPTS_VALUE) &#123;</span><br><span class="line">                                d-&gt;next_pts = frame-&gt;pts + frame-&gt;nb_samples;</span><br><span class="line">                                d-&gt;next_pts_tb = tb;</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    <span class="keyword">default</span>:</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (ret == AVERROR_EOF) &#123;</span><br><span class="line">                    d-&gt;finished = d-&gt;pkt_serial;</span><br><span class="line">                    avcodec_flush_buffers(d-&gt;avctx);</span><br><span class="line">                    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (ret &gt;= <span class="number">0</span>)</span><br><span class="line">                    <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">                <span class="comment">// EAGAIN:output is not available in this state - user must try to send new input</span></span><br><span class="line">                <span class="comment">// 获取解码数据完成，请重新放入新的待解码数据后再来获取解码后的数据。</span></span><br><span class="line">                <span class="comment">// 所以do while中就是一直循环调用avcodec_receive_frame读取解码后的帧，直到返回了EAGAIN表示获取解码数据完成了</span></span><br><span class="line">                <span class="comment">// AVERROR(EAGAIN):   output is not available in this state - user must try to send new input</span></span><br><span class="line">            &#125; <span class="keyword">while</span> (ret != AVERROR(EAGAIN));</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，第1步执行的前提条件就是：d-&gt;queue-&gt;serial &#x3D;&#x3D; d-&gt;pkt_serial。而关于这两个serial的解释在<a href="17303abc">feed_input_buffer</a>中的第2步中有解释过了，这里不再赘述。</p>
+<p>进入if之后，就是do while循环，循环的条件是:ret !&#x3D; AVERROR(EAGAIN)，精简下这个循环就是：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (d-&gt;<span class="built_in">queue</span>-&gt;serial == d-&gt;pkt_serial) &#123;</span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">    		<span class="comment">// 省略部分代码</span></span><br><span class="line">    		ret = avcodec_receive_frame(d-&gt;avctx, frame);</span><br><span class="line">    		<span class="comment">// 省略部分代码</span></span><br><span class="line">    &#125; <span class="keyword">while</span> (ret != AVERROR(EAGAIN));</span><br></pre></td></tr></table></figure>
+
+<p>可以看出，其实就是一直循环调用avcodec_receive_frame()方法来从解码器中获取解码后数据。如果返回值不等于AVERROR(EAGAIN)那么就一直循环。</p>
+<p>看完了大概的结构，那么开始分析do while循环中循环体内的逻辑：</p>
+<ol>
+<li>先判断解码器所对应的PacketQueue是否已终止，已终止的话那么就停止解码返回-1。</li>
+<li>判断传入的解码器类型，到底是视频解码器还是音频解码器。然后都是调用avcodec_receive_frame()方法来获取解码后数据，解码后数据会填充到入参frame中。关于avcodec_receive_frame()方法，属于ffmpeg的范畴，暂时不太懂，所以先不做解释。然后如果获取解码后数据成功的话，会更新frame中的pts。</li>
+<li>判断上面调用avcodec_receive_frame()方法的返回值是否是AVERROR_EOF，如果是的话就标明解码已完成直接返回0。</li>
+<li>如果返回值大于等于0，表示解码成功，那么就直接返回1，终止for循环。</li>
+</ol>
+<p>如果上面4步执行完都没有return，那么循环还会继续，直到avcodec_receive_frame()方法返回了AVERROR(EAGAIN)。关于AVERROR(EAGAIN)的解释，官方源码中有这么一句:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">AVERROR(EAGAIN):   output is not available in this state - user must try to send new input</span><br></pre></td></tr></table></figure>
+
+<p>也就是说如果返回了AVERROR(EAGAIN)标明解码器没有解码完成的数据了，需要填充待解码数据后再试。所以这里也就是为什么这个能作为do while循环的结束条件了。</p>
+<p>所以简单总结下第1步就是：</p>
+<ol>
+<li>主要实现从解码器中读取解码后的数据，一直读取，直到解码器返回了AVERROR(EAGAIN)告诉我们没数据了去填充点新数据吧。</li>
+<li>另外一个注意的就是第1步中有三个return，用于退出最外层的无限for循环，所以说我们优先取解码后数据，取到了就不执行后面的第2、3步了(等下次进来本方法时就会去执行后面的2、3步，因为解码器不可能不放入输入而无限取数据)。</li>
+</ol>
+<h4 id="第2步"><a href="#第2步" class="headerlink" title="第2步:"></a>第2步:</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">do</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (d-&gt;<span class="built_in">queue</span>-&gt;nb_packets == <span class="number">0</span>)</span><br><span class="line">                SDL_CondSignal(d-&gt;empty_queue_cond);</span><br><span class="line">            <span class="keyword">if</span> (d-&gt;packet_pending) &#123;</span><br><span class="line">                av_packet_move_ref(&amp;pkt, &amp;d-&gt;pkt);</span><br><span class="line">                d-&gt;packet_pending = <span class="number">0</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (packet_queue_get_or_buffering(ffp, d-&gt;<span class="built_in">queue</span>, &amp;pkt, &amp;d-&gt;pkt_serial, &amp;d-&gt;finished) &lt; <span class="number">0</span>)</span><br><span class="line">                    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">while</span> (d-&gt;<span class="built_in">queue</span>-&gt;serial != d-&gt;pkt_serial);</span><br></pre></td></tr></table></figure>
+
+<p>第二步就很简单了，还是一个do while循环。该循环的目的就是从d-&gt;queue中，也就是对应的PacketQueue中取出待解码数据。关于这个循环在<a href="17303abc">feed_input_buffer</a>中的第2步中有解释过，这里不在赘述直接看循环体：</p>
+<ol>
+<li>先判断d-&gt;queue队列是否已经没数据了，这点在<a href="17303abc">feed_input_buffer</a>中的第2步中也有提到。</li>
+<li>然后判断packet_pending是否为1，是的话就将 d-&gt;pkt所对应的AVPacket复制到pkt中去。而packet_pending是用来处理上次本方法没处理完的数据的一个标识，具体在<a href="17303abc">feed_input_buffer</a>中也有介绍过。这里暂时只需要记住这里判断了packet_pending的值，本文后面第3步中会有该值的赋值分析。</li>
+<li>队列有数据且上次没有剩余的数据要本次来处理，那么就调用packet_queue_get_or_buffering()方法来从队列中读出一个待解码数据，存到pkt中。如果读取返回值小于0，表示队列中缓冲了也没数据了，那么没办法返回-1吧(和上面第1步中d-&gt;queue-&gt;abort_request的返回值一样)。具体在<a href="17303abc">feed_input_buffer</a>中2.2步中有介绍过。</li>
+</ol>
+<p>所以第2步总结下就是：用来获取下一个要放入解码器中的待解码数据。</p>
+<h4 id="第3步"><a href="#第3步" class="headerlink" title="第3步:"></a>第3步:</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (pkt.data == flush_pkt.data) &#123;</span><br><span class="line">    avcodec_flush_buffers(d-&gt;avctx);</span><br><span class="line">    d-&gt;finished = <span class="number">0</span>;</span><br><span class="line">    d-&gt;next_pts = d-&gt;start_pts;</span><br><span class="line">    d-&gt;next_pts_tb = d-&gt;start_pts_tb;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (d-&gt;avctx-&gt;codec_type == AVMEDIA_TYPE_SUBTITLE) &#123;</span><br><span class="line">        <span class="type">int</span> got_frame = <span class="number">0</span>;</span><br><span class="line">        ret = avcodec_decode_subtitle2(d-&gt;avctx, sub, &amp;got_frame, &amp;pkt);</span><br><span class="line">        <span class="keyword">if</span> (ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line">         	 ret = AVERROR(EAGAIN);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (got_frame &amp;&amp; !pkt.data) &#123;</span><br><span class="line">                d-&gt;packet_pending = <span class="number">1</span>;</span><br><span class="line">                av_packet_move_ref(&amp;d-&gt;pkt, &amp;pkt);</span><br><span class="line">            &#125;</span><br><span class="line">          ret = got_frame ? <span class="number">0</span> : (pkt.data ? AVERROR(EAGAIN) : AVERROR_EOF);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> (avcodec_send_packet(d-&gt;avctx, &amp;pkt) == AVERROR(EAGAIN)) &#123;</span><br><span class="line">          av_log(d-&gt;avctx, AV_LOG_ERROR,</span><br><span class="line">                 <span class="string">&quot;Receive_frame and send_packet both returned EAGAIN, which is an API violation.\n&quot;</span>);</span><br><span class="line">          d-&gt;packet_pending = <span class="number">1</span>;</span><br><span class="line">          av_packet_move_ref(&amp;d-&gt;pkt, &amp;pkt);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    av_packet_unref(&amp;pkt);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>第3步中主要是两个分支:</p>
+<ol>
+<li><p>先判断当前pkt是不是flush_pkt，如果是的话就表示当前发生过seek，那么此时重置解码器中的一些属性。关于flush_pkt在feed_input_buffer](17303abc)中也有介绍过。</p>
+</li>
+<li><p>如果不是flush_pkt的话:</p>
+<ol>
+<li><p>就在判断当前是字幕解码器还是其他的。如果是字幕解码器就调用avcodec_decode_subtitle2()方法将本方法的入参sub传进去，用于字幕解码。</p>
+<p>而关于入参sub，其实是结构体AVSubtitle的实例，而在上面第1步中，并没有判断字幕类型，只是针对是音频解码或者视频解码时，调用了avcodec_receive_frame()方法获取解码后数据并填充到入参frame中去。</p>
+<p>所以说字幕的解码和音视频的解码不一样，音视频的解码是异步的，需要两步：往解码器中填入待解码数据和从解码器中读取出解码后数据。而字幕的解码是同步的，调用avcodec_decode_subtitle2()方法将待解码数据传入后即可完成解码。需要注意这点差别。</p>
+</li>
+<li><p>如果不是字幕的解码器，那么就调用avcodec_send_packet()方法来将待解码数据放入解码器中，如果返回值是AVERROR(EAGAIN)，那么就表示本次放入失败，那么就将pkt内容复制到d-&gt;pkt中，并且将packet_pending置为1用于下次填充。所以到这里就可以翻看上面第2步中的packet_pending解释了。</p>
+</li>
+</ol>
+</li>
+</ol>
+<h3 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h3><ol>
+<li>本方法主要逻辑是从传入的解码器中读取出解码后的数据，如果解码器中没有数据了(返回AVERROR(EAGAIN))，那么就会往解码器中放入新的待解码的数据。</li>
+<li>本方法有四个return，也就是用于终止外层无限循环的。其分别在第1步中(3个)和第2步中(1个)。</li>
+<li>本方法返回值-1表示队列已终止或无数据了，解码失败；0表示解码完成；大于0表示解码成功</li>
+<li>本方法中字幕的解码与音视频的解码有差异，音视频的解码不需要传入sub参数。</li>
+</ol>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/33f55665.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-get_video_frame</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/b99add2a.html">
+        <span class="next-text nav-default">Ijkplayer-func_init_video_decoder</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

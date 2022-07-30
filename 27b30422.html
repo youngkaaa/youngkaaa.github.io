@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-SDL_Android_AudioTrack"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/27b30422.html"/>
+
+
+<meta name="description" content="本文主要介绍位于android_audiotrack.c文件中的SDL_Android_AudioTrack结构体。该结构体大致对应着上层的AudioTrack类。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-SDL_Android_AudioTrack">
+<meta property="og:url" content="https://youngkaaa.github.io/27b30422.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍位于android_audiotrack.c文件中的SDL_Android_AudioTrack结构体。该结构体大致对应着上层的AudioTrack类。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-04-12T07:43:18.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.428Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-SDL_Android_AudioTrack - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-SDL_Android_AudioTrack
+        
+      </h1>
+
+      <time class="post-time">
+          4月 12 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍位于android_audiotrack.c文件中的SDL_Android_AudioTrack结构体。该结构体大致对应着上层的AudioTrack类。</p>
+<span id="more"></span>
+
+
+
+<p>关于SDL_Android_AudioTrack实例的创建，只有一个地方：<a href="b8be9048.html">AudioTrack</a>版本的<a href="a1824301.html">Aout</a>中的open_audio()方法，详细可以翻看<a href="b8be9048.html">AudioTrack</a>版本的open_audio()方法。在open_audio()方法中，实际是调用SDL_Android_AudioTrack_new_from_sdl_spec()方法来实现SDL_Android_AudioTrack的实际创建工作的。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">SDL_Android_AudioTrack *<span class="title function_">SDL_Android_AudioTrack_new_from_sdl_spec</span><span class="params">(JNIEnv *env, <span class="type">const</span> SDL_AudioSpec *sdl_spec)</span></span><br><span class="line">&#123;</span><br><span class="line">    SDL_Android_AudioTrack_Spec atrack_spec;</span><br><span class="line">    SDL_Android_AudioTrack_get_default_spec(&amp;atrack_spec);</span><br><span class="line">    atrack_spec.sample_rate_in_hz = sdl_spec-&gt;freq;</span><br><span class="line">    atrack_spec.channel_config = find_android_channel(sdl_spec-&gt;channels);</span><br><span class="line">    atrack_spec.audio_format = find_android_format(sdl_spec-&gt;format);</span><br><span class="line">    atrack_spec.buffer_size_in_bytes = sdl_spec-&gt;size;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> SDL_Android_AudioTrack_new_from_spec(env, &amp;atrack_spec);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>该方法中第二个参数就是外部调用open_audio()方法时传入的想要的音频输出配置，是SDL_AudioSpec类型的。所以这里第一步就是将其转换为SDL_Android_AudioTrack_Spec类型，也就是将其转换为Android AudioTrack所需要的(所支持的)类型。</p>
+<blockquote>
+<p>atrack_spec.sample_rate_in_hz</p>
+<p>采样率，这个和SDL_AudioSpec中的freq一样，所以原封不动的赋值就行</p>
+</blockquote>
+<blockquote>
+<p>atrack_spec.channel_config</p>
+<p>声道数信息。可以理解为和ffmpeg中的channel_layout类似。具体可以在java层的AudioFormat.java中找到定义，在c层的android_audiotrack.h文件中的SDL_Android_AudioTrack_Spec结构体中的ChannelConfig枚举列表中也能找到，其实c层就是将java层的定义复制下来了。</p>
+<p>所以find_android_channel()方法就是从android_audiotrack.c文件中的g_audio_channel_map数组中找到对应的定义，以将SDL_AudioSpec中的channels映射到Android所支持的声道类型上去。可以看到其实就只支持两种：单声道和立体声。</p>
+</blockquote>
+<blockquote>
+<p>audio_format</p>
+<p>采样格式。具体可以在java层的AudioFormat.java中找到定义，在c层的android_audiotrack.h文件中的SDL_Android_AudioTrack_Spec结构体中的AudioFormat枚举列表中也能找到。</p>
+<p>所以find_android_format()方法就是从android_audiotrack.c文件中的g_audio_format_map数组中找到对应的定义，以将SDL_AudioSpec中的format映射到Android所支持的采样格式上去。可以看到其实就只支持三种：ENCODING_PCM_16BIT、ENCODING_PCM_8BIT和ENCODING_PCM_FLOAT。其中一般是ENCODING_PCM_16BIT，因为ENCODING_PCM_16BIT在所有Android设备上都保证可以正常采样。</p>
+</blockquote>
+<blockquote>
+<p>atrack_spec.buffer_size_in_bytes</p>
+<p>最小缓冲大小。在创建AudioTrack实例时，一般需要通过getMinBufferSize()方法来计算一个最小缓冲大小，用于播放时存放音频采样数据，这里的buffer_size_in_bytes指的就是这个值，但是一般还会乘以2，因为在ijkplayer中最大2倍速播放。</p>
+</blockquote>
+<p>创建好SDL_Android_AudioTrack_Spec结构体实例后，此时SDL_AudioSpec就没用了，那么此时调用SDL_Android_AudioTrack_new_from_spec()方法来创建上层AudioTrack对象实例，也就是SDL_Android_AudioTrack结构体实例。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br></pre></td><td class="code"><pre><span class="line">SDL_Android_AudioTrack *<span class="title function_">SDL_Android_AudioTrack_new_from_spec</span><span class="params">(JNIEnv *env, SDL_Android_AudioTrack_Spec *spec)</span></span><br><span class="line">&#123;</span><br><span class="line">    assert(spec);</span><br><span class="line">    <span class="keyword">switch</span> (spec-&gt;channel_config) &#123;</span><br><span class="line">    <span class="keyword">case</span> CHANNEL_OUT_MONO:</span><br><span class="line">        ALOGI(<span class="string">&quot;SDL_Android_AudioTrack: %s&quot;</span>, <span class="string">&quot;CHANNEL_OUT_MONO&quot;</span>);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> CHANNEL_OUT_STEREO:</span><br><span class="line">        ALOGI(<span class="string">&quot;SDL_Android_AudioTrack: %s&quot;</span>, <span class="string">&quot;CHANNEL_OUT_STEREO&quot;</span>);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        ALOGE(<span class="string">&quot;%s: invalid channel %d&quot;</span>, __func__, spec-&gt;channel_config);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">switch</span> (spec-&gt;audio_format) &#123;</span><br><span class="line">    <span class="keyword">case</span> ENCODING_PCM_16BIT:</span><br><span class="line">        ALOGI(<span class="string">&quot;SDL_Android_AudioTrack: %s&quot;</span>, <span class="string">&quot;ENCODING_PCM_16BIT&quot;</span>);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> ENCODING_PCM_8BIT:</span><br><span class="line">        ALOGI(<span class="string">&quot;SDL_Android_AudioTrack: %s&quot;</span>, <span class="string">&quot;ENCODING_PCM_8BIT&quot;</span>);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        ALOGE(<span class="string">&quot;%s: invalid format %d&quot;</span>, __func__, spec-&gt;audio_format);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (spec-&gt;sample_rate_in_hz &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">        ALOGE(<span class="string">&quot;%s: invalid sample rate %d&quot;</span>, __func__, spec-&gt;sample_rate_in_hz);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    SDL_Android_AudioTrack *atrack = (SDL_Android_AudioTrack*) mallocz(<span class="keyword">sizeof</span>(SDL_Android_AudioTrack));</span><br><span class="line">    <span class="keyword">if</span> (!atrack) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    atrack-&gt;spec = *spec;</span><br><span class="line">    <span class="comment">// libswresample is ugly, depending on native resampler</span></span><br><span class="line">    <span class="keyword">while</span> (atrack-&gt;spec.sample_rate_in_hz &lt; <span class="number">4000</span>) &#123;</span><br><span class="line">        atrack-&gt;spec.sample_rate_in_hz *= <span class="number">2</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">while</span> (atrack-&gt;spec.sample_rate_in_hz &gt; <span class="number">48000</span>) &#123;</span><br><span class="line">        atrack-&gt;spec.sample_rate_in_hz /= <span class="number">2</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="type">int</span> min_buffer_size = J4AC_AudioTrack__getMinBufferSize(env,</span><br><span class="line">        atrack-&gt;spec.sample_rate_in_hz,</span><br><span class="line">        atrack-&gt;spec.channel_config,</span><br><span class="line">        atrack-&gt;spec.audio_format);</span><br><span class="line">    <span class="keyword">if</span> (J4A_ExceptionCheck__catchAll(env) || min_buffer_size &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">free</span>(atrack);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// for fast playback</span></span><br><span class="line">    min_buffer_size *= AUDIOTRACK_PLAYBACK_MAXSPEED;</span><br><span class="line">    atrack-&gt;thiz = J4AC_AudioTrack__AudioTrack__asGlobalRef__catchAll(env,</span><br><span class="line">        atrack-&gt;spec.stream_type,</span><br><span class="line">        atrack-&gt;spec.sample_rate_in_hz,</span><br><span class="line">        atrack-&gt;spec.channel_config,</span><br><span class="line">        atrack-&gt;spec.audio_format,</span><br><span class="line">        min_buffer_size,</span><br><span class="line">        atrack-&gt;spec.mode);</span><br><span class="line">    <span class="keyword">if</span> (!atrack-&gt;thiz) &#123;</span><br><span class="line">        <span class="built_in">free</span>(atrack);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    atrack-&gt;min_buffer_size = min_buffer_size;</span><br><span class="line">    atrack-&gt;spec.buffer_size_in_bytes = min_buffer_size;</span><br><span class="line">    <span class="comment">// atrack-&gt;max_volume = J4AC_AudioTrack__getMaxVolume__catchAll(env);</span></span><br><span class="line">    <span class="comment">// atrack-&gt;min_volume = J4AC_AudioTrack__getMinVolume__catchAll(env);</span></span><br><span class="line">    atrack-&gt;max_volume = <span class="number">1.0f</span>;</span><br><span class="line">    atrack-&gt;min_volume = <span class="number">0.0f</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// extra init</span></span><br><span class="line">    <span class="type">float</span> init_volume = <span class="number">1.0f</span>;</span><br><span class="line">    init_volume = IJKMIN(init_volume, atrack-&gt;max_volume);</span><br><span class="line">    init_volume = IJKMAX(init_volume, atrack-&gt;min_volume);</span><br><span class="line">    J4AC_AudioTrack__setStereoVolume__catchAll(env, atrack-&gt;thiz, init_volume, init_volume);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> atrack;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>可以看到该方法逻辑还是比较简单的。首先就是switch语句打印相关信息，如果遇到不支持的声道或采样格式就直接返回NULL。</p>
+<p>分配SDL_Android_AudioTrack内存空间，然后将传入的SDL_Android_AudioTrack_Spec实例赋值给其spec字段。</p>
+<p>然后调整采样率，如果小于4k那么将其乘以2，一直到其大于4k。如果大于48k，那么就将其除以2，直到其小于48k。所以这里是保证采样率要在4k-48k之间。但在上层AudioFormat中，目前支持的最小采样率是4k，最大是192k。</p>
+<p>然后调用上层的getMinBufferSize()方法来计算出最小缓冲大小min_buffer_size，然后将其乘以AUDIOTRACK_PLAYBACK_MAXSPEED，为了支持最大倍速播放。</p>
+<p>然后就可以创建上层AudioTrack对象实例了，将相应参数传入，创建的对象实例保存在atrack-&gt;thiz中。</p>
+<p>创建成功后，就可以给相关字段赋值了，比如atrack中的min_buffer_size，以及atrack中spec中的buffer_size_in_bytes等。</p>
+<p>到这里就创建好SDL_Android_AudioTrack实例了。并且给其中相应字段赋值了。</p>
+<p>关于SDL_Android_AudioTrack结构体中的字段就不挨个分析含义了，在上面创建时大部分都分析过了。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/5c9aa075.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-aout_thread</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/3ef4887e.html">
+        <span class="next-text nav-default">Ijkplayer-SDL_Aout_Opaque-For-OpenSLES</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

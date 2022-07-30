@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-audio_decode_frame"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/1ae52f91.html"/>
+
+
+<meta name="description" content="本文主要介绍位于ff_ffplay.c文件中的audio_decode_frame()方法。该方法的主要作用是从音频解码后数据队列FrameQueue中读取出待播放的数据，然后经过相应处理(时钟同步以及必要的重采样等操作)之后，存入is-&gt;audio_buf中。没有牵扯到解码的操作，所以这个方法名有一定的迷惑性。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-audio_decode_frame">
+<meta property="og:url" content="https://youngkaaa.github.io/1ae52f91.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍位于ff_ffplay.c文件中的audio_decode_frame()方法。该方法的主要作用是从音频解码后数据队列FrameQueue中读取出待播放的数据，然后经过相应处理(时钟同步以及必要的重采样等操作)之后，存入is-&gt;audio_buf中。没有牵扯到解码的操作，所以这个方法名有一定的迷惑性。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-04-12T10:12:36.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.430Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-audio_decode_frame - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-audio_decode_frame
+        
+      </h1>
+
+      <time class="post-time">
+          4月 12 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍位于ff_ffplay.c文件中的audio_decode_frame()方法。该方法的主要作用是从音频解码后数据队列FrameQueue中读取出待播放的数据，然后经过相应处理(时钟同步以及必要的重采样等操作)之后，存入is-&gt;audio_buf中。没有牵扯到解码的操作，所以这个方法名有一定的迷惑性。</p>
+<span id="more"></span>
+
+<blockquote>
+<p>TODO</p>
+<p>1、重采样部分逻辑</p>
+</blockquote>
+<p>本方法中好长的逻辑都用来处理音频的重采样逻辑了，下面的分析中暂且将重采样逻辑省略，等后续有相关了结之后再补充，省略之后的代码不影响逻辑的分析。</p>
+<blockquote>
+<p>ff_ffplay.c#audio_decode_frame()</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">audio_decode_frame</span><span class="params">(FFPlayer *ffp)</span> &#123;</span><br><span class="line">    VideoState *is = ffp-&gt;is;</span><br><span class="line">    <span class="type">int</span> data_size, resampled_data_size;</span><br><span class="line">    <span class="type">int64_t</span> dec_channel_layout;</span><br><span class="line">    av_unused <span class="type">double</span> audio_clock0;</span><br><span class="line">    <span class="type">int</span> wanted_nb_samples;</span><br><span class="line">    Frame *af;</span><br><span class="line">    <span class="type">int</span> translate_time = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">if</span> (is-&gt;paused || is-&gt;step)</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">        </span><br><span class="line">    <span class="comment">// 省略无关代码</span></span><br><span class="line">    </span><br><span class="line">    reload:</span><br><span class="line">  	<span class="comment">// 第1步</span></span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (!(af = frame_queue_peek_readable(&amp;is-&gt;sampq)))</span><br><span class="line">            <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">        frame_queue_next(&amp;is-&gt;sampq);</span><br><span class="line">    &#125; <span class="keyword">while</span> (af-&gt;serial != is-&gt;audioq.serial);</span><br><span class="line">    <span class="comment">// 第2步</span></span><br><span class="line">    data_size = av_samples_get_buffer_size(<span class="literal">NULL</span>, af-&gt;frame-&gt;channels,</span><br><span class="line">                                           af-&gt;frame-&gt;nb_samples,</span><br><span class="line">                                           af-&gt;frame-&gt;format, <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">    dec_channel_layout =</span><br><span class="line">            (af-&gt;frame-&gt;channel_layout &amp;&amp;</span><br><span class="line">             af-&gt;frame-&gt;channels == av_get_channel_layout_nb_channels(af-&gt;frame-&gt;channel_layout)) ?</span><br><span class="line">            af-&gt;frame-&gt;channel_layout : av_get_default_channel_layout(af-&gt;frame-&gt;channels);</span><br><span class="line"></span><br><span class="line">    wanted_nb_samples = synchronize_audio(is, af-&gt;frame-&gt;nb_samples);</span><br><span class="line"> </span><br><span class="line"> 		<span class="comment">// 省略重采样相关代码</span></span><br><span class="line">  </span><br><span class="line">  	<span class="comment">// 第3步</span></span><br><span class="line">    is-&gt;audio_buf = af-&gt;frame-&gt;data[<span class="number">0</span>];</span><br><span class="line">    resampled_data_size = data_size;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* update the audio clock with the pts */</span></span><br><span class="line">    <span class="keyword">if</span> (!isnan(af-&gt;pts))</span><br><span class="line">        is-&gt;audio_clock = af-&gt;pts + (<span class="type">double</span>) af-&gt;frame-&gt;nb_samples / af-&gt;frame-&gt;sample_rate;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        is-&gt;audio_clock = NAN;</span><br><span class="line">    is-&gt;audio_clock_serial = af-&gt;serial;</span><br><span class="line">    <span class="keyword">if</span> (!is-&gt;auddec.first_frame_decoded) &#123;</span><br><span class="line">        ALOGD(<span class="string">&quot;avcodec/Audio: first frame decoded\n&quot;</span>);</span><br><span class="line">        ffp_notify_msg1(ffp, FFP_MSG_AUDIO_DECODED_START);</span><br><span class="line">        is-&gt;auddec.first_frame_decoded_time = SDL_GetTickHR();</span><br><span class="line">        is-&gt;auddec.first_frame_decoded = <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> resampled_data_size;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>省略了相关代码之后，代码量一下子少了一半😁。</p>
+<h4 id="第1步"><a href="#第1步" class="headerlink" title="第1步:"></a>第1步:</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">do</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (!(af = frame_queue_peek_readable(&amp;is-&gt;sampq)))</span><br><span class="line">    		<span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    frame_queue_next(&amp;is-&gt;sampq);</span><br><span class="line">&#125; <span class="keyword">while</span> (af-&gt;serial != is-&gt;audioq.serial);</span><br></pre></td></tr></table></figure>
+
+<p>首先就是从sampq也就是音频数据解码后的FrameQueue中读取下一个待播放的数据af，如果没数据了就返回-1。如果有的话就调用frame_queue_next()将索引后移，也就是表示将af移出队列了。注意上述操作是在while循环中执行的，循环条件是af-&gt;serial !&#x3D; is-&gt;audioq.serial。关于serial的这个判断，在视频解码逻辑分析时就有遇到过，很容易理解就是丢帧，剔除掉seek之前的无效数据。</p>
+<h4 id="第2步"><a href="#第2步" class="headerlink" title="第2步:"></a>第2步:</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">data_size = av_samples_get_buffer_size(<span class="literal">NULL</span>, af-&gt;frame-&gt;channels,</span><br><span class="line">                                           af-&gt;frame-&gt;nb_samples,</span><br><span class="line">                                           af-&gt;frame-&gt;format, <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">dec_channel_layout =(af-&gt;frame-&gt;channel_layout &amp;&amp;af-&gt;frame-&gt;channels == av_get_channel_layout_nb_channels(af-&gt;frame-&gt;channel_layout)) ?af-&gt;frame-&gt;channel_layout : av_get_default_channel_layout(af-&gt;frame-&gt;channels);</span><br><span class="line"></span><br><span class="line">wanted_nb_samples = synchronize_audio(is, af-&gt;frame-&gt;nb_samples);</span><br></pre></td></tr></table></figure>
+
+<p>通过调用av_samples_get_buffer_size()方法来获取当前Frame也就是af中的数据大小，具体计算方法简单来说就是每个采样的大小乘以声道数再乘以采样数。</p>
+<p>然后就是根据af中的channels来纠正af中的channel_layout，如果两者不一致，那么以channels为准。最终的dec_channel_layout就是矫正之后的值。</p>
+<p>然后调用synchronize_audio()方法来完成时钟同步，如果主时钟是音频时钟，那么原封不动返回；如果是以视频时钟为主时钟的，那么会根据当前音频时钟和主时钟的时间差来做同步。返回值wanted_nb_samples就是经过同步之后的决定此时需要的采样数。</p>
+<p>然后就是判断音频格式啥的是否相同，是否需要重采样等，这里的逻辑比较复杂暂时没懂，所以省略了。</p>
+<h4 id="第3步"><a href="#第3步" class="headerlink" title="第3步:"></a>第3步:</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">is-&gt;audio_buf = af-&gt;frame-&gt;data[<span class="number">0</span>];</span><br><span class="line">resampled_data_size = data_size;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* update the audio clock with the pts */</span></span><br><span class="line"><span class="keyword">if</span> (!isnan(af-&gt;pts))</span><br><span class="line">		is-&gt;audio_clock = af-&gt;pts + (<span class="type">double</span>) af-&gt;frame-&gt;nb_samples / af-&gt;frame-&gt;sample_rate;</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">		is-&gt;audio_clock = NAN;</span><br><span class="line">is-&gt;audio_clock_serial = af-&gt;serial;</span><br><span class="line"><span class="keyword">if</span> (!is-&gt;auddec.first_frame_decoded) &#123;</span><br><span class="line">    ALOGD(<span class="string">&quot;avcodec/Audio: first frame decoded\n&quot;</span>);</span><br><span class="line">    ffp_notify_msg1(ffp, FFP_MSG_AUDIO_DECODED_START);</span><br><span class="line">    is-&gt;auddec.first_frame_decoded_time = SDL_GetTickHR();</span><br><span class="line">    is-&gt;auddec.first_frame_decoded = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> resampled_data_size;</span><br></pre></td></tr></table></figure>
+
+<p>然后就是将af中的数据赋值到is-&gt;audio_buf中去，然后resampled_data_size为对应数据的长度。</p>
+<p>然后将当前帧时间更新，注意这里只是给audio_clock赋值了而已，并没有设置到对应的音频时钟里去，音频音频实际上并没有播放，只是暂时放入了audio_buf而已，这里的audio_clock如果不仔细看还以为是更新了时钟。</p>
+<p>然后就是更新相关值，这里不做介绍了。最后返回此次复制到audio_buf中数据的长度。</p>
+<p>所以本方法总的来说并没有牵扯任何转码操作，顶多有个重采样。主要逻辑还是将音频FrameQueue中的数据转移到audio_buf中而已。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/a6d96fd1.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-SDL_AudioCallback</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/5c9aa075.html">
+        <span class="next-text nav-default">Ijkplayer-aout_thread</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

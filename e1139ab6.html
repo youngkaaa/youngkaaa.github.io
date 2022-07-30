@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-video_refresh_thread"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/e1139ab6.html"/>
+
+
+<meta name="description" content="本文主要介绍位于ff_ffplay.c文件中的video_refresh_thread()方法。 本方法的主要作用是实现视频帧刷新显示，主要逻辑为：从对应FrameQueue中取出之前解码时存入的解码后数据，然后做相关播放同步操作之后(包括丢帧以加快播放或重复播放以减缓播放)，再做帧展示操作。主要是这三步。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-video_refresh_thread">
+<meta property="og:url" content="https://youngkaaa.github.io/e1139ab6.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍位于ff_ffplay.c文件中的video_refresh_thread()方法。 本方法的主要作用是实现视频帧刷新显示，主要逻辑为：从对应FrameQueue中取出之前解码时存入的解码后数据，然后做相关播放同步操作之后(包括丢帧以加快播放或重复播放以减缓播放)，再做帧展示操作。主要是这三步。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-03-22T01:20:54.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.424Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-video_refresh_thread - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-video_refresh_thread
+        
+      </h1>
+
+      <time class="post-time">
+          3月 22 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍位于ff_ffplay.c文件中的video_refresh_thread()方法。</p>
+<p>本方法的主要作用是实现视频帧刷新显示，主要逻辑为：从对应<a href="866c32fa.html">FrameQueue</a>中取出之前解码时存入的解码后数据，然后做相关播放同步操作之后(包括丢帧以加快播放或重复播放以减缓播放)，再做帧展示操作。主要是这三步。</p>
+<span id="more"></span>
+
+<blockquote>
+<p>TODO:</p>
+<p>第6步字幕刷新逻辑分析</p>
+</blockquote>
+<h4 id="前言："><a href="#前言：" class="headerlink" title="前言："></a>前言：</h4><p>先介绍本方法的调用路径，先明确本方法的调用时刻再介绍本方法逻辑。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">IjkMediaPlayer#prepareAsync()</span><br><span class="line">---&gt;ijkplayer_jni.c#IjkMediaPlayer_prepareAsync()</span><br><span class="line">------&gt;ijkplayer.c#ijkmp_prepare_async()</span><br><span class="line">---------&gt;ijkplayer.c#ijkmp_prepare_async_l()</span><br><span class="line">-------------&gt;ff_ffplay.c#ffp_prepare_async_l()</span><br><span class="line">------------------&gt;ff_ffplay.c#stream_open()</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>ff_ffplay.c#stream_open()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"> <span class="type">static</span> VideoState *<span class="title function_">stream_open</span><span class="params">(FFPlayer *ffp, <span class="type">const</span> <span class="type">char</span> *filename, AVInputFormat*iformat)</span> &#123;</span><br><span class="line">     <span class="comment">// 省略无关代码</span></span><br><span class="line">    is-&gt;video_refresh_tid = SDL_CreateThreadEx(&amp;is-&gt;_video_refresh_tid, video_refresh_thread, ffp, <span class="string">&quot;ff_vout&quot;</span>);</span><br><span class="line">     <span class="comment">// 省略无关代码</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>可以看出:</p>
+<ol>
+<li>video_refresh_thread方法是单独在一个新线程中执行的</li>
+<li>创建video_refresh_thread线程的最初是由于调用了上层IjkMediaPlayer对象实例中的prepareAsync()方法。也就是创建时机是上层prepare时。</li>
+</ol>
+<h4 id="分析"><a href="#分析" class="headerlink" title="分析:"></a>分析:</h4><blockquote>
+<p>ff_ffplay.c#video_refresh_thread()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">video_refresh_thread</span><span class="params">(<span class="type">void</span> *arg)</span> &#123;</span><br><span class="line">    FFPlayer *ffp = arg;</span><br><span class="line">    VideoState *is = ffp-&gt;is;</span><br><span class="line">    <span class="type">double</span> remaining_time = <span class="number">0.0</span>;</span><br><span class="line">    <span class="keyword">while</span> (!is-&gt;abort_request) &#123;</span><br><span class="line">        <span class="keyword">if</span> (remaining_time &gt; <span class="number">0.0</span>) &#123;</span><br><span class="line">            av_usleep((<span class="type">int</span>) (<span class="type">int64_t</span>) (remaining_time * <span class="number">1000000.0</span>));</span><br><span class="line">        &#125;</span><br><span class="line">      	remaining_time = REFRESH_RATE;</span><br><span class="line">        <span class="keyword">if</span> (is-&gt;show_mode != SHOW_MODE_NONE &amp;&amp; (!is-&gt;paused || is-&gt;force_refresh))</span><br><span class="line">            video_refresh(ffp, &amp;remaining_time);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>可以看到，本方法中先定义的remaining_time&#x3D;0.0,用于表示下次刷新需要等待的时间，单位为s。所以刚开始是0表示直接开始刷新。</p>
+<p>其次刷新等主要逻辑就在while循环中了，循环条件是:is-&gt;abort_request&#x3D;0，而abort_request一般是当暂停或者销毁播放器时会将其置为1，表示停止播放(包括停止相关队列等)。所以这里的while循环就是当还在播放中时，就循环一直执行循环体内的逻辑。</p>
+<ol>
+<li><p>先判断remaining_time是否大于0，如果大于0的话那么就等待休眠remaining_time时长。然后再考虑后面刷新的事儿。</p>
+</li>
+<li><p>将remaining_time赋值为REFRESH_RATE，也就是0.01s，也就是刷新间隔为0.01s。</p>
+</li>
+<li><p>刷新展示视频帧逻辑，主要在video_refresh()方法(下面会分析)中，但是这里执行video_refresh()方法(下面会分析)是有条件的，比如</p>
+<ul>
+<li>show_mode不等于SHOW_MODE_NONE：show_mode表示当前展示类型，是只播音频还是视频或者啥都不展示，比如在read_thread()中打开每个轨道流时赋值，比如视频轨道打开成功时会置为SHOW_MODE_VIDEO。</li>
+<li>!is-&gt;paused：这个不解释了，就是处于播放中才刷新，暂停了就不刷新(注意这里关系是或，所以如果force_refresh&#x3D;1时拿就算暂停了也要刷新)</li>
+<li>is-&gt;force_refresh：是否强制刷新。该值一般在video_refresh()方法中(下面会分析)赋值，当到了新的一帧的显示时间时会将其置为1，表示该刷新了。</li>
+</ul>
+<p>需注意上面三个条件的 <strong>和</strong> 、<strong>或</strong> 关系哦。</p>
+<p>条件满足时会调用video_refresh来完成剩下的逻辑，注意这里将remaining_time的地址传进去了，里面会根据情况来修改remaining_time的值。然后执行完video_refresh后while下一次循环会根据修改后的remaining_time的大小来休眠等待。</p>
+</li>
+</ol>
+<p>下面主要看video_refresh方法了:</p>
+<blockquote>
+<p>ff_ffplay.c#video_refresh()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">video_refresh</span><span class="params">(FFPlayer *opaque, <span class="type">double</span> *remaining_time)</span> &#123;</span><br><span class="line">    FFPlayer *ffp = opaque;</span><br><span class="line">    VideoState *is = ffp-&gt;is;</span><br><span class="line">    <span class="type">double</span> time;</span><br><span class="line">    Frame *sp, *sp2;</span><br><span class="line">		</span><br><span class="line">		<span class="comment">// 省略无关代码</span></span><br><span class="line">		</span><br><span class="line">    <span class="keyword">if</span> (is-&gt;video_st) &#123;</span><br><span class="line">        retry:</span><br><span class="line">        <span class="keyword">if</span> (frame_queue_nb_remaining(&amp;is-&gt;pictq) == <span class="number">0</span>) &#123; </span><br><span class="line">            <span class="comment">// nothing to do, no picture to display in the queue</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          	<span class="comment">// 第1步</span></span><br><span class="line">            <span class="type">double</span> last_duration, duration, delay;</span><br><span class="line">            Frame *vp, *lastvp;</span><br><span class="line"></span><br><span class="line">            <span class="comment">/* dequeue the picture */</span></span><br><span class="line">            lastvp = frame_queue_peek_last(&amp;is-&gt;pictq);</span><br><span class="line">            vp = frame_queue_peek(&amp;is-&gt;pictq);</span><br><span class="line">            <span class="keyword">if</span> (vp-&gt;serial != is-&gt;videoq.serial) &#123;</span><br><span class="line">                frame_queue_next(&amp;is-&gt;pictq);</span><br><span class="line">                <span class="keyword">goto</span> retry;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (lastvp-&gt;serial != vp-&gt;serial) &#123;</span><br><span class="line">                is-&gt;frame_timer = av_gettime_relative() / <span class="number">1000000.0</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (is-&gt;paused) &#123;</span><br><span class="line">                <span class="keyword">goto</span> display;</span><br><span class="line">            &#125;</span><br><span class="line">          	<span class="comment">// 第2步</span></span><br><span class="line">            <span class="comment">/* compute nominal last_duration */</span></span><br><span class="line">            last_duration = vp_duration(is, lastvp, vp);</span><br><span class="line">            delay = compute_target_delay(ffp, last_duration, is);</span><br><span class="line">          	<span class="comment">// 第3步</span></span><br><span class="line">            time = av_gettime_relative() / <span class="number">1000000.0</span>;</span><br><span class="line">            <span class="keyword">if</span> (isnan(is-&gt;frame_timer) || time &lt; is-&gt;frame_timer) &#123;</span><br><span class="line">                is-&gt;frame_timer = time;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (time &lt; is-&gt;frame_timer + delay) &#123;</span><br><span class="line">                *remaining_time = FFMIN(is-&gt;frame_timer + delay - time, *remaining_time);</span><br><span class="line">                <span class="keyword">goto</span> display;</span><br><span class="line">            &#125;</span><br><span class="line">          	<span class="comment">// 第4步</span></span><br><span class="line">            is-&gt;frame_timer += delay;</span><br><span class="line">            <span class="keyword">if</span> (delay &gt; <span class="number">0</span> &amp;&amp; time - is-&gt;frame_timer &gt; AV_SYNC_THRESHOLD_MAX) &#123;</span><br><span class="line">                is-&gt;frame_timer = time;</span><br><span class="line">            &#125;</span><br><span class="line">            SDL_LockMutex(is-&gt;pictq.mutex);</span><br><span class="line">            <span class="keyword">if</span> (!isnan(vp-&gt;pts)) &#123;</span><br><span class="line">                update_video_pts(is, vp-&gt;pts, vp-&gt;pos, vp-&gt;serial);</span><br><span class="line">            &#125;</span><br><span class="line">            SDL_UnlockMutex(is-&gt;pictq.mutex);</span><br><span class="line">          	<span class="comment">// 第5步</span></span><br><span class="line">            <span class="keyword">if</span> (frame_queue_nb_remaining(&amp;is-&gt;pictq) &gt; <span class="number">1</span>) &#123;</span><br><span class="line">                Frame *nextvp = frame_queue_peek_next(&amp;is-&gt;pictq);</span><br><span class="line">                duration = vp_duration(is, vp, nextvp);</span><br><span class="line">                <span class="keyword">if</span> (!is-&gt;step &amp;&amp;</span><br><span class="line">                    (ffp-&gt;framedrop &gt; <span class="number">0</span> || (ffp-&gt;framedrop &amp;&amp; get_master_sync_type(is) != AV_SYNC_VIDEO_MASTER)) &amp;&amp;</span><br><span class="line">                    time &gt; is-&gt;frame_timer + duration) &#123;</span><br><span class="line">                    frame_queue_next(&amp;is-&gt;pictq);</span><br><span class="line">                    <span class="keyword">goto</span> retry;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">          	<span class="comment">// 第6步</span></span><br><span class="line">            <span class="keyword">if</span> (is-&gt;subtitle_st) &#123;</span><br><span class="line">                <span class="keyword">while</span> (frame_queue_nb_remaining(&amp;is-&gt;subpq) &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                    sp = frame_queue_peek(&amp;is-&gt;subpq);</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (frame_queue_nb_remaining(&amp;is-&gt;subpq) &gt; <span class="number">1</span>)</span><br><span class="line">                        sp2 = frame_queue_peek_next(&amp;is-&gt;subpq);</span><br><span class="line">                    <span class="keyword">else</span></span><br><span class="line">                        sp2 = <span class="literal">NULL</span>;</span><br><span class="line">                    <span class="keyword">if</span> (sp-&gt;serial != is-&gt;subtitleq.serial</span><br><span class="line">                        || (is-&gt;vidclk.pts &gt; (sp-&gt;pts + ((<span class="type">float</span>) sp-&gt;sub.end_display_time / <span class="number">1000</span>)))</span><br><span class="line">                        || (sp2 &amp;&amp; is-&gt;vidclk.pts &gt; (sp2-&gt;pts + ((<span class="type">float</span>) sp2-&gt;sub.start_display_time / <span class="number">1000</span>)))) &#123;</span><br><span class="line">                        <span class="keyword">if</span> (sp-&gt;uploaded) &#123;</span><br><span class="line">                            ffp_notify_msg4(ffp, FFP_MSG_TIMED_TEXT, <span class="number">0</span>, <span class="number">0</span>, <span class="string">&quot;&quot;</span>, <span class="number">1</span>);</span><br><span class="line">                        &#125;</span><br><span class="line">                        frame_queue_next(&amp;is-&gt;subpq);</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">          	<span class="comment">// 第7步</span></span><br><span class="line">            frame_queue_next(&amp;is-&gt;pictq);</span><br><span class="line">            is-&gt;force_refresh = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">            SDL_LockMutex(ffp-&gt;is-&gt;play_mutex);</span><br><span class="line">            <span class="keyword">if</span> (is-&gt;step) &#123;</span><br><span class="line">                is-&gt;step = <span class="number">0</span>;</span><br><span class="line">                <span class="keyword">if</span> (!is-&gt;paused)</span><br><span class="line">                    stream_update_pause_l(ffp);</span><br><span class="line">            &#125;</span><br><span class="line">            SDL_UnlockMutex(ffp-&gt;is-&gt;play_mutex);</span><br><span class="line">        &#125;</span><br><span class="line">        display:</span><br><span class="line">        <span class="comment">// 第8步</span></span><br><span class="line">        <span class="comment">/* display picture */</span></span><br><span class="line">        <span class="keyword">if</span> (!ffp-&gt;display_disable &amp;&amp; is-&gt;force_refresh &amp;&amp; is-&gt;show_mode == SHOW_MODE_VIDEO &amp;&amp;</span><br><span class="line">            is-&gt;pictq.rindex_shown) &#123;</span><br><span class="line">            video_display2(ffp);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  	<span class="comment">// 第9步</span></span><br><span class="line">    is-&gt;force_refresh = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">// 省略部分无关代码</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>关于video_refresh()方法，省略了部分暂时无关代码，然后在代码中标上了步骤，后续按照上面步骤来分析。</p>
+</blockquote>
+<p>分析之前，首先将上面逻辑结构省略下:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">video_refresh</span><span class="params">(FFPlayer *opaque, <span class="type">double</span> *remaining_time)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (is-&gt;video_st) &#123;</span><br><span class="line">        retry:</span><br><span class="line">        <span class="keyword">if</span> (frame_queue_nb_remaining(&amp;is-&gt;pictq) == <span class="number">0</span>) &#123; </span><br><span class="line">            <span class="comment">// nothing to do, no picture to display in the queue</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          	<span class="comment">// 第1步</span></span><br><span class="line">          	<span class="comment">// 第2步</span></span><br><span class="line">          	<span class="comment">// 第3步</span></span><br><span class="line">          	<span class="comment">// 第4步</span></span><br><span class="line">          	<span class="comment">// 第5步</span></span><br><span class="line">          	<span class="comment">// 第6步</span></span><br><span class="line">          	<span class="comment">// 第7步</span></span><br><span class="line">        &#125;</span><br><span class="line">        display:</span><br><span class="line">        <span class="comment">// 第8步</span></span><br><span class="line">    &#125;</span><br><span class="line">  	<span class="comment">// 第9步</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>省略之后的框架如上，这里需要关注两个程序点：retry和display，这两个程序点主要是为goto语言做准备，第8步也就对应着display点。</p>
+<p>可以看到，video_refresh()方法主要先判断is-&gt;video_st是否为空，也就是视频轨道是否存在，视频轨道存在才有之后的分析，因为本方法就是视频帧刷新的，如果视频轨道不存在那还刷新个屁哟。</p>
+<p>然后调用frame_queue_nb_remaining()方法判断is-&gt;pictq所对应的<a href="866c32fa.html">FrameQueue</a>队里中是否还有待显示的已解码数据，如果没有数据那么就不做任何操作。而关于<a href="866c32fa.html">frame_queue_nb_remaining()</a>方法在<a href="866c32fa.html">FrameQueue</a>中有解释，这里不在赘述。后续相关方法直接链接到对应地址，不再做单独解释。</p>
+<p>如果队列中有待展示的数据，那么按顺序执行下面的几步：</p>
+<h5 id="第1步："><a href="#第1步：" class="headerlink" title="第1步："></a>第1步：</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">double</span> last_duration, duration, delay;</span><br><span class="line">Frame *vp, *lastvp;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* dequeue the picture */</span></span><br><span class="line">lastvp = frame_queue_peek_last(&amp;is-&gt;pictq);</span><br><span class="line">vp = frame_queue_peek(&amp;is-&gt;pictq);</span><br><span class="line"><span class="keyword">if</span> (vp-&gt;serial != is-&gt;videoq.serial) &#123;</span><br><span class="line">    frame_queue_next(&amp;is-&gt;pictq);</span><br><span class="line">    <span class="keyword">goto</span> retry;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> (lastvp-&gt;serial != vp-&gt;serial) &#123;</span><br><span class="line">		is-&gt;frame_timer = av_gettime_relative() / <span class="number">1000000.0</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> (is-&gt;paused) &#123;</span><br><span class="line">		<span class="keyword">goto</span> display;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>第步很简单，首先先定义相关变量：</p>
+<ul>
+<li>last_duration:表示lastvp帧的持续时间，其实就是lastvp的pts和vp的pts之间的差值。根据vp_duration()方法计算的。</li>
+<li>duration:表示vp帧的持续时间，其实就是vp的pts和nextvp(后续介绍)的pts之间的差值。根据vp_duration()方法计算的。</li>
+<li>delay:表示lastvp帧经过播放同步之后的持续时间。简单来说就是考虑了音视频同步之后，计算出来lastvp帧应持续的时间，最终lastvp帧的持续时间其实是以delay为准的，上面计算出来的last_duration只是为了计算delay做准备而已。</li>
+<li>lastvp:当前正在显示的Frame，为何叫lastvp呢？因为该帧一般是此刻已经在屏幕上显示着的了，所以它的显示操作肯定在此刻之前(不然此刻怎能看到该帧？)。</li>
+<li>vp:后面要显示的下一帧，也就是本次即将要显示的帧。这里需多多理解，不要和后面第5步中的nextvp混淆了。</li>
+</ul>
+<p>对于上面提到的lastvp，vp，nextvp(往后翻看第5步)，可以看如下的示意图:</p>
+
+
+<p>这里需注意<a href="866c32fa.html">FrameQueue</a>其实是使用数组实现的环形队列，这里为了看起来方便就没有画成环形。</p>
+<p>上图可以看出，lastvp和vp以及后面的nextvp、nextvpA、nextvpB此刻在<a href="866c32fa.html">FrameQueue</a>中的顺序。后面会多次使用本图中的属性名。</p>
+<p>定义完相关变量，后面就先调用<a href="866c32fa.html">frame_queue_peek_last</a>方法来获取当前正在显示的视频帧，以及调用<a href="866c32fa.html">frame_queue_peek</a>方法来获取即将要显示的下一帧。</p>
+<p>拿到当前视频帧lastvp和即将要显示的vp帧之后，先判断即将要显示的vp帧的serial和当前队列的serial是否一样，不一样的话表示发生过seek，而该即将要显示的vp帧是seek之前的旧的视频帧(lastvp在vp之前肯定也是seek之前的旧数据)，所以此时调用<a href="866c32fa.html">frame_queue_next</a>方法来丢弃lastvp。然后从顶部retry处重新往下执行。</p>
+<blockquote>
+<p>为何这里丢弃的是lastvp？</p>
+<p>在音频、视频的FrameQueue中是有<a href="866c32fa.html">keep_last</a>机制的，也就是保留已播放的上一帧，这就是为什么此处可以拿到lastvp了，如果没有这个机制的话播放完就直接扔掉该帧了。而又因为在后续的同步时，可能会重复播放当前帧(当前播放中的就是lastvp)，所以lastvp不能扔。</p>
+<p>而回到这个问题上来，为何只丢弃lastvp，我的理解是和这个有关，如果此时不仅丢掉lastvp还把vp也丢掉，那么假如vp之后的nextvp是合法的话，就该播放nextvp了，此时nextvp就没有上一帧了，违背了<a href="866c32fa.html">keep_last</a>机制。</p>
+<p>还有一个原因就是上面已知lastvp和vp都是过时的数据，假如nextvp是新数据(seek之后的)，那么如果把lastvp和vp同时丢掉，下面的更新时间戳逻辑就永远不会执行了：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (lastvp-&gt;serial != vp-&gt;serial) &#123;</span><br><span class="line">		is-&gt;frame_timer = av_gettime_relative() / <span class="number">1000000.0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>当然上述只是针对既定结果的原因猜测而已，也说不定是作者无心为之而我在强加解释罢了😄</p>
+</blockquote>
+<p>再往后就是判断lastvp和vp的serial是否相同，而上面判断过如果vp的serial和PacketQueue中最新的serial不一致的话就直接retry了，所以说能执行到这里就表示vp是seek之后的新数据，而lastvp是seek之前的旧数据，此时处于seek后新老数据的交汇点。所以此时用系统当前时间来更新frame_timer，也是相当于校准时间吧。</p>
+<blockquote>
+<p>is-&gt;frame_timer</p>
+<p>frame_timer表示的是上一帧的展示播放时间，一般当新的一帧要展示时才会更新此值。</p>
+</blockquote>
+<p>最后就是判断当前是否已暂停，如果已暂停的话就跳到display处，也就是第8步。当然跳到第8步处也不一定会做展示操作，因为第8步处要展示还要有一些条件的。这里跳到display处表示暂停状态就维持之前的播放帧状态，不做帧显示上的更新。</p>
+<h5 id="第1步小结："><a href="#第1步小结：" class="headerlink" title="第1步小结："></a>第1步小结：</h5><p>总的来说上面第1步就是用来准备好lastvp和vp，并做一些简单的筛选处理，比如新取出的vp是否已过时。</p>
+<h5 id="第2步："><a href="#第2步：" class="headerlink" title="第2步："></a>第2步：</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* compute nominal last_duration */</span></span><br><span class="line">last_duration = vp_duration(is, lastvp, vp);</span><br><span class="line">delay = compute_target_delay(ffp, last_duration, is);</span><br></pre></td></tr></table></figure>
+
+<p>第2步看上去很简单，就两句而已。然而这两句需要解释的内容可不少，包括了视频播放同步的主要逻辑。</p>
+<ol>
+<li><p>调用vp_duration()方法来计算当前正在展示的视频帧(lastvp)的展示持续时长:</p>
+<blockquote>
+<p>ff_ffplay.c#vp_duration()</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">static double vp_duration(VideoState *is, Frame *vp, Frame *nextvp) &#123;</span><br><span class="line">    if (vp-&gt;serial == nextvp-&gt;serial) &#123;</span><br><span class="line">        double duration = nextvp-&gt;pts - vp-&gt;pts;</span><br><span class="line">        if (isnan(duration) || duration &lt;= 0 || duration &gt; is-&gt;max_frame_duration)</span><br><span class="line">            return vp-&gt;duration;</span><br><span class="line">        else</span><br><span class="line">            return duration;</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        return 0.0;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，其实vp_duration()主要计算逻辑就是使用传入的两个Frame的pts相减来计算出持续时长，本方法中还有一些容错处理返回兜底的时长，当然大多数还是返回两个Frame的pts之差。</p>
+</blockquote>
+</li>
+<li><p>调用compute_target_delay()方法来计算出该帧最终的持续时长delay。注意此时将上面刚计算好的last_duration传入，所以说last_duration的计算只是为delay的计算做铺垫，最终帧的应持续展示时长还是delay来决定。</p>
+<blockquote>
+<p>ff_ffplay.c#compute_target_delay()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">double</span> <span class="title function_">compute_target_delay</span><span class="params">(FFPlayer *ffp, <span class="type">double</span> delay, VideoState *is)</span> &#123;</span><br><span class="line">    <span class="type">double</span> sync_threshold, diff = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">/* update delay to follow master synchronisation source */</span></span><br><span class="line">    <span class="keyword">if</span> (get_master_sync_type(is) != AV_SYNC_VIDEO_MASTER) &#123;</span><br><span class="line">        <span class="comment">/* if video is slave, we try to correct big delays by</span></span><br><span class="line"><span class="comment">           duplicating or deleting a frame */</span></span><br><span class="line">        <span class="type">double</span> videoClock = get_clock(&amp;is-&gt;vidclk);</span><br><span class="line">        <span class="type">double</span> masterClock = get_master_clock(is);</span><br><span class="line">        diff = videoClock - masterClock;</span><br><span class="line">        <span class="comment">/* skip or repeat frame. We take into account the</span></span><br><span class="line"><span class="comment">           delay to compute the threshold. I still don&#x27;t know</span></span><br><span class="line"><span class="comment">           if it is the best guess */</span></span><br><span class="line">        sync_threshold = FFMAX(AV_SYNC_THRESHOLD_MIN, FFMIN(AV_SYNC_THRESHOLD_MAX, delay));</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* -- by bbcallen: replace is-&gt;max_frame_duration with AV_NOSYNC_THRESHOLD */</span></span><br><span class="line">        <span class="keyword">if</span> (!isnan(diff) &amp;&amp; <span class="built_in">fabs</span>(diff) &lt; AV_NOSYNC_THRESHOLD) &#123;</span><br><span class="line">            <span class="keyword">if</span> (diff &lt;= -sync_threshold) &#123;</span><br><span class="line">                delay = FFMAX(<span class="number">0</span>, delay + diff);</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (diff &gt;= sync_threshold &amp;&amp; delay &gt; AV_SYNC_FRAMEDUP_THRESHOLD) &#123;</span><br><span class="line">                delay = delay + diff;</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (diff &gt;= sync_threshold) &#123;</span><br><span class="line">                delay = <span class="number">2</span> * delay;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> delay;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>可以看到，本方法中注释还是比较多的，足以看出本方法的重要性。</p>
+<p>本方法中，首先前提条件是当前时钟同步类型不是以视频时钟为主时钟的。因为如果是以视频时钟为主时钟的话，视频帧是不需要同步的，只需要按顺序往下播放就行了，而其他音频是需要根据视频时钟来调整同步的。同理如果是以音频时钟为主时钟的，那么音频正常播放，其他时钟比如视频时钟应该去动态调整速度以适应(或者说对齐)音频时钟。详见<a href="217ddfcf.html">Clock</a>中的分析。</p>
+<ol>
+<li><p>通过<a href="217ddfcf.html">get_clock()</a>方法来获取当前视频时钟的当前时间，以及通过<a href="217ddfcf.html">get_master_clock()</a>方法来获取主时钟的当前时间。然后用当前视频时钟的时间减去主时钟的时间，计算出视频时钟和主时钟的时间差diff。单位为秒。</p>
+</li>
+<li><p>计算sync_threshold的值，即将入参delay(外面的last_duration)赋值给sync_threshold，并且保证sync_threshold的值不大于AV_SYNC_THRESHOLD_MAX，不小于AV_SYNC_THRESHOLD_MIN。这里的sync_threshold其实就是一个同步区间，diff在次区间内的则认为是同步的，不做额外调整正常按照last_duration时长来显示。</p>
+</li>
+<li><p>判断时间差是否合法且小于AV_NOSYNC_THRESHOLD的，而AV_NOSYNC_THRESHOLD是100，也就是说当时钟差异大于100s时，可能有大的错误发生了，此时就不做音视频同步操作了。</p>
+</li>
+<li><p>满足3中的条件时，接下来就要根据diff和sync_threshold的大小关系来做相关操作了。而仔细看上面分析时可以将上面if语句等价变换为下面这样：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (!isnan(diff) &amp;&amp; <span class="built_in">fabs</span>(diff) &lt; AV_NOSYNC_THRESHOLD) &#123;</span><br><span class="line">  <span class="keyword">if</span> (diff &lt;= -sync_threshold) &#123;</span><br><span class="line">    	delay = FFMAX(<span class="number">0</span>, delay + diff);</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (diff &gt;= sync_threshold)&#123;</span><br><span class="line">      <span class="keyword">if</span> (delay &gt; AV_SYNC_FRAMEDUP_THRESHOLD) &#123;</span><br><span class="line">          delay = delay + diff;</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          delay = <span class="number">2</span> * delay;</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以可以按照diff为坐标轴，画出如下的示意图:</p>
+
+
+<p>所以根据上图可以看出：</p>
+<ul>
+<li><p>当diff落在了-sync_threshold左边(包括)时，而sync_threshold肯定是大于0，所以此时diff肯定小于0，也就是视频时钟的当前时间小于主时钟的当前时间，也就是视频播放的慢了，所以此时返回FFMAX(0, delay + diff)：</p>
+<ol>
+<li>如果delay+diff&gt;0，也就是从delay上减去了fab(diff)，也就是减去了时钟差，此时视频时钟和主时钟对齐了，表示虽然lastvp的显示时长缩短了diff，但这样保证了时钟的同步。</li>
+<li>如果delay+diff&lt;0，也就是从delay上减去了时钟差之后小于0了，那么此时返回0。总不能返回负数吧，返回负数就相当于时光倒流了哈哈。</li>
+<li>如果delay+diff&#x3D;0，那么返回0。表示lastvp剩下的时间都别展示了，牺牲了lastvp的展示时间赢得了时钟的同步。不过delay+diff&#x3D;0这情况也太少了哈哈</li>
+</ol>
+</li>
+<li><p>当diff落在(-sync_threshold,sync_threshold)之间时，认为音视频是同步的，所以此时原封不动返回delay，也就是lastvp本该播放持续的时长，按原定步伐走，不加快也不延迟播放。</p>
+</li>
+<li><p>当diff落在了sync_threshold右边(包括)时，此时diff肯定大于0，也就是视频播放过快，此时需要减缓播放：</p>
+<ol>
+<li><p>如果delay &gt; AV_SYNC_FRAMEDUP_THRESHOLD，也就是说该lastvp帧应该显示的时间本来就很长，那么没办法，不能重复播放此帧，因为该时长后双倍就更大了，后面就会越过更多的帧，所以此时给该lastvp帧原来应播放的时长上再增加diff，表示让其在原基础上多播放diff秒，以实现时钟同步。而这也正和官方对于AV_SYNC_FRAMEDUP_THRESHOLD的注释中所言:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* If a frame duration is longer than this, it will not be duplicated to compensate AV sync */</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>如果delay &lt;&#x3D; AV_SYNC_FRAMEDUP_THRESHOLD，那么此时就简单的将该帧在播放一次吧，也就是将原播放时间双倍。</p>
+</li>
+</ol>
+</li>
+</ul>
+</li>
+</ol>
+<p>总结compute_target_delay()方法：</p>
+<ul>
+<li>主要用于实现播放同步，保证视频时钟和主时钟同步。入参delay为当前帧(lastvp)理应持续的时间。</li>
+<li>计算出sync_threshold，表示同步区间，在此区间内默认为时钟是同步，不做同步纠正，原封不动返回delay。</li>
+<li>如若视频时钟慢于主时钟，且超过同步区间，那么加快视频的播放，通过的方法就是减少当前帧lastvp的展示时长，也就是减少delay的值。</li>
+<li>如果视频时钟快于主时钟，且超过同步区间，那么减缓视频的播放，通过的方法就是增加当前帧lastvp的展示时长，也就是增加delay的值。</li>
+</ul>
+</li>
+</ol>
+<h5 id="第2步小结："><a href="#第2步小结：" class="headerlink" title="第2步小结："></a>第2步小结：</h5><p>第2步主要逻辑就是计算当前正在展示播放的帧lastvp应持续的时长，先计算出last_duration，在通过last_duration计算出最终的时长delay，以供后面判断使用。</p>
+<h5 id="第3步"><a href="#第3步" class="headerlink" title="第3步:"></a>第3步:</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">time = av_gettime_relative() / <span class="number">1000000.0</span>;</span><br><span class="line"><span class="keyword">if</span> (isnan(is-&gt;frame_timer) || time &lt; is-&gt;frame_timer) &#123;</span><br><span class="line">		is-&gt;frame_timer = time;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> (time &lt; is-&gt;frame_timer + delay) &#123;</span><br><span class="line">		*remaining_time = FFMIN(is-&gt;frame_timer + delay - time, *remaining_time);</span><br><span class="line">		<span class="keyword">goto</span> display;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>第3步中首先通过av_gettime_relative()方法拿到系统当前时间time，单位为s。然后判断如果frame_timer值不合法或者说大于当前系统时间，那么就将其更新为系统当前时间。因为frame_timer表示的是上一帧显示时的时间，肯定小于系统当前时间的，而这里就是做时间纠正。</p>
+<p>然后计算当前帧lastvp的结束时间：也就是当前帧lastvp的开始展示时间is-&gt;frame_timer加上当前帧lastvp的应持续时长(经过上面第2步中时钟同步逻辑后的)，然后将系统当前时间和当前帧lastvp的结束时间做比较，如果小于，表示当前帧lastvp还没有播放完，应该接着展示该帧，那么此时先修改入参remaining_time的值为当前帧lastvp剩余的展示时间(is-&gt;frame_timer + delay - time)，表示等下次video_refresh_thread()方法中循环时先休眠这么长时间后再来执行本方法video_refresh来刷新展示下一帧，修改完remaining_time的值后就跳到display处，表示此次video_refresh逻辑结束(跳到display处不一定是展示哦，因为会有其他条件判断，比如force_refresh)。</p>
+<h5 id="第3步小结："><a href="#第3步小结：" class="headerlink" title="第3步小结："></a>第3步小结：</h5><p>第3步主要是判断当前帧lastvp的展示时间是否已经结束，如果未结束就接着展示，不会执行下面的第4步第5步等步骤了。</p>
+<h5 id="第4步"><a href="#第4步" class="headerlink" title="第4步:"></a>第4步:</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">is-&gt;frame_timer += delay;</span><br><span class="line"><span class="keyword">if</span> (delay &gt; <span class="number">0</span> &amp;&amp; time - is-&gt;frame_timer &gt; AV_SYNC_THRESHOLD_MAX) &#123;</span><br><span class="line">		is-&gt;frame_timer = time;</span><br><span class="line">&#125;</span><br><span class="line">SDL_LockMutex(is-&gt;pictq.mutex);</span><br><span class="line"><span class="keyword">if</span> (!isnan(vp-&gt;pts)) &#123;</span><br><span class="line">		update_video_pts(is, vp-&gt;pts, vp-&gt;pos, vp-&gt;serial);</span><br><span class="line">&#125;</span><br><span class="line">SDL_UnlockMutex(is-&gt;pictq.mutex);</span><br></pre></td></tr></table></figure>
+
+<p>上面第3步中已经判断了当前帧lastvp的展示时长，如果其展示时间未结束，那么不会走当前逻辑，所以当前逻辑是基于当前帧lastvp的展示时间已经到了的前提下的。</p>
+<p>所以此时先更新is-&gt;frame_timer的值，给其加上delay，也就是加上当前帧lastvp的持续时间，所以加完delay之后，is-&gt;frame_timer就表示的是lastvp的结束时间点，vp的开始时间点。</p>
+<p>然后再做时间校准，即当当前时间减去is-&gt;frame_timer的值大于AV_SYNC_THRESHOLD_MAX(0.1s)，那么就将frame_timer置为当前时间。</p>
+<p>然后通过<a href="217ddfcf.html">update_video_pts()</a>方法来更新视频时钟的时间，注意这里更新用的pts是vp的而不是lastvp的，也就是当前准备播放vp了。</p>
+<h5 id="第4步小结："><a href="#第4步小结：" class="headerlink" title="第4步小结："></a>第4步小结：</h5><p>第4步主要逻辑就是将相关信息更新成vp的，比如frame_timer更新成vp的开始时间(也就是lastvp的结束时间)，已经视频时钟的更新。做这些更新主要是为了后面做准备。</p>
+<h5 id="第5步"><a href="#第5步" class="headerlink" title="第5步:"></a>第5步:</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (frame_queue_nb_remaining(&amp;is-&gt;pictq) &gt; <span class="number">1</span>) &#123;</span><br><span class="line">    Frame *nextvp = frame_queue_peek_next(&amp;is-&gt;pictq);</span><br><span class="line">    duration = vp_duration(is, vp, nextvp);</span><br><span class="line">    <span class="keyword">if</span> (!is-&gt;step &amp;&amp; (ffp-&gt;framedrop &gt; <span class="number">0</span> || (ffp-&gt;framedrop &amp;&amp; get_master_sync_type(is) != AV_SYNC_VIDEO_MASTER)) &amp;&amp; time &gt; is-&gt;frame_timer + duration) &#123;</span><br><span class="line">        frame_queue_next(&amp;is-&gt;pictq);</span><br><span class="line">        <span class="keyword">goto</span> retry;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>首先还是先调用<a href="866c32fa.html">frame_queue_nb_remaining()</a>方法来获取当前pictq队列中剩余的数据个数，判断其是否大于1，如果大于1，也就是表示在vp之后还有nextvp，那么通过<a href="866c32fa.html">frame_queue_peek_next</a>方法来获取vp之后的数据nextvp(详见上面第一张图)。然后同样还是通过vp_duration()方法来计算持续时长，不过此时计算的是vp的持续时长，上面计算的是lastvp的持续时长。然后就是if条件判断，判断是否需要丢帧:</p>
+<ol>
+<li><p>is-&gt;step：</p>
+<p>关于step，一般是暂停状态时seek，此时会将起置为1，然后seek成功后会显示seek后的一帧画面用于体现seek成功了。这里不是step状态才丢帧走retry，如果时step状态不走丢帧retry逻辑，具体下面会有。</p>
+</li>
+<li><p>(ffp-&gt;framedrop &gt; 0 || (ffp-&gt;framedrop &amp;&amp; get_master_sync_type(is) !&#x3D; AV_SYNC_VIDEO_MASTER)：</p>
+</li>
+</ol>
+<p>   framedrop是用户可配置的开关，表示是否允许丢帧。关于framedrop在<a href="8876f557.html">func_run_sync</a>、<a href="3da735d9.html">drain_output_buffer2</a>、<a href="33f55665.html">get_video_frame</a>中都有简单介绍过，也就是解码时的丢帧操作。而这里的是展示中的丢帧操作，所以在ijkplayer(甚至ffplay)中，视频丢帧的操作存在于视频解码时和视频展示时。</p>
+<ol start="3">
+<li><p>time &gt; is-&gt;frame_timer + duration</p>
+<p>由于上面第4步中已经将frame_timer更新成vp的开始时间了(也就是lastvp的结束时间)，而此时duration又是vp的展示持续时长，所以is-&gt;frame_timer + duration就是vp的结束时间。也就是说此处判断当前时间是否大于vp的结束时间，如果大于表示当前已经过了vp这帧的展示时间了，也就是说vp该帧永无出头之日。</p>
+</li>
+</ol>
+<p>所以当上面条件满足时，表示需要丢帧，所以调用<a href="866c32fa.html">frame_queue_next</a>方法来完成丢帧操作，但是需注意此处丢弃的仍是lastvp而不是vp。</p>
+<blockquote>
+<p>为何这里丢弃的是lastvp？</p>
+<p>至于这里为什么只丢弃lastvp，而不是将lastvp和vp一同丢掉，我觉得原因有三：</p>
+<ol>
+<li>和上面第1步中的分析差不多，主要还是为了保持keep_last机制吧。</li>
+<li>因为上面第4步中只是将frame_timer更新成vp的开始时间，而此处如果将vp一同丢掉，那么还需再更新frame_timer，将其更新成vp的结束时间，也就是nextvp的开始时间。</li>
+<li>如果同时丢掉vp的话，那么会有一帧没有经过同步逻辑计算。而如果只丢掉lastvp，那么这样逻辑统一了，每一帧都会经过同步逻辑计算，而且就算此时不丢掉等下一次retry时再丢掉也是ok的。</li>
+</ol>
+</blockquote>
+<h5 id="第5步小结"><a href="#第5步小结" class="headerlink" title="第5步小结:"></a>第5步小结:</h5><p>第5步主要逻辑就是丢帧。判断当前是否已经过了vp的显示时间。如果已超过，此处丢弃的是lastvp，而不是lastvp和vp。</p>
+<h5 id="第6步"><a href="#第6步" class="headerlink" title="第6步:"></a>第6步:</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">if</span> (is-&gt;subtitle_st) &#123;</span><br><span class="line">     <span class="keyword">while</span> (frame_queue_nb_remaining(&amp;is-&gt;subpq) &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        sp = frame_queue_peek(&amp;is-&gt;subpq);</span><br><span class="line">				<span class="keyword">if</span> (frame_queue_nb_remaining(&amp;is-&gt;subpq) &gt; <span class="number">1</span>)</span><br><span class="line">        		sp2 = frame_queue_peek_next(&amp;is-&gt;subpq);</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        		sp2 = <span class="literal">NULL</span>;</span><br><span class="line">        <span class="keyword">if</span> (sp-&gt;serial != is-&gt;subtitleq.serial || (is-&gt;vidclk.pts &gt; (sp-&gt;pts + ((<span class="type">float</span>) sp-&gt;sub.end_display_time / <span class="number">1000</span>)))|| (sp2 &amp;&amp; is-&gt;vidclk.pts &gt; (sp2-&gt;pts + ((<span class="type">float</span>) sp2-&gt;sub.start_display_time / <span class="number">1000</span>)))) &#123;</span><br><span class="line">            <span class="keyword">if</span> (sp-&gt;uploaded) &#123;</span><br><span class="line">            		ffp_notify_msg4(ffp, FFP_MSG_TIMED_TEXT, <span class="number">0</span>, <span class="number">0</span>, <span class="string">&quot;&quot;</span>, <span class="number">1</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            frame_queue_next(&amp;is-&gt;subpq);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        		<span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>第6步主要是字幕播放，这里留个TODO暂不分析。</p>
+<h5 id="第6步小结"><a href="#第6步小结" class="headerlink" title="第6步小结:"></a>第6步小结:</h5><p>TODO</p>
+<h5 id="第7步："><a href="#第7步：" class="headerlink" title="第7步："></a>第7步：</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">frame_queue_next(&amp;is-&gt;pictq);</span><br><span class="line">is-&gt;force_refresh = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">SDL_LockMutex(ffp-&gt;is-&gt;play_mutex);</span><br><span class="line"><span class="keyword">if</span> (is-&gt;step) &#123;</span><br><span class="line">    is-&gt;step = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span> (!is-&gt;paused)</span><br><span class="line">   		 stream_update_pause_l(ffp);</span><br><span class="line">&#125;</span><br><span class="line">SDL_UnlockMutex(ffp-&gt;is-&gt;play_mutex);</span><br></pre></td></tr></table></figure>
+
+<p>能执行到这一步，表示当前视频帧lastvp的展示时间已经用完了，该展示vp了。那么此时调用调用<a href="866c32fa.html">frame_queue_next</a>方法来将lastvp丢掉，然后将force_refresh置为1，表示vp帧即将要展示。这里丢弃的是lastvp就很合情理了，因为lastvp展示完了，该vp了，所以lastvp丢掉，此时队列头部就是vp了。但是此时可能就有疑问：</p>
+<blockquote>
+<p>为啥现在不说keep_last机制了？</p>
+<p>因为此时本就满足keep_last机制。force_refresh置为了1，那么执行到下面的display处时，会满足条件而调用<a href="205c40e1.html">video_display2</a>方法来展示vp这一帧，那么此时vp就和上面说的lastvp一样了。而keep_last机制就是保留已播放的上一帧，对此处来说就是保留vp这一帧，所以没问题。</p>
+</blockquote>
+<p>然后判断step是否为1，如果是的话，表示当前是暂停状态的seek成功了，此时需要展示seek成功后的一帧，以体现seek成功。那么先将step置为0表示step成功，然后将播放器状态维持为暂停。而上面第5步中的丢帧操作中也有对step的判断，可以对照上面第5步中的逻辑来理解。</p>
+<h5 id="第7步小结"><a href="#第7步小结" class="headerlink" title="第7步小结:"></a>第7步小结:</h5><p>总的来说第7步就是用来正常逻辑的丢弃lastvp，然后为后面的展示vp做准备(将force_refresh置为1)。</p>
+<h5 id="第8步："><a href="#第8步：" class="headerlink" title="第8步："></a>第8步：</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (!ffp-&gt;display_disable &amp;&amp; is-&gt;force_refresh &amp;&amp; is-&gt;show_mode == SHOW_MODE_VIDEO &amp;&amp; is-&gt;pictq.rindex_shown) &#123;</span><br><span class="line">		video_display2(ffp);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>第8步也就是上面一直提到的display处，可以看到这里要展示vp这一帧还是有很多条件的:</p>
+<ul>
+<li><p>!ffp-&gt;display_disable</p>
+<p>当前视频帧展示是打开的，也就是display_disable是0。这个开关一般用户来设置，详见ff_ffplay_options.c#ffp_context_options中的定义。</p>
+</li>
+<li><p>is-&gt;force_refresh</p>
+<p>上面介绍过了，再第7步中也有介绍。最终满不满足if条件多半是由这个值来决定的，而在上面好多步中都有跳display的逻辑，但是大多数是进不去这个if的，除非第7步。</p>
+</li>
+<li><p>is-&gt;show_mode &#x3D;&#x3D; SHOW_MODE_VIDEO</p>
+<p>上面一开始有介绍，不再赘述。</p>
+</li>
+<li><p>is-&gt;pictq.rindex_shown</p>
+<p>该值对于音频、视频队列一般是1，字幕队列是0。该值的存在就是为了实现<a href="866c32fa.html">keep_last</a>机制。</p>
+</li>
+</ul>
+<p>可以看到，要最终调用<a href="205c40e1.html">video_display2</a>方法来展示vp条件还是挺多的，但是实质上决定条件是force_refresh。</p>
+<h5 id="第8步小结"><a href="#第8步小结" class="headerlink" title="第8步小结:"></a>第8步小结:</h5><p>判断条件满足后调用<a href="205c40e1.html">video_display2</a>方法来展示vp。</p>
+<blockquote>
+<p>注意：</p>
+<p>这里说的展示vp，其实是针对video_refresh()方法本次的执行来说的，而又因为在上面第7步中调用了frame_queue_next()方法，所以此时说的vp其实是下次video_refresh()方法执行时的lastvp了。</p>
+</blockquote>
+<h5 id="第9步："><a href="#第9步：" class="headerlink" title="第9步："></a>第9步：</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">is-&gt;force_refresh = <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+
+<p>这一步太简单了就是将force_refresh置为0。也就是说从第7步中置为1，然后到了第8步中满足了条件执行了<a href="205c40e1.html">video_display2</a>方法，那么之后就立马将其置为0。足以看出force_refresh的重要性了。别看第8步中条件那么多，最终起作用的还是这个，因为其他几个都是基本不变的。</p>
+<h4 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h4><p>其实相比较于之前分析的方法来说，本方法并不算多，但是还是分了9步来解释，其中一个原因就是这个方法太重要了，因为它涉及到音视频时钟同步、FrameQueue等，着实看了好久才看得一皮毛，所以先做记录，不然后面担心有忘。</p>
+<p>本方法主要逻辑还是如文章开始所说的处理视频帧刷新展示逻辑。而有疑惑的其实是第1步和第5步中明知vp已经都不符合要求了，还调用frame_queue_next方法来只丢弃lastvp，而不连同vp一起。后面也是想出了一些原因，不知是正确的，或是我强加的解释。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/866c32fa.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-FrameQueue</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/6093ab9f.html">
+        <span class="next-text nav-default">Ijkplayer-SDL_Vout_Opaque</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

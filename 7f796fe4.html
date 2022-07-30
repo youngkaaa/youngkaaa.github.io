@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="ijkplayer之IjkMediaPlayer"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/7f796fe4.html"/>
+
+
+<meta name="description" content="本文主要介绍ijkplayer中位于ijkplayer_internal.h中的IjkMediaPlayer结构体。 关于IjkMediaPlayer结构体，它是IjkPlayer中最基本的结构体，存储着最基本的一些信息。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ijkplayer之IjkMediaPlayer">
+<meta property="og:url" content="https://youngkaaa.github.io/7f796fe4.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍ijkplayer中位于ijkplayer_internal.h中的IjkMediaPlayer结构体。 关于IjkMediaPlayer结构体，它是IjkPlayer中最基本的结构体，存储着最基本的一些信息。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-03-07T02:49:46.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.418Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> ijkplayer之IjkMediaPlayer - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          ijkplayer之IjkMediaPlayer
+        
+      </h1>
+
+      <time class="post-time">
+          3月 07 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍ijkplayer中位于ijkplayer_internal.h中的IjkMediaPlayer结构体。</p>
+<p>关于IjkMediaPlayer结构体，它是IjkPlayer中最基本的结构体，存储着最基本的一些信息。</p>
+<span id="more"></span>
+
+<p>关于IjkMediaPlayer的定义如下:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">struct IjkMediaPlayer &#123;</span><br><span class="line">    volatile int ref_count;</span><br><span class="line">    pthread_mutex_t mutex;</span><br><span class="line">    FFPlayer *ffplayer;</span><br><span class="line"></span><br><span class="line">    int (*msg_loop)(void*);</span><br><span class="line">    SDL_Thread *msg_thread;</span><br><span class="line">    SDL_Thread _msg_thread;</span><br><span class="line">    int mp_state;</span><br><span class="line">    char *data_source;</span><br><span class="line">    void *weak_thiz;</span><br><span class="line"></span><br><span class="line">    int restart;</span><br><span class="line">    int restart_from_beginning;</span><br><span class="line">    int seek_req;</span><br><span class="line">    long seek_msec;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>关于上面结构体中相关字段的解释如下：</p>
+<h3 id="ref-count"><a href="#ref-count" class="headerlink" title="ref_count"></a>ref_count</h3><p>ref_count看名字便可以猜到是引用数。也就是当前结构体实例的外部引用数。通过ijkplayer.c文件中的ijkmp_inc_ref(IjkMediaPlayer)和ijkmp_dec_ref(IjkMediaPlayer)方法来增加或减少引用数，也就是改变ref_count的值，其中关于ijkmp_dec_ref(IjkMediaPlayer)方法中可以额外关注下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">void ijkmp_dec_ref(IjkMediaPlayer *mp) &#123;</span><br><span class="line">    if (!mp)</span><br><span class="line">        return;</span><br><span class="line"></span><br><span class="line">    int ref_count = __sync_sub_and_fetch(&amp;mp-&gt;ref_count, 1);</span><br><span class="line">    if (ref_count == 0) &#123;</span><br><span class="line">                MPTRACE(&quot;ijkmp_dec_ref(): ref=0\n&quot;);</span><br><span class="line">        ijkmp_shutdown(mp);</span><br><span class="line">        ijkmp_destroy_p(&amp;mp);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看，在ijkmp_dec_ref(IjkMediaPlayer)方法中在自减1之后会判断当前引用数是否为0，如果为0那么就销毁释放该实例。这不就是垃圾回收中的引用计数发嘛。</p>
+<h3 id="mutex"><a href="#mutex" class="headerlink" title="mutex"></a>mutex</h3><p>锁实例，所有关于IjkMediaPlayer结构体实例中字段的操作需要加锁的，都可以使用该锁。</p>
+<h3 id="ffplayer"><a href="#ffplayer" class="headerlink" title="ffplayer"></a>ffplayer</h3><p>原ffmpeg中的结构体，在ijkplayer中被扩充了些字段，比如增加了音视频解码相关的IJKFF_Pipeline等，是视频播放器的主要结构体，也承载着主要逻辑。</p>
+<h3 id="msg-loop"><a href="#msg-loop" class="headerlink" title="msg_loop"></a>msg_loop</h3><p>指针函数。具体函数的实现指向的是ijkplayer_jni.c中的message_loop(void *)。主要作用是整个库的<code>消息循环</code>逻辑，包括在相关状态变化时底层做的一些操作(比如在在播放结束FFP_MSG_COMPLETED时修改相关结构体中字段的值以保证状态正确)，以及将播放器状态变化更新通知到上层。</p>
+<h3 id="mp-state"><a href="#mp-state" class="headerlink" title="mp_state"></a>mp_state</h3><p>当前播放器的状态，比如：MP_STATE_IDLE、MP_STATE_PREPARED等。详见<code>ijkplayer.h</code>中的定义。</p>
+<h3 id="data-source"><a href="#data-source" class="headerlink" title="data_source"></a>data_source</h3><p>视频的地址信息。比如播放本地文件是就是该文件在手机存储中的位置，播放在线视频时就是视频的url信息。</p>
+<h3 id="weak-thiz"><a href="#weak-thiz" class="headerlink" title="weak_thiz"></a>weak_thiz</h3><p>存储着上层传下来的new WeakReference<IjkMediaPlayer>(this)。具体在上层IjkMediaPlayer类对象实例化时，会调用native_setup()方法，传入的就是new WeakReference<IjkMediaPlayer>(this),传递到c层的IjkMediaPlayer结构体中就会用weak_thiz指向该实例地址。简单说就是对应到上层IjkMediaPlayer对象实例的地址。</p>
+<h3 id="restart"><a href="#restart" class="headerlink" title="restart"></a>restart</h3><p>是否重新开始播放。当视频播放完成时(FFP_MSG_COMPLETED)，在msg_loop中会将其置为1，等下一次开始播放时会自动从头开始播放。</p>
+<h3 id="restart-from-beginning"><a href="#restart-from-beginning" class="headerlink" title="restart_from_beginning"></a>restart_from_beginning</h3><p>重新播放时是否从头开始播放。一般跟着restart赋值为1时一起置为1。</p>
+<h3 id="seek-req"><a href="#seek-req" class="headerlink" title="seek_req"></a>seek_req</h3><p>当前是否是在seek中。上层调用seekTo(long)方法时，底层会将该值置为1，当seek完成时会自动置为0。</p>
+<h3 id="seek-msec"><a href="#seek-msec" class="headerlink" title="seek_msec"></a>seek_msec</h3><p>要seek到位置，单位毫秒。赋值同上面seek_req。</p>
+<h2 id="创建"><a href="#创建" class="headerlink" title="创建"></a>创建</h2><p>c层的结构体实例创建总是依赖于上层的。所以我们从上层IjkPlayer类中开始分析。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public IjkMediaPlayer(IjkLibLoader libLoader) &#123;</span><br><span class="line">        initPlayer(libLoader);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在IjkMediaPlayer类的构造方法中，其实就只是调用了initPlayer(IjkLibLoader)方法，传入了一个IjkLibLoader接口的实现类，关于IjkLibLoader就不解释了。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">private void initPlayer(IjkLibLoader libLoader) &#123;</span><br><span class="line"></span><br><span class="line">    // 此处省略无关代码</span><br><span class="line"></span><br><span class="line">    /*</span><br><span class="line">     * Native setup requires a weak reference to our object. It&#x27;s easier to</span><br><span class="line">     * create it here than in C++.</span><br><span class="line">     */</span><br><span class="line">    native_setup(new WeakReference&lt;IjkMediaPlayer&gt;(this));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到主要是调用了native_setup(Object)方法，传入的是当前对象的<code>弱引用</code>，这个可以就可以解释上面的weak_thiz属性了。然后最终调用的是ijkplayer_jni.c中的IjkMediaPlayer_native_setup()方法:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">static void IjkMediaPlayer_native_setup(JNIEnv *env, jobject thiz, jobject weak_this) &#123;</span><br><span class="line"></span><br><span class="line">    // 创建IjkMediaPlayer结构体实例</span><br><span class="line">    IjkMediaPlayer *mp = ijkmp_android_create(message_loop);</span><br><span class="line">    JNI_CHECK_GOTO(mp, env, &quot;java/lang/OutOfMemoryError&quot;, &quot;mpjni: native_setup: ijkmp_create() failed&quot;, LABEL_RETURN);</span><br><span class="line"></span><br><span class="line">    // 将c层IjkMediaPlayer结构体实例(mp)的地址设置给java层IjkMediaPlayer对象实例中的mNativeMediaPlayer</span><br><span class="line">    jni_set_media_player(env, thiz, mp);</span><br><span class="line"></span><br><span class="line">    // IjkMediaPlayer结构体实例中的weak_thiz赋值</span><br><span class="line">    ijkmp_set_weak_thiz(mp, (*env)-&gt;NewGlobalRef(env, weak_this));</span><br><span class="line"></span><br><span class="line">    // 省略无用代码</span><br><span class="line"></span><br><span class="line">    LABEL_RETURN:</span><br><span class="line">    ijkmp_dec_ref_p(&amp;mp);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看出：</p>
+<ol>
+<li>通过ijkmp_android_create()方法创建出IjkMediaPlayer结构体实例。该方法中包括对IjkMediaPlayer结构体的地址分配以及其中ffplayer、msg_loop赋值初始化等。</li>
+<li>通过jni_set_media_player()方法将该结构体实例地址设置给上层刚传下来的IjkMediaPlayer对象中的mNativeMediaPlayer变量中去，所以以后只要有了上层对象实例jobject thiz就能拿到其底层所对应的IjkMediaPlayer结构体实例了。具体看ijkplayer_jni.c中jni_get_media_player方法。</li>
+<li>调用ijkmp_set_weak_thiz()方法将上层传下来的new WeakReference<IjkMediaPlayer>(this)赋值给IjkMediaPlayer结构体中的weak_thiz字段。</li>
+</ol>
+<p>所以说上层IjkMediaPlayer类对象实例和底层IjkMediaPlayer结构体实例中互相都引用到了彼此。其中后者引用的是弱引用。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>关于IjkMediaPlayer结构体,其实是上层IjkMediaPlayer类在底层的一个对应，其实这种对应实现在本库中还有好多，比如上层的MediaCodec对应底层的SDL_AMediaCodec结构体；上层的BufferInfo对应底层的SDL_AMediaCodecBufferInfo结构体等；以及google官方的Surface对应底层的ANativeWindow等。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/d2a3d8a6.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">ijkplayer-IJKFF_Pipeline</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

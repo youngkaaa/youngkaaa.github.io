@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-ffpipenode_create_video_decoder_from_ffplay"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/f38a2dac.html"/>
+
+
+<meta name="description" content="本文主要分析位于ffpipenode_ffplay_vdec.c文件中的ffpipenode_create_video_decoder_from_ffplay()方法。 简单说，本方法主要是创建视频软解相关逻辑，而视频硬解相关的可以翻看func_open_video_decoder中关于ffpipenode_create_video_decoder_from_android_mediacodec(">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-ffpipenode_create_video_decoder_from_ffplay">
+<meta property="og:url" content="https://youngkaaa.github.io/f38a2dac.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要分析位于ffpipenode_ffplay_vdec.c文件中的ffpipenode_create_video_decoder_from_ffplay()方法。 简单说，本方法主要是创建视频软解相关逻辑，而视频硬解相关的可以翻看func_open_video_decoder中关于ffpipenode_create_video_decoder_from_android_mediacodec(">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-03-15T06:14:02.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.422Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-ffpipenode_create_video_decoder_from_ffplay - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-ffpipenode_create_video_decoder_from_ffplay
+        
+      </h1>
+
+      <time class="post-time">
+          3月 15 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要分析位于ffpipenode_ffplay_vdec.c文件中的ffpipenode_create_video_decoder_from_ffplay()方法。</p>
+<p>简单说，本方法主要是创建视频软解相关逻辑，而视频硬解相关的可以翻看<a href="65dc31d5.html">func_open_video_decoder</a>中关于ffpipenode_create_video_decoder_from_android_mediacodec()方法的介绍，以及可以找到本方法的调用场景。</p>
+<span id="more"></span>
+
+
+
+<blockquote>
+<p>ffpipenode_ffplay_vdec.c#ffpipenode_create_video_decoder_from_ffplay()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">IJKFF_Pipenode *<span class="title function_">ffpipenode_create_video_decoder_from_ffplay</span><span class="params">(FFPlayer *ffp)</span></span><br><span class="line">&#123;</span><br><span class="line">    IJKFF_Pipenode *node = ffpipenode_alloc(<span class="keyword">sizeof</span>(IJKFF_Pipenode_Opaque));</span><br><span class="line">    <span class="keyword">if</span> (!node)</span><br><span class="line">        <span class="keyword">return</span> node;</span><br><span class="line"></span><br><span class="line">    IJKFF_Pipenode_Opaque *opaque = node-&gt;opaque;</span><br><span class="line">    opaque-&gt;ffp         = ffp;</span><br><span class="line"></span><br><span class="line">    node-&gt;func_destroy  = func_destroy;</span><br><span class="line">    node-&gt;func_run_sync = func_run_sync;</span><br><span class="line"></span><br><span class="line">    ffp_set_video_codec_info(ffp, AVCODEC_MODULE_NAME, avcodec_get_name(ffp-&gt;is-&gt;viddec.avctx-&gt;codec_id));</span><br><span class="line">    ffp-&gt;stat.vdec_type = FFP_PROPV_DECODER_AVCODEC;</span><br><span class="line">    <span class="keyword">return</span> node;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>可以看到，软解的<a href="86c88415.html">IJKFF_Pipenode</a>创建逻辑还是很简单的，相较于硬解的<a href="86c88415.html">IJKFF_Pipenode</a>创建逻辑<a href="65dc31d5.html">ffpipenode_create_video_decoder_from_android_mediacodec</a>来说简单的太多了。其实硬解软解分别对应的这两个方法完成的逻辑都是一样的:</p>
+<ol>
+<li>给<a href="86c88415.html">IJKFF_Pipenode</a>中的指定指针函数赋值</li>
+<li>初始化创建、配置解码器</li>
+</ol>
+<p>而在硬解的<a href="65dc31d5.html">ffpipenode_create_video_decoder_from_android_mediacodec</a>方法实现中，大部分的逻辑都是在第2步，也就是创建上层MediaCodec对以及MediaFormat的对象实例。而软解中的第二步实现就很简单了，甚至都没有相关步骤，就只是最后调用ffp_set_video_codec_info()方法将解码器信息保存起来(而本方法在硬解中也有)。</p>
+<p>而了解过前面硬解的解码过程后，可以知道，最主要的解码逻辑是在func_run_sync中的，比如硬解中的<a href="8876f557.html">func_run_sync</a>方法(异步解码)和<a href="64d79e1a.html">func_run_sync_loop</a>方法(同步解码)。所以软解中的解码具体实现逻辑还是得在软解的func_run_sync方法中:</p>
+<blockquote>
+<p>ffpipenode_ffplay_vdec.c#func_run_sync()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">func_run_sync</span><span class="params">(IJKFF_Pipenode *node)</span></span><br><span class="line">&#123;</span><br><span class="line">    IJKFF_Pipenode_Opaque *opaque = node-&gt;opaque;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ffp_video_thread(opaque-&gt;ffp);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>可以看到，其实最主要还是在ffp_video_thread()方法中的:</p>
+<blockquote>
+<p>ff_ffplay.c#ffp_video_thread()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">ffp_video_thread</span><span class="params">(FFPlayer *ffp)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> ffplay_video_thread(ffp);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>可以看到，其实还是调用的<a href="1c5ec8b9.html">ffp_video_thread</a>方法，详细的可以看<a href="1c5ec8b9.html">ffp_video_thread</a>中的分析，这里不再赘述。</p>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>可以看到，对于ffpipenode_create_video_decoder_from_ffplay()方法来说，与其对应的是<a href="65dc31d5.html">ffpipenode_create_video_decoder_from_android_mediacodec</a>方法，前者是软解实现，后者是硬解实现。最终的实现都是依附于这两个方法所创建返回的<a href="86c88415.html">IJKFF_Pipenode</a>实例中的func_run_sync方法。这里我们可以看出：对于c这种没有对象概念的语言来说，要实现类似于java中的多态(类继承实现)的功能，可以通过指针函数方式，这里的<a href="86c88415.html">IJKFF_Pipenode</a>的创建不就是一个例子么？</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/1c5ec8b9.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-ffplay_video_thread</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/4a17d154.html">
+        <span class="next-text nav-default">Ijkplayer-AVRational</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

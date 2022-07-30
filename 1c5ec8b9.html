@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-ffplay_video_thread"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/1c5ec8b9.html"/>
+
+
+<meta name="description" content="本文主要分析位于ff_ffplay.c中的ffplay_video_thread()方法。 本方法主要作用是实现视频软解，类似于硬解中的func_run_sync方法(异步解码)和func_run_sync_loop方法(同步解码)。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-ffplay_video_thread">
+<meta property="og:url" content="https://youngkaaa.github.io/1c5ec8b9.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要分析位于ff_ffplay.c中的ffplay_video_thread()方法。 本方法主要作用是实现视频软解，类似于硬解中的func_run_sync方法(异步解码)和func_run_sync_loop方法(同步解码)。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-03-15T13:14:23.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.422Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-ffplay_video_thread - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-ffplay_video_thread
+        
+      </h1>
+
+      <time class="post-time">
+          3月 15 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要分析位于ff_ffplay.c中的ffplay_video_thread()方法。</p>
+<p>本方法主要作用是实现视频软解，类似于硬解中的<a href="8876f557.html">func_run_sync</a>方法(异步解码)和<a href="64d79e1a.html">func_run_sync_loop</a>方法(同步解码)。</p>
+<span id="more"></span>
+
+
+
+<blockquote>
+<p>ff_ffplay.c#ffplay_video_thread()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">ffplay_video_thread</span><span class="params">(<span class="type">void</span> *arg)</span> &#123;</span><br><span class="line">    <span class="comment">// 第1步</span></span><br><span class="line">    FFPlayer *ffp = arg;</span><br><span class="line">    VideoState *is = ffp-&gt;is;</span><br><span class="line">    AVFrame *frame = av_frame_alloc();</span><br><span class="line">    <span class="type">double</span> pts;</span><br><span class="line">    <span class="type">double</span> duration;</span><br><span class="line">    <span class="type">int</span> ret;</span><br><span class="line">    AVRational tb = is-&gt;video_st-&gt;time_base;</span><br><span class="line">    AVRational frame_rate = av_guess_frame_rate(is-&gt;ic, is-&gt;video_st, <span class="literal">NULL</span>);</span><br><span class="line">    <span class="type">int64_t</span> dst_pts = <span class="number">-1</span>;</span><br><span class="line">    <span class="type">int64_t</span> last_dst_pts = <span class="number">-1</span>;</span><br><span class="line">    <span class="type">int</span> retry_convert_image = <span class="number">0</span>;</span><br><span class="line">    <span class="type">int</span> convert_frame_count = <span class="number">0</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 省略滤镜相关代码</span></span><br><span class="line">  </span><br><span class="line">    <span class="keyword">if</span> (!frame) &#123;</span><br><span class="line">        <span class="keyword">return</span> AVERROR(ENOMEM);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">        <span class="comment">// 第2.1步</span></span><br><span class="line">        ret = get_video_frame(ffp, frame);</span><br><span class="line">        <span class="keyword">if</span> (ret &lt; <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">goto</span> the_end;</span><br><span class="line">        <span class="keyword">if</span> (!ret)</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">      	<span class="comment">// 第2.2步</span></span><br><span class="line">        <span class="keyword">if</span> (ffp-&gt;get_frame_mode) &#123;</span><br><span class="line">            <span class="keyword">if</span> (!ffp-&gt;get_img_info || ffp-&gt;get_img_info-&gt;count &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">                av_frame_unref(frame);</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            last_dst_pts = dst_pts;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (dst_pts &lt; <span class="number">0</span>) &#123;</span><br><span class="line">                dst_pts = ffp-&gt;get_img_info-&gt;start_time;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                dst_pts += (ffp-&gt;get_img_info-&gt;end_time - ffp-&gt;get_img_info-&gt;start_time) /</span><br><span class="line">                           (ffp-&gt;get_img_info-&gt;num - <span class="number">1</span>);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            pts = (frame-&gt;pts == AV_NOPTS_VALUE) ? NAN : frame-&gt;pts * av_q2d(tb);</span><br><span class="line">            pts = pts * <span class="number">1000</span>;</span><br><span class="line">            <span class="keyword">if</span> (pts &gt;= dst_pts) &#123;</span><br><span class="line">                <span class="keyword">while</span> (retry_convert_image &lt;= MAX_RETRY_CONVERT_IMAGE) &#123;</span><br><span class="line">                    ret = convert_image(ffp, frame, (<span class="type">int64_t</span>) pts, frame-&gt;width, frame-&gt;height);</span><br><span class="line">                    <span class="keyword">if</span> (!ret) &#123;</span><br><span class="line">                        convert_frame_count++;</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                    retry_convert_image++;</span><br><span class="line">                    av_log(<span class="literal">NULL</span>, AV_LOG_ERROR, <span class="string">&quot;convert image error retry_convert_image = %d\n&quot;</span>,</span><br><span class="line">                           retry_convert_image);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                retry_convert_image = <span class="number">0</span>;</span><br><span class="line">                <span class="keyword">if</span> (ret || ffp-&gt;get_img_info-&gt;count &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">                    <span class="keyword">if</span> (ret) &#123;</span><br><span class="line">                        av_log(<span class="literal">NULL</span>, AV_LOG_ERROR, <span class="string">&quot;convert image abort ret = %d\n&quot;</span>, ret);</span><br><span class="line">                        ffp_notify_msg3(ffp, FFP_MSG_GET_IMG_STATE, <span class="number">0</span>, ret);</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        av_log(<span class="literal">NULL</span>, AV_LOG_INFO, <span class="string">&quot;convert image complete convert_frame_count = %d\n&quot;</span>,</span><br><span class="line">                               convert_frame_count);</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">goto</span> the_end;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                dst_pts = last_dst_pts;</span><br><span class="line">            &#125;</span><br><span class="line">            av_frame_unref(frame);</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    		<span class="comment">// 省略滤镜相关代码</span></span><br><span class="line">   </span><br><span class="line">      	<span class="comment">// 第2.3步</span></span><br><span class="line">        duration = (frame_rate.num &amp;&amp; frame_rate.den ? av_q2d((AVRational) &#123;frame_rate.den, frame_rate.num&#125;) : <span class="number">0</span>);</span><br><span class="line">        pts = (frame-&gt;pts == AV_NOPTS_VALUE) ? NAN : frame-&gt;pts * av_q2d(tb);</span><br><span class="line">        ret = queue_picture(ffp, frame, pts, duration, frame-&gt;pkt_pos, is-&gt;viddec.pkt_serial);</span><br><span class="line">        av_frame_unref(frame);</span><br><span class="line">        <span class="keyword">if</span> (ret &lt; <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">goto</span> the_end;</span><br><span class="line">    &#125;</span><br><span class="line">    the_end:</span><br><span class="line">    av_log(<span class="literal">NULL</span>, AV_LOG_INFO, <span class="string">&quot;convert image convert_frame_count = %d\n&quot;</span>, convert_frame_count);</span><br><span class="line">    av_frame_free(&amp;frame);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>具体代码如上，省略了部分滤镜相关的逻辑，然后标上了一些步骤。下面先简单总结下上面几个步骤的流程:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 第1步</span></span><br><span class="line"><span class="keyword">for</span> (;;) &#123;</span><br><span class="line">		<span class="comment">// 第2.1步;</span></span><br><span class="line">		<span class="comment">// 第2.2步;</span></span><br><span class="line">		<span class="comment">// 第2.3步;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="第1步"><a href="#第1步" class="headerlink" title="第1步:"></a>第1步:</h4><p>第1步很简单，主要就是定义和初始化一些值。比如用于存放解码后数据的frame(AVFrame)、以及通过av_guess_frame_rate()方法得到视频的播放帧率frame_rate等。</p>
+<h4 id="第2步"><a href="#第2步" class="headerlink" title="第2步:"></a>第2步:</h4><p>第2步中，包括2.1-2.3步，主要是一个无限的for循环，具体退出条件在下面的分析中会提到。</p>
+<h5 id="第2-1步"><a href="#第2-1步" class="headerlink" title="第2.1步:"></a>第2.1步:</h5><p>调用<a href="33f55665.html">get_video_frame()</a>方法来获取解码后数据，将其填充到入参frame中。注意本方法的返回值，如果小于0(一般是-1)，表示的是PacketQueue已终止，没必要再解码了，所以此时直接推出for循环，终止解码逻辑，如果不等于0(也就是&gt;0)，那么表示获取解码后数据失败，那么重新执行for循环。</p>
+<h5 id="第2-2步"><a href="#第2-2步" class="headerlink" title="第2.2步:"></a>第2.2步:</h5><p>经过上面第2.1步之后，说明解码后的数据已经填充到frame入参中了，那么此时判断ffp-&gt;get_frame_mode开关是否开启，如果开启了就走if中的逻辑，注意此时就不会走下面的2.3步了，因为if中有continue。而这个get_frame_mode开关是用来干嘛的呢？下面简单介绍下：</p>
+<blockquote>
+<p>ffp-&gt;get_frame_mode</p>
+<p>表示当前不是视频播放模式，而是视频帧获取模式。也就是说只要打开了这个开关，那么视频帧不会压入到is-&gt;pictq中，那么也就不会有视频帧画面显示了(仅限软解，硬解该开关无效)。关于这个开关的打开可以翻看ff_ffplay_options.h中的ffp_context_options定义。这个开关一般配合上层IjkMediaPlayer中的_setFrameAtTime()方法一起使用的，用于保存将某段时间内的视频帧挨个保存到本地。比如调用了该方法后,对应到jni中方法为:</p>
+<blockquote>
+<p>Ijkplayer_jni.c#IjkMediaPlayer_setFrameAtTime()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">IjkMediaPlayer_setFrameAtTime</span><span class="params">(JNIEnv *env, jobject thiz, jstring path, jlong start_time, jlong end_time, jint num,jint definition)</span> &#123;</span><br><span class="line">    IjkMediaPlayer *mp = jni_get_media_player(env, thiz);</span><br><span class="line">    <span class="type">const</span> <span class="type">char</span> *c_path = <span class="literal">NULL</span>;</span><br><span class="line">    JNI_CHECK_GOTO(path, env, <span class="string">&quot;java/lang/IllegalArgumentException&quot;</span>, <span class="string">&quot;mpjni: setFrameAtTime: null path&quot;</span>, LABEL_RETURN);</span><br><span class="line">    JNI_CHECK_GOTO(mp, env, <span class="string">&quot;java/lang/IllegalStateException&quot;</span>, <span class="string">&quot;mpjni: setFrameAtTime: null mp&quot;</span>, LABEL_RETURN);</span><br><span class="line"></span><br><span class="line">    c_path = (*env)-&gt;GetStringUTFChars(env, path, <span class="literal">NULL</span>);</span><br><span class="line">    JNI_CHECK_GOTO(c_path, env, <span class="string">&quot;java/lang/OutOfMemoryError&quot;</span>, <span class="string">&quot;mpjni: setFrameAtTime: path.string oom&quot;</span>, LABEL_RETURN);</span><br><span class="line"></span><br><span class="line">    ALOGV(<span class="string">&quot;setFrameAtTime: path %s&quot;</span>, c_path);</span><br><span class="line">    ijkmp_set_frame_at_time(mp, c_path, start_time, end_time, num, definition);</span><br><span class="line">    (*env)-&gt;ReleaseStringUTFChars(env, path, c_path);</span><br><span class="line"></span><br><span class="line">    LABEL_RETURN:</span><br><span class="line">    ijkmp_dec_ref_p(&amp;mp);</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>然后辗转最后调用的是:</p>
+<blockquote>
+<p>ff_ffplay.c#ffp_set_frame_at_time()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">ffp_set_frame_at_time</span><span class="params">(FFPlayer *ffp, <span class="type">const</span> <span class="type">char</span> *path, <span class="type">int64_t</span> start_time, <span class="type">int64_t</span> end_time, <span class="type">int</span> num, <span class="type">int</span> definition)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (!ffp-&gt;get_img_info) &#123;</span><br><span class="line">        ffp-&gt;get_img_info = av_mallocz(<span class="keyword">sizeof</span>(GetImgInfo));</span><br><span class="line">        <span class="keyword">if</span> (!ffp-&gt;get_img_info) &#123;</span><br><span class="line">            ffp_notify_msg3(ffp, FFP_MSG_GET_IMG_STATE, <span class="number">0</span>, <span class="number">-1</span>);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (start_time &gt;= <span class="number">0</span> &amp;&amp; num &gt; <span class="number">0</span> &amp;&amp; end_time &gt;= <span class="number">0</span> &amp;&amp; end_time &gt;= start_time) &#123;</span><br><span class="line">        ffp-&gt;get_img_info-&gt;img_path = av_strdup(path);</span><br><span class="line">        ffp-&gt;get_img_info-&gt;start_time = start_time;</span><br><span class="line">        ffp-&gt;get_img_info-&gt;end_time = end_time;</span><br><span class="line">        ffp-&gt;get_img_info-&gt;num = num;</span><br><span class="line">        ffp-&gt;get_img_info-&gt;count = num;</span><br><span class="line">        <span class="keyword">if</span> (definition == HD_IMAGE) &#123;</span><br><span class="line">            ffp-&gt;get_img_info-&gt;width = <span class="number">640</span>;</span><br><span class="line">            ffp-&gt;get_img_info-&gt;height = <span class="number">360</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (definition == SD_IMAGE) &#123;</span><br><span class="line">            ffp-&gt;get_img_info-&gt;width = <span class="number">320</span>;</span><br><span class="line">            ffp-&gt;get_img_info-&gt;height = <span class="number">180</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            ffp-&gt;get_img_info-&gt;width = <span class="number">160</span>;</span><br><span class="line">            ffp-&gt;get_img_info-&gt;height = <span class="number">90</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        ffp-&gt;get_img_info-&gt;count = <span class="number">0</span>;</span><br><span class="line">        ffp_notify_msg3(ffp, FFP_MSG_GET_IMG_STATE, <span class="number">0</span>, <span class="number">-1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，其实最终就是创建了一个GetImgInfo结构体实例，然后将上层传下来的一些值比如开始时间、结束时间、保存的帧数、保存地址等赋值到该结构体中，也就是ffp-&gt;get_img_info中。</p>
+</blockquote>
+</blockquote>
+<p>回到上面第2.2步的解释中，如果get_frame_mode开关打开，那么先判断ffp-&gt;get_img_info是否为空(也就是判断用户有没有调用过上层的_setFrameAtTime方法来设置帧图片保存的信息)，如果为空那么就continue，从新开始循环。不为空的话那么计算dst_pts，如果第一次的话dst_pts就是ffp-&gt;get_img_info-&gt;start_time，也就是用户传进来的值，如果不是第一次那么就每次增加对应时间差（计算方式就是结束时间减去开始时间再除以要保存的帧数间隔），然后再判断当前获取到的解码后的帧的pts是否大于刚才计算的dst_pts，满足的话就调用convert_image()方法将其保存到本地(这里保存会有重试机制不细述)。</p>
+<p>关于2.2步的总体来说，就是实现将固定时间内的解码后帧数据保存成图片到本地。</p>
+<h5 id="第2-3步"><a href="#第2-3步" class="headerlink" title="第2.3步:"></a>第2.3步:</h5><p>到了这里就该将填充好解码后数据的AVFrame放到对应队列中了，用于后面的视频播放了。所以首先还是计算该帧的持续时长duration以及其展示时间戳pts。这里的计算在<a href="8876f557.html">func_run_sync</a>中的第6步里有简单解释过，这里和那里类似，不做赘述。</p>
+<p>然后就是调用<a href="fe1f1f62.html">queue_picture</a>方法来将frame放入到对应的队列中去，用于后续的播放。</p>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>简单来说，本方法就是视频软解的主要承载实现体，与之对应的硬解方式的方法为<a href="8876f557.html">func_run_sync</a>(异步方式)和<a href="64d79e1a.html">func_run_sync_loop</a>。主要实现逻辑还是一样的：往解码器中放入数据和读取数据、将读取的数据放入对应队列。不同的是在本方法中，将 往解码器中放入数据和读取数据 逻辑统一放在了<a href="33f55665.html">get_video_frame()</a>方法中的<a href="4dc50342.html">decoder_decode_frame</a>中去，而不是像硬解那样将两个拆分成两个方法。当然我觉得应该是因为硬解中有异步方式的实现，所以做了拆分吧。</p>
+<p>还有一点要提的就是关于上面get_frame_mode的解释，也是发现了一种比较好玩的做法：将视频帧保存到本地。但是注意有个限制就是仅限软解方式，硬解方式不支持。至于为啥不支持？我猜可能是由于MediaCodec和Surface绑定了，解码后数据直接走的Surface吧。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/57193a84.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-VideoDecodeGuide</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/f38a2dac.html">
+        <span class="next-text nav-default">Ijkplayer-ffpipenode_create_video_decoder_from_ffplay</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

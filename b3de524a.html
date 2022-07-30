@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-SDL_Aout_Opaque-For-AudioTrack"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/b3de524a.html"/>
+
+
+<meta name="description" content="本文主要介绍位于ijksdl_aout_android_audiotrack.c文件中的SDL_Aout_Opaque结构体。其主要作用是为AudioTrack版本的Aout存储一些控制量及数据。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-SDL_Aout_Opaque-For-AudioTrack">
+<meta property="og:url" content="https://youngkaaa.github.io/b3de524a.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍位于ijksdl_aout_android_audiotrack.c文件中的SDL_Aout_Opaque结构体。其主要作用是为AudioTrack版本的Aout存储一些控制量及数据。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-04-12T07:33:05.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.429Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-SDL_Aout_Opaque-For-AudioTrack - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-SDL_Aout_Opaque-For-AudioTrack
+        
+      </h1>
+
+      <time class="post-time">
+          4月 12 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍位于ijksdl_aout_android_audiotrack.c文件中的SDL_Aout_Opaque结构体。其主要作用是为<a href="b8be9048.html">AudioTrack</a>版本的<a href="a1824301.html">Aout</a>存储一些控制量及数据。</p>
+<span id="more"></span>
+
+
+
+<h4 id="1、定义"><a href="#1、定义" class="headerlink" title="1、定义"></a>1、定义</h4><blockquote>
+<p>ijksdl_aout_android_audiotrack.c#SDL_Aout_Opaque</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">SDL_Aout_Opaque</span> &#123;</span></span><br><span class="line">    SDL_cond *wakeup_cond;</span><br><span class="line">    SDL_mutex *wakeup_mutex;</span><br><span class="line"></span><br><span class="line">    SDL_AudioSpec spec;</span><br><span class="line">    SDL_Android_AudioTrack *atrack;</span><br><span class="line">    <span class="type">int</span> buffer_size;</span><br><span class="line">    <span class="type">uint8_t</span> *buffer;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">volatile</span> <span class="type">bool</span> need_flush;</span><br><span class="line">    <span class="keyword">volatile</span> <span class="type">bool</span> pause_on;</span><br><span class="line">    <span class="keyword">volatile</span> <span class="type">bool</span> abort_request;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">volatile</span> <span class="type">bool</span> need_set_volume;</span><br><span class="line">    <span class="keyword">volatile</span> <span class="type">float</span> left_volume;</span><br><span class="line">    <span class="keyword">volatile</span> <span class="type">float</span> right_volume;</span><br><span class="line"></span><br><span class="line">    SDL_Thread *audio_tid;</span><br><span class="line">    SDL_Thread _audio_tid;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> audio_session_id;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">volatile</span> <span class="type">float</span> speed;</span><br><span class="line">    <span class="keyword">volatile</span> <span class="type">bool</span> speed_changed; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h4 id="2、字段解释"><a href="#2、字段解释" class="headerlink" title="2、字段解释"></a>2、字段解释</h4><h5 id="spec"><a href="#spec" class="headerlink" title="spec:"></a>spec:</h5><p>SDL_AudioSpec结构体实例，保存着外部调用<a href="a1824301.html">Aout</a>中open_audio()方法时传入的SDL_AudioSpec结构体实例，也就是外部希望打开的音频输出配置信息。</p>
+<h5 id="atrack"><a href="#atrack" class="headerlink" title="atrack:"></a>atrack:</h5><p><a href="27b30422.html">SDL_Android_AudioTrack</a>结构体实例。存储着上层AudioTrack实例，以及相关参数。是音频输出的主要承载者。</p>
+<h5 id="buffer-size"><a href="#buffer-size" class="headerlink" title="buffer_size:"></a>buffer_size:</h5><p>同<a href="27b30422.html">SDL_Android_AudioTrack</a>结构体实例中的min_buffer_size字段。</p>
+<h5 id="buffer："><a href="#buffer：" class="headerlink" title="buffer："></a>buffer：</h5><p>上面buffer_size大小的空间，用以保存接码后的音频数据。简单说就是调用上面spec中的callback，也就是<a href="a6d96fd1.html">SDL_AudioCallback</a>来从解码后的音频FrameQueue中读取音频数据时，传入的参数作为容器，<a href="a6d96fd1.html">SDL_AudioCallback</a>中会将指定长度的音频数据复制到这个buffer里面来，然后后面给AudioTrack中写入时就直接用这个buffer，这样就完成了将音频数据从FrameQueue中转换到AudioTrack的流程，也就是将待播放数据塞入到了播放器中。</p>
+<h5 id="need-flush"><a href="#need-flush" class="headerlink" title="need_flush:"></a>need_flush:</h5><p>当前是否需要flush。如果此时数据写入了但是还没播放那么就会被丢弃。<a href="b8be9048.html">AudioTrack</a>版本的<a href="a1824301.html">Aout</a>中的flush_audio()方法会将其置为1。然后在音频输出线程<a href="5c9aa075.html">aout_thread</a>中，会时刻判断该值是否为1，如果为1的话会调用上层AudioTrack对象实例中的flush()方法来刷新播放器。</p>
+<h5 id="pause-on："><a href="#pause-on：" class="headerlink" title="pause_on："></a>pause_on：</h5><p>当前音频是否是暂停的。<a href="b8be9048.html">AudioTrack</a>版本的<a href="a1824301.html">Aout</a>中的pause_audio()方法会修改该值。在音频输出线程<a href="5c9aa075.html">aout_thread</a>中，会时刻判断该值以决定要调用上层AudioTrack对象实例中的play()方法开始播放还是pause()方法来暂停。</p>
+<h5 id="abort-request"><a href="#abort-request" class="headerlink" title="abort_request:"></a>abort_request:</h5><p>当前播放是否已终止，<a href="b8be9048.html">AudioTrack</a>版本的<a href="a1824301.html">Aout</a>中的free_l()方法会将其置为true，表示播放终止。</p>
+<h5 id="need-set-volume"><a href="#need-set-volume" class="headerlink" title="need_set_volume:"></a>need_set_volume:</h5><p>当前音量是否发生变化。如果调用了上层IjkMediaPlayer对象实例中的setVolume()方法的话，那么会将need_set_volume该值置为1(left_volume、right_volume同理)，表示音量发生了变化，那么在音频输出线程<a href="5c9aa075.html">aout_thread</a>中，会时刻判断该值以决定是否要调用上层AudioTrack对象实例中的setStereoVolume()方法来设置音量大小。</p>
+<h5 id="left-volume"><a href="#left-volume" class="headerlink" title="left_volume:"></a>left_volume:</h5><p>当前左声道音量大小。详见need_set_volume。</p>
+<h5 id="right-volume"><a href="#right-volume" class="headerlink" title="right_volume:"></a>right_volume:</h5><p>当前左声道音量大小。详见need_set_volume。</p>
+<h5 id="audio-session-id"><a href="#audio-session-id" class="headerlink" title="audio_session_id:"></a>audio_session_id:</h5><p>调用AudioTrack对象的getAudioSessionId()方法获得的。一般在AudioTrack创建好后赋值，也就是在<a href="b8be9048.html">AudioTrack</a>版本的<a href="a1824301.html">Aout</a>中的open_audio()方法中赋值，然后在func_get_audio_session_id()方法中返回，也就是在上层IjkMediaPlayer的getAudioSessionId()方法中返回。</p>
+<h5 id="speed-changed"><a href="#speed-changed" class="headerlink" title="speed_changed:"></a>speed_changed:</h5><p>当前播放速度是否发生变化。一般在<a href="b8be9048.html">AudioTrack</a>版本的<a href="a1824301.html">Aout</a>中的func_set_playback_rate()方法中赋值，也就是在上层IjkMediaPlayer中调用了setSpeed()方法后，会将ffplay实例中的pf_playback_rate和pf_playback_rate_changed修改，然后最终影响到func_set_playback_rate()方法。这里暂不考虑soundtouch。</p>
+<h5 id="speed"><a href="#speed" class="headerlink" title="speed:"></a>speed:</h5><p>当前播放速度，同speed_changed。</p>
+<p>所以总的来说，ijksdl_aout_android_audiotrack.c文件中的SDL_Aout_Opaque结构体是为<a href="b8be9048.html">AudioTrack</a>版本的<a href="a1824301.html">Aout</a>来服务的。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/3ef4887e.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-SDL_Aout_Opaque-For-OpenSLES</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/289044cb.html">
+        <span class="next-text nav-default">Ijkplayer-SDL_Aout-For-OpenSLES</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

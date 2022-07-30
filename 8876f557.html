@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-func_run_sync"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/8876f557.html"/>
+
+
+<meta name="description" content="本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的func_run_sync()方法。 该方法是IJKFF_Pipenode结构体中func_run_sync指针函数的主要执行逻辑(前提是没有开启mediacodec_sync开关)。本方法主要逻辑为：在不同的线程中分别往视频解码器中填入待解码数据和从中读取出解码后数据。其中前者在新线程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-func_run_sync">
+<meta property="og:url" content="https://youngkaaa.github.io/8876f557.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的func_run_sync()方法。 该方法是IJKFF_Pipenode结构体中func_run_sync指针函数的主要执行逻辑(前提是没有开启mediacodec_sync开关)。本方法主要逻辑为：在不同的线程中分别往视频解码器中填入待解码数据和从中读取出解码后数据。其中前者在新线程">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-03-08T01:36:20.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.420Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-func_run_sync - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-func_run_sync
+        
+      </h1>
+
+      <time class="post-time">
+          3月 08 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的func_run_sync()方法。</p>
+<p>该方法是IJKFF_Pipenode结构体中func_run_sync指针函数的主要执行逻辑(前提是没有开启mediacodec_sync开关)。本方法主要逻辑为：在不同的线程中分别往视频解码器中填入待解码数据和从中读取出解码后数据。其中前者在新线程中执行。</p>
+<span id="more"></span>
+
+<blockquote>
+<p>ffpipenode_android_mediacodec_vdec.c#func_run_sync()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">func_run_sync</span><span class="params">(IJKFF_Pipenode *node)</span> &#123;</span><br><span class="line">JNIEnv *env = <span class="literal">NULL</span>;</span><br><span class="line">IJKFF_Pipenode_Opaque *opaque = node-&gt;opaque;</span><br><span class="line">FFPlayer *ffp = opaque-&gt;ffp;</span><br><span class="line">VideoState *is = ffp-&gt;is;</span><br><span class="line">Decoder *d = &amp;is-&gt;viddec;</span><br><span class="line">PacketQueue *q = d-&gt;<span class="built_in">queue</span>;</span><br><span class="line"><span class="type">int</span> ret = <span class="number">0</span>;</span><br><span class="line"><span class="type">int</span> dequeue_count = <span class="number">0</span>;</span><br><span class="line">AVFrame *frame = <span class="literal">NULL</span>;</span><br><span class="line"><span class="type">int</span> got_frame = <span class="number">0</span>;</span><br><span class="line">AVRational tb = is-&gt;video_st-&gt;time_base;</span><br><span class="line">AVRational frame_rate = av_guess_frame_rate(is-&gt;ic, is-&gt;video_st, <span class="literal">NULL</span>);</span><br><span class="line"><span class="type">double</span> duration;</span><br><span class="line"><span class="type">double</span> pts;</span><br><span class="line"><span class="comment">// 第一步</span></span><br><span class="line"><span class="keyword">if</span> (!opaque-&gt;acodec) &#123;</span><br><span class="line"><span class="keyword">return</span> ffp_video_thread(ffp);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (JNI_OK != SDL_JNI_SetupThreadEnv(&amp;env)) &#123;</span><br><span class="line">ALOGE(<span class="string">&quot;%s: SetupThreadEnv failed\n&quot;</span>, __func__);</span><br><span class="line"><span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br><span class="line">frame = av_frame_alloc();</span><br><span class="line"><span class="keyword">if</span> (!frame)</span><br><span class="line"><span class="keyword">goto</span> fail;</span><br><span class="line">		<span class="comment">// 第二步</span></span><br><span class="line">opaque-&gt;enqueue_thread = SDL_CreateThreadEx(&amp;opaque-&gt;_enqueue_thread, enqueue_thread_func, node,<span class="string">&quot;amediacodec_input_thread&quot;</span>);</span><br><span class="line"><span class="keyword">if</span> (!opaque-&gt;enqueue_thread) &#123;</span><br><span class="line">ALOGE(<span class="string">&quot;%s: SDL_CreateThreadEx failed\n&quot;</span>, __func__);</span><br><span class="line">ret = <span class="number">-1</span>;</span><br><span class="line"><span class="keyword">goto</span> fail;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> (!q-&gt;abort_request) &#123;</span><br><span class="line">  <span class="comment">// 第三步</span></span><br><span class="line"><span class="type">int64_t</span> timeUs = opaque-&gt;acodec_first_dequeue_output_request ? <span class="number">0</span> : AMC_OUTPUT_TIMEOUT_US;</span><br><span class="line">got_frame = <span class="number">0</span>;</span><br><span class="line"><span class="comment">// 第四步</span></span><br><span class="line">ret = drain_output_buffer(env, node, timeUs, &amp;dequeue_count, frame, &amp;got_frame);</span><br><span class="line"><span class="comment">// 第五步</span></span><br><span class="line"><span class="keyword">if</span> (opaque-&gt;acodec_first_dequeue_output_request) &#123;</span><br><span class="line">   SDL_LockMutex(opaque-&gt;acodec_first_dequeue_output_mutex);</span><br><span class="line">   opaque-&gt;acodec_first_dequeue_output_request = <span class="literal">false</span>;</span><br><span class="line">   SDL_CondSignal(opaque-&gt;acodec_first_dequeue_output_cond);</span><br><span class="line">   SDL_UnlockMutex(opaque-&gt;acodec_first_dequeue_output_mutex);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> (ret != <span class="number">0</span>) &#123;</span><br><span class="line">   ret = <span class="number">-1</span>;</span><br><span class="line">   <span class="keyword">if</span> (got_frame &amp;&amp; frame-&gt;opaque)</span><br><span class="line">       SDL_VoutAndroid_releaseBufferProxyP(opaque-&gt;weak_vout, (SDL_AMediaCodecBufferProxy **) &amp;frame-&gt;opaque,<span class="literal">false</span>);</span><br><span class="line">   <span class="keyword">goto</span> fail;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 第六步</span></span><br><span class="line"><span class="keyword">if</span> (got_frame) &#123;</span><br><span class="line">   duration = (frame_rate.num &amp;&amp; frame_rate.den ? av_q2d((AVRational) &#123;frame_rate.den, frame_rate.num&#125;) : <span class="number">0</span>);</span><br><span class="line">   pts = (frame-&gt;pts == AV_NOPTS_VALUE) ? NAN : frame-&gt;pts * av_q2d(tb);</span><br><span class="line">   <span class="keyword">if</span> (ffp-&gt;framedrop &gt; <span class="number">0</span> || (ffp-&gt;framedrop &amp;&amp; ffp_get_master_sync_type(is) != AV_SYNC_VIDEO_MASTER)) &#123;</span><br><span class="line">       ffp-&gt;stat.decode_frame_count++;</span><br><span class="line">       <span class="keyword">if</span> (frame-&gt;pts != AV_NOPTS_VALUE) &#123;</span><br><span class="line">           <span class="type">double</span> dpts = pts;</span><br><span class="line">           <span class="type">double</span> diff = dpts - ffp_get_master_clock(is);</span><br><span class="line">           <span class="keyword">if</span> (!isnan(diff) &amp;&amp; <span class="built_in">fabs</span>(diff) &lt; AV_NOSYNC_THRESHOLD &amp;&amp;</span><br><span class="line">               diff - is-&gt;frame_last_filter_delay &lt; <span class="number">0</span> &amp;&amp;</span><br><span class="line">               is-&gt;viddec.pkt_serial == is-&gt;vidclk.serial &amp;&amp;</span><br><span class="line">               is-&gt;videoq.nb_packets) &#123;</span><br><span class="line">               is-&gt;frame_drops_early++;</span><br><span class="line">               is-&gt;continuous_frame_drops_early++;</span><br><span class="line">               <span class="keyword">if</span> (is-&gt;continuous_frame_drops_early &gt; ffp-&gt;framedrop) &#123;</span><br><span class="line">                   is-&gt;continuous_frame_drops_early = <span class="number">0</span>;</span><br><span class="line">               &#125; <span class="keyword">else</span> &#123; <span class="comment">// 丢帧</span></span><br><span class="line">                   ffp-&gt;stat.drop_frame_count++;</span><br><span class="line">                   ffp-&gt;stat.drop_frame_rate =</span><br><span class="line">                           (<span class="type">float</span>) (ffp-&gt;stat.drop_frame_count) / (<span class="type">float</span>) (ffp-&gt;stat.decode_frame_count);</span><br><span class="line">                   <span class="keyword">if</span> (frame-&gt;opaque) &#123; <span class="comment">// 释放该bufferInfo</span></span><br><span class="line">                       SDL_VoutAndroid_releaseBufferProxyP(opaque-&gt;weak_vout,</span><br><span class="line">                                                           (SDL_AMediaCodecBufferProxy **) &amp;frame-&gt;opaque,</span><br><span class="line">                                                           <span class="literal">false</span>);</span><br><span class="line">                   &#125;</span><br><span class="line">                   av_frame_unref(frame);</span><br><span class="line">                   <span class="keyword">continue</span>;</span><br><span class="line">               &#125;</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br><span class="line"> 	<span class="comment">// 第七步</span></span><br><span class="line">   ret = ffp_queue_picture(ffp, frame, pts, duration, av_frame_get_pkt_pos(frame), is-&gt;viddec.pkt_serial);</span><br><span class="line">   <span class="keyword">if</span> (ret) &#123;</span><br><span class="line">       <span class="keyword">if</span> (frame-&gt;opaque)</span><br><span class="line">           SDL_VoutAndroid_releaseBufferProxyP(opaque-&gt;weak_vout,</span><br><span class="line">                                               (SDL_AMediaCodecBufferProxy **) &amp;frame-&gt;opaque, <span class="literal">false</span>);</span><br><span class="line">   &#125;</span><br><span class="line">   av_frame_unref(frame);</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fail:</span><br><span class="line">av_frame_free(&amp;frame);</span><br><span class="line">opaque-&gt;<span class="built_in">abort</span> = <span class="literal">true</span>;</span><br><span class="line">SDL_WaitThread(opaque-&gt;enqueue_thread, <span class="literal">NULL</span>);</span><br><span class="line">SDL_AMediaCodecFake_abort(opaque-&gt;acodec);</span><br><span class="line"><span class="keyword">if</span> (opaque-&gt;n_buf_out) &#123;</span><br><span class="line"><span class="built_in">free</span>(opaque-&gt;amc_buf_out);</span><br><span class="line">opaque-&gt;n_buf_out = <span class="number">0</span>;</span><br><span class="line">opaque-&gt;amc_buf_out = <span class="literal">NULL</span>;</span><br><span class="line">opaque-&gt;off_buf_out = <span class="number">0</span>;</span><br><span class="line">opaque-&gt;last_queued_pts = AV_NOPTS_VALUE;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> (opaque-&gt;acodec) &#123;</span><br><span class="line">SDL_VoutAndroid_invalidateAllBuffers(opaque-&gt;weak_vout);</span><br><span class="line">SDL_LockMutex(opaque-&gt;acodec_mutex);</span><br><span class="line">SDL_UnlockMutex(opaque-&gt;acodec_mutex);</span><br><span class="line">&#125;</span><br><span class="line">SDL_AMediaCodec_stop(opaque-&gt;acodec);</span><br><span class="line">SDL_AMediaCodec_decreaseReferenceP(&amp;opaque-&gt;acodec);</span><br><span class="line">ALOGI(<span class="string">&quot;MediaCodec: %s: exit: %d&quot;</span>, __func__, ret);</span><br><span class="line"><span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<ol>
+<li><p>第一步：如果opaque-&gt;acodec为空，表示上层MediaCodec创建失败，那么走<code>软解</code>对应的方法ffp_video_thread()，该方法暂不分析。然后再往后就是调用av_frame_alloc()方法分配一个AVFrame结构体实例地址，用来后面放置解码后的数据。</p>
+</li>
+<li><p>创建新线程，用于执行enqueue_thread_func()方法，该方法如下：</p>
+<blockquote>
+<p>ffpipenode_android_mediacodec_vdec.c#enqueue_thread_func()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">enqueue_thread_func</span><span class="params">(<span class="type">void</span> *arg)</span> &#123;</span><br><span class="line">    JNIEnv *env = <span class="literal">NULL</span>;</span><br><span class="line">    IJKFF_Pipenode *node = arg;</span><br><span class="line">    IJKFF_Pipenode_Opaque *opaque = node-&gt;opaque;</span><br><span class="line">    FFPlayer *ffp = opaque-&gt;ffp;</span><br><span class="line">    VideoState *is = ffp-&gt;is;</span><br><span class="line">    Decoder *d = &amp;is-&gt;viddec;</span><br><span class="line">    PacketQueue *q = d-&gt;<span class="built_in">queue</span>;</span><br><span class="line">    <span class="type">int</span> ret = <span class="number">-1</span>;</span><br><span class="line">    <span class="type">int</span> dequeue_count = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (JNI_OK != SDL_JNI_SetupThreadEnv(&amp;env)) &#123;</span><br><span class="line">        ALOGE(<span class="string">&quot;%s: SetupThreadEnv failed\n&quot;</span>, __func__);</span><br><span class="line">        <span class="keyword">goto</span> fail;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (!q-&gt;abort_request &amp;&amp; !opaque-&gt;<span class="built_in">abort</span>) &#123;</span><br><span class="line">        ret = feed_input_buffer(env, node, AMC_INPUT_TIMEOUT_US, &amp;dequeue_count);</span><br><span class="line">        <span class="keyword">if</span> (ret != <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">goto</span> fail;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ret = <span class="number">0</span>;</span><br><span class="line">    fail:</span><br><span class="line">    SDL_AMediaCodecFake_abort(opaque-&gt;acodec);</span><br><span class="line">    ALOGI(<span class="string">&quot;MediaCodec: %s: exit: %d&quot;</span>, __func__, ret);</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，在新线程中执行的enqueue_thread_func()方法中逻辑很简单，就是循环调用了<a href="17303abc.html">feed_input_buffer</a>方法来读取待解码数据然后放入到解码器中，循环的条件就是对应的PacketQueue队列没有被终止。</p>
+</blockquote>
+</li>
+<li><p>第三步主要就是计算timeUs的值，计算规则为：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">timeUs = opaque-&gt;acodec_first_dequeue_output_request ? <span class="number">0</span> : AMC_OUTPUT_TIMEOUT_US</span><br></pre></td></tr></table></figure>
+
+<p>而对于acodec_first_dequeue_output_request的解释，在<a href="65dc31d5.html">func_open_video_decoder</a>中有解释过了。简单来说就是每次编解码器被配置后就会将其置为1，表示后面解码的下一帧就是第一帧。</p>
+</li>
+<li><p>第四步很简单，主要就是调用了<a href="70ca7e71.html">drain_output_buffer</a>方法来从解码器中读取解码后的数据。这里会将上面计算好的timeUs传入，表示获取解码数据帧的最大等待时长。所以上面当第一次获取解码后数据时，传入等待时长为0。传入的got_frame变量地址当获取解码后帧数据成功是会在该方法内将其置为1。</p>
+</li>
+<li><p>第五步中首先就是将acodec_first_dequeue_output_request置为false，避免后面循环时每一次timeUs都是0。然后根据<a href="70ca7e71.html">drain_output_buffer</a>方法的返回值来判断获取解码后数据是否成功，如果失败那么释放数据并且返回。</p>
+</li>
+<li><p>第六步中判断如果got_frame为1，也就是数据帧获取成功，那么先计算该帧的展示时长duration:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">duration = (frame_rate.num &amp;&amp; frame_rate.den ? av_q2d((AVRational) &#123;frame_rate.den, frame_rate.num&#125;) : <span class="number">0</span>);</span><br></pre></td></tr></table></figure>
+
+<p>其中frame_rate是AVRational结构体类型的，该结构体有两个字段num和den，分子和分母。关于AVRational后面有空再分析。而这里的frame_rate是通过上面定义时的av_guess_frame_rate()方法来计算出来的。所以这里帧时长计算规则就是当上面av_guess_frame_rate()方法拿到了帧率的话，那么就调用av_q2d(frame_rate)方法来计算出帧时长，而av_q2d()就是用frame_rate中的分子除以分母得到的double值。比如视频帧率是30帧，也就是30fps，也就是30帧每秒，所以此时frame_rate.num&#x3D;1，frame_rate.den&#x3D;30。所以用av_q2d()得到的就是1&#x2F;30≈0.0333 s 。</p>
+<p>然后计算出该帧的展示时间pts:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">AVRational tb = is-&gt;video_st-&gt;time_base;</span><br><span class="line">pts = (frame-&gt;pts == AV_NOPTS_VALUE) ? NAN : frame-&gt;pts * av_q2d(tb);</span><br></pre></td></tr></table></figure>
+
+<p>其中tb是视频轨道的时间基，也是AVRational结构体类型的，该帧的最终展示时间pts就等于解码器中读取到的pts乘以时间基。</p>
+<p>然后判断framedrop是否打开，如果framedrop打开(大于0表示打开)并且当前同步时钟不是视频时钟，那么就判断当前帧的展示时间和当前主时钟的时间差是否大于等于AV_NOSYNC_THRESHOLD(以及其他条件比如is-&gt;viddec.pkt_serial &#x3D;&#x3D; is-&gt;vidclk.serial判断当前是同一播放序列即未seek过等)，然后满足条件的话就丢掉该帧。</p>
+<p>所以第六步简单来说就是根据新取出的解码后视频帧的展示时间戳以及相关开关来判断要不要做丢帧操作。</p>
+</li>
+<li><p>到了第七步，就该存该帧了，因为上面各种满足条件啥的都过滤判断过了，到这里就证明这一帧是合法有效的，那么就正常保存呗。主要是调用<a href="fe1f1f62.html">ffp_queue_picture</a>方法来将新获取到的解码后数据放入ffp-&gt;is-&gt;pictq队尾。</p>
+</li>
+</ol>
+<p><strong>小结：</strong></p>
+<p>本方法主要逻辑就是视频解码，包括往解码器中填入待解码数据(<a href="17303abc.html">feed_input_buffer</a>)和从解码器中拿到解码后的数据(<a href="70ca7e71.html">drain_output_buffer</a>)，需注意两者是在不同的线程中执行的，这也是<a href="64d79e1a.html">func_run_sync_loop</a>方法和本方法的主要差别。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/17303abc.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-feed_input_buffer</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/86c88415.html">
+        <span class="next-text nav-default">ijkplayer-IJKFF_Pipenode</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

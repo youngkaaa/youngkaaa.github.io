@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-SDL_AudioCallback"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/a6d96fd1.html"/>
+
+
+<meta name="description" content="本文主要介绍位于ijksdl_audio.h中的SDL_AudioCallback。其实对于SDL_AudioCallback来说，其实就是指针函数的别名。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-SDL_AudioCallback">
+<meta property="og:url" content="https://youngkaaa.github.io/a6d96fd1.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍位于ijksdl_audio.h中的SDL_AudioCallback。其实对于SDL_AudioCallback来说，其实就是指针函数的别名。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-04-13T04:02:09.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.430Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-SDL_AudioCallback - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-SDL_AudioCallback
+        
+      </h1>
+
+      <time class="post-time">
+          4月 13 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍位于ijksdl_audio.h中的SDL_AudioCallback。其实对于SDL_AudioCallback来说，其实就是指针函数的别名。</p>
+<span id="more"></span>
+
+<p>对于SDL_AudioCallback，一般指的是SDL_AudioSpec中的callback字段，其赋值在<a href="15d1ed53.html">audio_open</a>中有介绍过，其对应的是ff_ffplay.c文件中的sdl_audio_callback()方法。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">sdl_audio_callback</span><span class="params">(<span class="type">void</span> *opaque, Uint8 *stream, <span class="type">int</span> len)</span> &#123;</span><br><span class="line">    FFPlayer *ffp = opaque;</span><br><span class="line">    VideoState *is = ffp-&gt;is;</span><br><span class="line">    <span class="type">int</span> audio_size, len1;</span><br><span class="line">  	<span class="comment">// 第1步</span></span><br><span class="line">    <span class="keyword">if</span> (!ffp || !is) &#123;</span><br><span class="line">        <span class="built_in">memset</span>(stream, <span class="number">0</span>, len);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ffp-&gt;audio_callback_time = av_gettime_relative();</span><br><span class="line">    <span class="keyword">if</span> (ffp-&gt;pf_playback_rate_changed) &#123;</span><br><span class="line">        ffp-&gt;pf_playback_rate_changed = <span class="number">0</span>;</span><br><span class="line"><span class="meta">#<span class="keyword">if</span> defined(__ANDROID__)</span></span><br><span class="line">        <span class="keyword">if</span> (!ffp-&gt;soundtouch_enable) &#123;</span><br><span class="line">            SDL_AoutSetPlaybackRate(ffp-&gt;aout, ffp-&gt;pf_playback_rate);</span><br><span class="line">        &#125;</span><br><span class="line"><span class="meta">#<span class="keyword">else</span></span></span><br><span class="line">        SDL_AoutSetPlaybackRate(ffp-&gt;aout, ffp-&gt;pf_playback_rate);</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (ffp-&gt;pf_playback_volume_changed) &#123;</span><br><span class="line">        ffp-&gt;pf_playback_volume_changed = <span class="number">0</span>;</span><br><span class="line">        SDL_AoutSetPlaybackVolume(ffp-&gt;aout, ffp-&gt;pf_playback_volume);</span><br><span class="line">    &#125;</span><br><span class="line">		</span><br><span class="line">    <span class="keyword">while</span> (len &gt; <span class="number">0</span>) &#123;</span><br><span class="line">      	<span class="comment">// 第2步</span></span><br><span class="line">        <span class="keyword">if</span> (is-&gt;audio_buf_index &gt;= is-&gt;audio_buf_size) &#123;</span><br><span class="line">            audio_size = audio_decode_frame(ffp);</span><br><span class="line">            <span class="keyword">if</span> (audio_size &lt; <span class="number">0</span>) &#123;</span><br><span class="line">                <span class="comment">/* if error, just output silence */</span></span><br><span class="line">                is-&gt;audio_buf = <span class="literal">NULL</span>;</span><br><span class="line">                is-&gt;audio_buf_size =</span><br><span class="line">                        SDL_AUDIO_MIN_BUFFER_SIZE / is-&gt;audio_tgt.frame_size * is-&gt;audio_tgt.frame_size;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (is-&gt;show_mode != SHOW_MODE_VIDEO)</span><br><span class="line">                    update_sample_display(is, (<span class="type">int16_t</span> *) is-&gt;audio_buf, audio_size);</span><br><span class="line">                is-&gt;audio_buf_size = audio_size;</span><br><span class="line">            &#125;</span><br><span class="line">            is-&gt;audio_buf_index = <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">      	<span class="comment">// 第3步	</span></span><br><span class="line">        <span class="keyword">if</span> (is-&gt;auddec.pkt_serial != is-&gt;audioq.serial) &#123;</span><br><span class="line">            is-&gt;audio_buf_index = is-&gt;audio_buf_size;</span><br><span class="line">            <span class="built_in">memset</span>(stream, <span class="number">0</span>, len);</span><br><span class="line">            <span class="comment">// stream += len;</span></span><br><span class="line">            <span class="comment">// len = 0;</span></span><br><span class="line">            SDL_AoutFlushAudio(ffp-&gt;aout);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">      	<span class="comment">// 第4步	</span></span><br><span class="line">        len1 = is-&gt;audio_buf_size - is-&gt;audio_buf_index;</span><br><span class="line">        <span class="keyword">if</span> (len1 &gt; len)</span><br><span class="line">            len1 = len;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!is-&gt;muted &amp;&amp; is-&gt;audio_buf &amp;&amp; is-&gt;audio_volume == SDL_MIX_MAXVOLUME)</span><br><span class="line">            <span class="built_in">memcpy</span>(stream, (<span class="type">uint8_t</span> *) is-&gt;audio_buf + is-&gt;audio_buf_index, len1);</span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="built_in">memset</span>(stream, <span class="number">0</span>, len1);</span><br><span class="line">            <span class="keyword">if</span> (!is-&gt;muted &amp;&amp; is-&gt;audio_buf)</span><br><span class="line">                SDL_MixAudio(stream, (<span class="type">uint8_t</span> *) is-&gt;audio_buf + is-&gt;audio_buf_index, len1, is-&gt;audio_volume);</span><br><span class="line">        &#125;</span><br><span class="line">        len -= len1;</span><br><span class="line">        stream += len1;</span><br><span class="line">        is-&gt;audio_buf_index += len1;</span><br><span class="line">    &#125;</span><br><span class="line"> 		<span class="comment">// 第5步	</span></span><br><span class="line">    is-&gt;audio_write_buf_size = is-&gt;audio_buf_size - is-&gt;audio_buf_index;</span><br><span class="line">    <span class="comment">/* Let&#x27;s assume the audio driver that is used by SDL has two periods. */</span></span><br><span class="line">    <span class="keyword">if</span> (!isnan(is-&gt;audio_clock)) &#123;</span><br><span class="line">        set_clock_at(&amp;is-&gt;audclk,</span><br><span class="line">                     is-&gt;audio_clock - (<span class="type">double</span>) (is-&gt;audio_write_buf_size) / is-&gt;audio_tgt.bytes_per_sec -</span><br><span class="line">                     SDL_AoutGetLatencySeconds(ffp-&gt;aout), is-&gt;audio_clock_serial,</span><br><span class="line">                     ffp-&gt;audio_callback_time / <span class="number">1000000.0</span>);</span><br><span class="line">        sync_clock_to_slave(&amp;is-&gt;extclk, &amp;is-&gt;audclk);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (!ffp-&gt;first_audio_frame_rendered) &#123;</span><br><span class="line">        ffp-&gt;first_audio_frame_rendered = <span class="number">1</span>;</span><br><span class="line">        ffp_notify_msg1(ffp, FFP_MSG_AUDIO_RENDERING_START);</span><br><span class="line">    &#125;</span><br><span class="line">		<span class="comment">// 第6步	</span></span><br><span class="line">    <span class="keyword">if</span> (is-&gt;latest_audio_seek_load_serial == is-&gt;audio_clock_serial) &#123;</span><br><span class="line">        <span class="type">int</span> latest_audio_seek_load_serial = __atomic_exchange_n(&amp;(is-&gt;latest_audio_seek_load_serial), <span class="number">-1</span>,</span><br><span class="line">                                                                memory_order_seq_cst);</span><br><span class="line">        <span class="keyword">if</span> (latest_audio_seek_load_serial == is-&gt;audio_clock_serial) &#123;</span><br><span class="line">            <span class="keyword">if</span> (ffp-&gt;av_sync_type == AV_SYNC_AUDIO_MASTER) &#123;</span><br><span class="line">                ffp_notify_msg2(ffp, FFP_MSG_AUDIO_SEEK_RENDERING_START, <span class="number">1</span>);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                ffp_notify_msg2(ffp, FFP_MSG_AUDIO_SEEK_RENDERING_START, <span class="number">0</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ffp-&gt;render_wait_start &amp;&amp; !ffp-&gt;start_on_prepared &amp;&amp; is-&gt;pause_req) &#123;</span><br><span class="line">        <span class="keyword">while</span> (is-&gt;pause_req &amp;&amp; !is-&gt;abort_request) &#123;</span><br><span class="line">            SDL_Delay(<span class="number">20</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在分析之前，先看下本方法的入参：</p>
+<blockquote>
+<p>opaque</p>
+<p>FFPlayer结构体实例，其实就是音频输出控制线程<a href="5c9aa075.html">aout_thread</a>中的userdata。主要用它里VideoState中的audio_buf来转存数据。详见后面的<a href="1ae52f91.html">audio_decode_frame</a>中的分析。</p>
+</blockquote>
+<blockquote>
+<p>stream</p>
+<p>存放音频数据的容器buffer，详见音频输出控制线程<a href="5c9aa075.html">aout_thread</a>中buffer的相关解释。</p>
+</blockquote>
+<blockquote>
+<p>len</p>
+<p>本次需要拷贝音频数据的长度，单位字节。其实每次固定的都是256个字节。详见音频输出控制线程<a href="5c9aa075.html">aout_thread</a>中copy_size的相关解释。</p>
+</blockquote>
+<p>所以本方法的目的就是从opaque中赋值len长的数据到stream中。而每一帧音频数据长度都不一定是一样的，而每次只需要复制固定的256长度的字节，这样两端对不齐呐？所以需要引入中间层作为缓冲，每次从中间缓冲层复制256个字节，如果中间缓冲层不够，那么就通过<code>指定方法</code>填充缓冲层，再复制。如果够用还剩下的话就供下一次使用。而这里说的缓冲层就是ffp-&gt;is-&gt;audio_buf，而上面说的<code>指定方法</code>就是<a href="1ae52f91.html">audio_decode_frame</a>。</p>
+<h4 id="第1步："><a href="#第1步：" class="headerlink" title="第1步："></a>第1步：</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (!ffp || !is) &#123;</span><br><span class="line">    <span class="built_in">memset</span>(stream, <span class="number">0</span>, len);</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br><span class="line">ffp-&gt;audio_callback_time = av_gettime_relative();</span><br><span class="line"><span class="keyword">if</span> (ffp-&gt;pf_playback_rate_changed) &#123;</span><br><span class="line">    ffp-&gt;pf_playback_rate_changed = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span> (!ffp-&gt;soundtouch_enable) &#123;</span><br><span class="line">    		SDL_AoutSetPlaybackRate(ffp-&gt;aout, ffp-&gt;pf_playback_rate);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> (ffp-&gt;pf_playback_volume_changed) &#123;</span><br><span class="line">    ffp-&gt;pf_playback_volume_changed = <span class="number">0</span>;</span><br><span class="line">    SDL_AoutSetPlaybackVolume(ffp-&gt;aout, ffp-&gt;pf_playback_volume);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>先判断相关参数是否合法，比如ffp和is，如果不合法就直接将stream全部置为0返回，此时播放应该是静音的。</p>
+<p>然后更新audio_callback_time的值为当前系统时间，记录下上次更新音频数据的时间点。这个和视频帧的更新中的<a href="e1139ab6.html">frame_timer</a>差不多。</p>
+<p>然后就是判断当前用户有没有设置变更过播放速度以及音量，如果有的话就调用相关[SDL_Aout中的方法来完成设置，这里不细述。关于soundtouch_enable，是另外一个音频相关的库，用于变更音频播放速率的。</p>
+<h4 id="补充："><a href="#补充：" class="headerlink" title="补充："></a>补充：</h4><p>关于下面的2、3、4步，其都在while循环中，循环条件是len&gt;0，len表示着当前还需要复制的字节长度，刚开始是256，然后进入while循环，在循环体中复制后将len减少，然后再循环直到len减为0表示256个字节都复制了。</p>
+<h4 id="第2步"><a href="#第2步" class="headerlink" title="第2步:"></a>第2步:</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (is-&gt;audio_buf_index &gt;= is-&gt;audio_buf_size) &#123;</span><br><span class="line">    audio_size = audio_decode_frame(ffp);</span><br><span class="line">    <span class="keyword">if</span> (audio_size &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">/* if error, just output silence */</span></span><br><span class="line">        is-&gt;audio_buf = <span class="literal">NULL</span>;</span><br><span class="line">        is-&gt;audio_buf_size =</span><br><span class="line">        SDL_AUDIO_MIN_BUFFER_SIZE / is-&gt;audio_tgt.frame_size * is-&gt;audio_tgt.frame_size;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (is-&gt;show_mode != SHOW_MODE_VIDEO)</span><br><span class="line">        update_sample_display(is, (<span class="type">int16_t</span> *) is-&gt;audio_buf, audio_size);</span><br><span class="line">        is-&gt;audio_buf_size = audio_size;</span><br><span class="line">    &#125;</span><br><span class="line">    is-&gt;audio_buf_index = <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>首先判断当前audio_buf中的数据是否已经复制消耗完了。</p>
+<blockquote>
+<p>audio_buf_index</p>
+<p>表示当前audio_buf中已复制的字节数，下次复制从audio_buf中的audio_buf_index索引开始往后复制</p>
+</blockquote>
+<blockquote>
+<p>audio_buf_size</p>
+<p>表示当前audio_buf中的总字节数，当audio_buf_index&gt;&#x3D;audio_buf_size时，表示audio_buf中数据已被全部复制消耗完了</p>
+</blockquote>
+<blockquote>
+<p>audio_buf</p>
+<p>从音频所对应的FrameQueue中读取的下一个待播放的Frame数据的暂存点，也就是上面说的中间缓冲层，用以缓冲Frame和stream之间的数量差异。详见<a href="1ae52f91.html">audio_decode_frame</a></p>
+</blockquote>
+<p>所以当audio_buf_index&gt;&#x3D;audio_buf_size时，表示audio_buf中数据已经用完了，此时需要从FrameQueue中复制新的待播放音频数据到audio_buf了。所以此时调用<a href="1ae52f91.html">audio_decode_frame</a>来完成这个任务，返回值audio_size就是本次调用<a href="1ae52f91.html">audio_decode_frame</a>方法复制到audio_buf中的字节长度。</p>
+<p>如果复制失败，也就是audio_size小于0，那么本次没有数据可复制，那么直接跳过当前帧。如果不小于0，那么将audio_buf_size更新，表示当前audio_buf中有audio_buf_size长度的数据了。</p>
+<p>最后将audio_buf_index置为0，表示是新的数据了，从头开始消耗复制吧。</p>
+<h4 id="第3步"><a href="#第3步" class="headerlink" title="第3步:"></a>第3步:</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (is-&gt;auddec.pkt_serial != is-&gt;audioq.serial) &#123;</span><br><span class="line">    is-&gt;audio_buf_index = is-&gt;audio_buf_size;</span><br><span class="line">    <span class="built_in">memset</span>(stream, <span class="number">0</span>, len);</span><br><span class="line">    <span class="comment">// stream += len;</span></span><br><span class="line">    <span class="comment">// len = 0;</span></span><br><span class="line">    SDL_AoutFlushAudio(ffp-&gt;aout);</span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个很简单，就是防止seek之后播放的seek之前的旧数据。如果是seek之前的旧数据的话，就把audio_buf_index挪到最后，表示丢弃掉当前audio_buf中的数据，然后将stream全部(len长度)置为0。</p>
+<h4 id="第4步"><a href="#第4步" class="headerlink" title="第4步:"></a>第4步:</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">len1 = is-&gt;audio_buf_size - is-&gt;audio_buf_index;</span><br><span class="line"><span class="keyword">if</span> (len1 &gt; len)</span><br><span class="line">		len1 = len;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (!is-&gt;muted &amp;&amp; is-&gt;audio_buf &amp;&amp; is-&gt;audio_volume == SDL_MIX_MAXVOLUME)</span><br><span class="line">		<span class="built_in">memcpy</span>(stream, (<span class="type">uint8_t</span> *) is-&gt;audio_buf + is-&gt;audio_buf_index, len1);</span><br><span class="line"><span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="built_in">memset</span>(stream, <span class="number">0</span>, len1);</span><br><span class="line">    <span class="keyword">if</span> (!is-&gt;muted &amp;&amp; is-&gt;audio_buf)</span><br><span class="line">    		SDL_MixAudio(stream, (<span class="type">uint8_t</span> *) is-&gt;audio_buf + is-&gt;audio_buf_index, len1, is-&gt;audio_volume);</span><br><span class="line">&#125;</span><br><span class="line">len -= len1;</span><br><span class="line">stream += len1;</span><br><span class="line">is-&gt;audio_buf_index += len1;</span><br></pre></td></tr></table></figure>
+
+<p>这一步就开始将audio_buf中的数据来往stream中复制了。首先假设本次将audio_buf中所有剩余的数据都复制到stream中，那么就是复制len1长度，然后判断如果audio_buf所剩的多于本次要复制的len长度，那么就将len1置为len，表示只从audio_buf中复制一部分到stream就够了，audio_buf中剩余的等下次吧。</p>
+<p>其实这里的len1就代表的是后面要复制的长度。</p>
+<p>然后按照len1的长度来从audio_buf中开始复制，复制到stream中，当然这里还有一些判断，比如不是静音状态，如果是静音的那么就不复制音频数据。</p>
+<p>最后就是更新长度值了，比如将len减去本次复制的长度以确定下次是否还要循环再复制。</p>
+<h4 id="第5步："><a href="#第5步：" class="headerlink" title="第5步："></a>第5步：</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">is-&gt;audio_write_buf_size = is-&gt;audio_buf_size - is-&gt;audio_buf_index;</span><br><span class="line"><span class="comment">/* Let&#x27;s assume the audio driver that is used by SDL has two periods. */</span></span><br><span class="line"><span class="keyword">if</span> (!isnan(is-&gt;audio_clock)) &#123;</span><br><span class="line">    set_clock_at(&amp;is-&gt;audclk,</span><br><span class="line">    is-&gt;audio_clock - (<span class="type">double</span>) (is-&gt;audio_write_buf_size) / is-&gt;audio_tgt.bytes_per_sec -</span><br><span class="line">    SDL_AoutGetLatencySeconds(ffp-&gt;aout), is-&gt;audio_clock_serial,</span><br><span class="line">    ffp-&gt;audio_callback_time / <span class="number">1000000.0</span>);</span><br><span class="line">    sync_clock_to_slave(&amp;is-&gt;extclk, &amp;is-&gt;audclk);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> (!ffp-&gt;first_audio_frame_rendered) &#123;</span><br><span class="line">    ffp-&gt;first_audio_frame_rendered = <span class="number">1</span>;</span><br><span class="line">    ffp_notify_msg1(ffp, FFP_MSG_AUDIO_RENDERING_START);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>经过上面2、3、4步的循环之后，len长度的数据已经从audio_buf中复制到stream中了即将就播放了，那么此时可以更新音频时钟了，而前面在<a href="1ae52f91.html">audio_decode_frame</a>中说过，在从FrameQueue拿到数据Frame然后复制到audio_buf中之后，就更新了is-&gt;audio_clock的值，那个时候更新的is-&gt;audio_clock表示的是改Frame完全被使用，完全消耗时的时间。然而这里有可能只复制消耗了audio_buf中的一部分，那么真正的音频时钟应该小于等于is-&gt;audio_clock。应该从is-&gt;audio_clock中减去audio_buf中剩余部分的播放时间。</p>
+<p>所以is-&gt;audio_write_buf_size) &#x2F; is-&gt;audio_tgt.bytes_per_sec计算的就是audio_buf中剩余部分的播放时间。bytes_per_sec是字节率(好像bit rate更常用吧)，也就是每秒音频音频播放多少字节，用剩余的字节数除以该值就是剩余字节的播放时间。</p>
+<p>然后更新音频时钟，这样音频时钟的时间才是准确的。</p>
+<h4 id="第6步："><a href="#第6步：" class="headerlink" title="第6步："></a>第6步：</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (is-&gt;latest_audio_seek_load_serial == is-&gt;audio_clock_serial) &#123;</span><br><span class="line">       <span class="type">int</span> latest_audio_seek_load_serial = __atomic_exchange_n(&amp;(is-&gt;latest_audio_seek_load_serial), <span class="number">-1</span>,</span><br><span class="line">                                                               memory_order_seq_cst);</span><br><span class="line">       <span class="keyword">if</span> (latest_audio_seek_load_serial == is-&gt;audio_clock_serial) &#123;</span><br><span class="line">           <span class="keyword">if</span> (ffp-&gt;av_sync_type == AV_SYNC_AUDIO_MASTER) &#123;</span><br><span class="line">               ffp_notify_msg2(ffp, FFP_MSG_AUDIO_SEEK_RENDERING_START, <span class="number">1</span>);</span><br><span class="line">           &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">               ffp_notify_msg2(ffp, FFP_MSG_AUDIO_SEEK_RENDERING_START, <span class="number">0</span>);</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个就不解释了，在视频帧展示的<a href="205c40e1.html">video_display2</a>中的第6步中有介绍过。</p>
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>对于本方法来说，主要作用就是用来将音频FrameQueue内Frame中的数据转移到入参stream中去，然后将stream投入到AudioTrack播放器中来播放。这里引入了一层缓冲audio_buf，为了使两边对齐。这种方式以后可以尝试使用。</p>
+<p>哎呀好晚了，睡觉了就这样吧，一天天的上班累死了。2020-04-13 22:45:34</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+    
+      <a class="next" href="/1ae52f91.html">
+        <span class="next-text nav-default">Ijkplayer-audio_decode_frame</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-SDL_Vout_Opaque"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/6093ab9f.html"/>
+
+
+<meta name="description" content="本文主要介绍位于ijksdl_vout_android_nativewindow.c文件中的SDL_Vout_Opaque结构体。 SDL_Vout_Opaque结构体主要是用来存储一些上层的有关视频输出的信息，比如对应着上层Surface的native_window、对应着上层MediaCodec的acodec等。而SDL_Vout_Opaque主要是对应着SDL_Vout中的opaque字段。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-SDL_Vout_Opaque">
+<meta property="og:url" content="https://youngkaaa.github.io/6093ab9f.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍位于ijksdl_vout_android_nativewindow.c文件中的SDL_Vout_Opaque结构体。 SDL_Vout_Opaque结构体主要是用来存储一些上层的有关视频输出的信息，比如对应着上层Surface的native_window、对应着上层MediaCodec的acodec等。而SDL_Vout_Opaque主要是对应着SDL_Vout中的opaque字段。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-03-21T05:16:11.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.426Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-SDL_Vout_Opaque - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-SDL_Vout_Opaque
+        
+      </h1>
+
+      <time class="post-time">
+          3月 21 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍位于ijksdl_vout_android_nativewindow.c文件中的SDL_Vout_Opaque结构体。</p>
+<p>SDL_Vout_Opaque结构体主要是用来存储一些上层的有关视频输出的信息，比如对应着上层Surface的native_window、对应着上层MediaCodec的acodec等。而SDL_Vout_Opaque主要是对应着<a href="6c4c2c27.html">SDL_Vout</a>中的opaque字段。</p>
+<span id="more"></span>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">SDL_Vout_Opaque</span> &#123;</span></span><br><span class="line">    ANativeWindow *native_window;</span><br><span class="line">    SDL_AMediaCodec *acodec;</span><br><span class="line">    <span class="type">int</span> null_native_window_warned; <span class="comment">// reduce log for null window</span></span><br><span class="line">    <span class="type">int</span> next_buffer_id;</span><br><span class="line"></span><br><span class="line">    ISDL_Array overlay_manager;</span><br><span class="line">    ISDL_Array overlay_pool;</span><br><span class="line"></span><br><span class="line">    IJK_EGL *egl;</span><br><span class="line">&#125; SDL_Vout_Opaque;</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="1、初始化"><a href="#1、初始化" class="headerlink" title="1、初始化"></a>1、初始化</h4><p>SDL_Vout_Opaque的初始化其实依赖于<a href="6c4c2c27.html">SDL_Vout</a>，因为它对应的就是<a href="6c4c2c27.html">SDL_Vout</a>中的opaque字段。所以初始化调用信息同<a href="6c4c2c27.html">SDL_Vout</a>，最终是在SDL_VoutAndroid_CreateForANativeWindow()方法中:</p>
+<blockquote>
+<p>ijksdl_vout_android_nativewindow.c#SDL_VoutAndroid_CreateForANativeWindow()</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">SDL_Vout *<span class="title function_">SDL_VoutAndroid_CreateForANativeWindow</span><span class="params">()</span> &#123;</span><br><span class="line">    SDL_Vout *vout = SDL_Vout_CreateInternal(<span class="keyword">sizeof</span>(SDL_Vout_Opaque));</span><br><span class="line">    <span class="keyword">if</span> (!vout)</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    SDL_Vout_Opaque *opaque = vout-&gt;opaque;</span><br><span class="line">    opaque-&gt;native_window = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="comment">// 初始化overlay_manager和overlay_pool</span></span><br><span class="line">    <span class="keyword">if</span> (ISDL_Array__init(&amp;opaque-&gt;overlay_manager, <span class="number">32</span>))</span><br><span class="line">        <span class="keyword">goto</span> fail;</span><br><span class="line">    <span class="keyword">if</span> (ISDL_Array__init(&amp;opaque-&gt;overlay_pool, <span class="number">32</span>))</span><br><span class="line">        <span class="keyword">goto</span> fail;</span><br><span class="line"></span><br><span class="line">    opaque-&gt;egl = IJK_EGL_create();</span><br><span class="line">    <span class="keyword">if</span> (!opaque-&gt;egl)</span><br><span class="line">        <span class="keyword">goto</span> fail;</span><br><span class="line">  </span><br><span class="line">  	<span class="comment">// 省略其他无关代码</span></span><br><span class="line">  </span><br><span class="line">    <span class="keyword">return</span> vout;</span><br><span class="line">    fail:</span><br><span class="line">    func_free_l(vout);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看出，在初始化<a href="6c4c2c27.html">SDL_Vout</a>时，绝大部分都是工作都用来初始化SDL_Vout_Opaque了（内存分配下面不讲）。</p>
+<p>首先将native_window置为null，因为此时是上层IjkMediaPlayer对象刚创建时，上层Surface肯定还没有，得等后面设置传入。接着初始化overlay_manager和overlay_pool，这两个是ISDL_Array类型的，可以理解为数组。所以这里就是初始化两个的容量大小都为32。最后就是创建egl，关于egl的话暂时不太熟悉，不做解释。</p>
+<p>这样就完成了SDL_Vout_Opaque的创建，此时SDL_Vout_Opaque中就native_window、acodec这两个比较重要的还没有赋值了。</p>
+<h4 id="2、字段分析"><a href="#2、字段分析" class="headerlink" title="2、字段分析"></a>2、字段分析</h4><h5 id="native-window"><a href="#native-window" class="headerlink" title="native_window"></a>native_window</h5><p>ANativeWindow结构体实例，对应的是上层的Surface对象实例。具体赋值路径为:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">IjkMediaPlayer.java#setSurface()</span><br><span class="line">	-&gt;IjkMediaPlayer.java#_setVideoSurface()</span><br><span class="line">    -&gt;ijkplayer_jni.c#IjkMediaPlayer_setVideoSurface()</span><br><span class="line">    	-&gt;省略部分</span><br><span class="line">  			-&gt; ijksdl_vout_android_nativewindow.c#SDL_VoutAndroid_SetNativeWindow_l()</span><br></pre></td></tr></table></figure>
+
+<p>简单来说，就是上层IjkMediaPlayer实例调用setSurface()方法将Surface对象传下来，然后经过ANativeWindow_fromSurface()方法将上层Surface对象实例转换为ANativeWindow结构体实例，最后通过SDL_VoutAndroid_SetNativeWindow_l()方法来将其赋值给SDL_Vout_Opaque的native_window字段。而ANativeWindow其实就是上层Surface的底层对应，操作ANativeWindow就是操作上层的Surface。</p>
+<h5 id="acodec"><a href="#acodec" class="headerlink" title="acodec"></a>acodec</h5><p>SDL_AMediaCodec结构体实例，对应的是上层的MediaCodec对象实例。而acodec的赋值在之前的<a href="65dc31d5.html">func_open_video_decoder</a>方法中介绍过了，具体在其reconfigure_codec_l()或configure_codec_l()方法中，这里不再赘述。</p>
+<h5 id="null-native-window-warned"><a href="#null-native-window-warned" class="headerlink" title="null_native_window_warned"></a>null_native_window_warned</h5><p>native_window为空时会打印输出警告信息，而该值就是用来防止警告信息多次打印的。在<a href="6c4c2c27.html">SDL_Vout</a>中的display_overlay中有相关逻辑。</p>
+<h5 id="next-buffer-id"><a href="#next-buffer-id" class="headerlink" title="next_buffer_id"></a>next_buffer_id</h5><p>每次创建(或者复用之前的)一个SDL_AMediaCodecBufferProxy实例时，都会给SDL_AMediaCodecBufferProxy中的buffer_id赋值，表示当前序号，也就是next_buffer_id的值，每次使用过之后都会自增，保证每次的序列号都是不一样的。</p>
+<h5 id="overlay-manager"><a href="#overlay-manager" class="headerlink" title="overlay_manager"></a>overlay_manager</h5><p>存储着当前<strong>所有创建过</strong>的SDL_AMediaCodecBufferProxy实例。而关于SDL_AMediaCodecBufferProxy在<a href="70ca7e71.html">drain_output_buffer</a>中的第5步中有介绍，简单来说就是视频硬解的返回数据BufferInfo的又一层包装结构体，多余增加了dequeueOutputBuffer()方法返回的index，该index后面会用来调用releaseOutputBuffer()方法以展示视频帧。而在获取SDL_AMediaCodecBufferProxy实例时调用的是SDL_VoutAndroid_obtainBufferProxy()方法：</p>
+<blockquote>
+<p>ijksdl_vout_android_nativewindow.c#SDL_VoutAndroid_obtainBufferProxy_l</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> SDL_AMediaCodecBufferProxy *</span><br><span class="line"><span class="title function_">SDL_VoutAndroid_obtainBufferProxy_l</span><span class="params">(SDL_Vout *vout, <span class="type">int</span> acodec_serial, <span class="type">int</span> buffer_index, SDL_AMediaCodecBufferInfo *buffer_info)</span> &#123;</span><br><span class="line">    SDL_Vout_Opaque *opaque = vout-&gt;opaque;</span><br><span class="line">    SDL_AMediaCodecBufferProxy *proxy = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="keyword">if</span> (ISDL_Array__size(&amp;opaque-&gt;overlay_pool) &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        proxy = ISDL_Array__pop_back(&amp;opaque-&gt;overlay_pool);</span><br><span class="line">        SDL_AMediaCodecBufferProxy_reset(proxy);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        proxy = (SDL_AMediaCodecBufferProxy *) mallocz(<span class="keyword">sizeof</span>(SDL_AMediaCodecBufferProxy));</span><br><span class="line">        <span class="keyword">if</span> (!proxy)</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">        SDL_AMediaCodecBufferProxy_init(proxy);</span><br><span class="line">        ISDL_Array__push_back(&amp;opaque-&gt;overlay_manager, proxy);</span><br><span class="line">    &#125;</span><br><span class="line">    proxy-&gt;buffer_id = opaque-&gt;next_buffer_id++;</span><br><span class="line">    proxy-&gt;acodec_serial = acodec_serial;</span><br><span class="line">    proxy-&gt;buffer_index = buffer_index;</span><br><span class="line">    proxy-&gt;buffer_info = *buffer_info;</span><br><span class="line">    <span class="keyword">return</span> proxy;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>也就是说，整个项目获取SDL_AMediaCodecBufferProxy实例都是通过本方法的。</p>
+<p>而在本方法中，首先会判断overlay_pool中是否有可供复用的SDL_AMediaCodecBufferProxy实例，有的话就取出然后将其重置；如果overlay_pool中没有的话，那么就新分配创建一个，同时将其放入overlay_manager中。最后再将其中的如下字段赋值:</p>
+<blockquote>
+<p>buffer_id</p>
+<p>正如前面next_buffer_id中所说的，每次都使用next_buffer_id来赋值，赋值完后将next_buffer_id自增</p>
+</blockquote>
+<blockquote>
+<p>acodec_serial</p>
+<p>MediaCodec的序列号，全局序列号不重复，每次MediaCodec重新配置、刷新或者停止时，该序列值都会变化，用acodec_serial主要是在最终releaseOutputBuffer()时判断当前要展示的SDL_AMediaCodecBufferProxy中的数据和当前解码器是否是同一个序列，如果是的话就可以正常展示，如果不是的话标明解码器发生过变化，该数据是老的解码后数据不应在新的解码器中展示，会跳过展示逻辑。</p>
+</blockquote>
+<blockquote>
+<p>buffer_index</p>
+<p>调用上层MediaCodec中的dequeueOutputBuffer()方法返回的index，后续可用此index传入releaseOutputBuffer()方法中来展示index所对应的帧。</p>
+</blockquote>
+<blockquote>
+<p>buffer_info</p>
+<p>调用上层MediaCodec中的dequeueOutputBuffer()方法返回的BufferInfo实例。</p>
+</blockquote>
+<p>所以总得来说，overlay_manager中存储管理着<strong>所有创建过</strong>的SDL_AMediaCodecBufferProxy实例，每次创建一个SDL_AMediaCodecBufferProxy实例都会放进去，但是从来不取出。而overlay_pool中存放着所有**已使用完的SDL_AMediaCodecBufferProxy实例，每次用完一个就放进去一个，复用掉一个就取出一个。</p>
+<h5 id="overlay-pool"><a href="#overlay-pool" class="headerlink" title="overlay_pool"></a>overlay_pool</h5><p>存放着所有**已使用完的SDL_AMediaCodecBufferProxy实例，每次用完一个就放进去一个，复用掉一个就取出一个。关于overlay_pool中的取出操作，在上面的SDL_VoutAndroid_obtainBufferProxy_l()中介绍过了，这里补充下放入overlay_pool的操作。要放入overlay_pool肯定是该SDL_AMediaCodecBufferProxy实例已使用完了，那么对应的地点就是SDL_VoutAndroid_releaseBufferProxy_l()，也就是调用上层MediaCodec中releaseOutputBuffer()方法来渲染展示该帧时，会将刚使用完的SDL_AMediaCodecBufferProxy实例放入overlay_pool中。</p>
+<h5 id="egl"><a href="#egl" class="headerlink" title="egl"></a>egl</h5><p>暂时不了解，应该是用于帧展示的。暂时不做分析。</p>
+<h4 id="3、小结"><a href="#3、小结" class="headerlink" title="3、小结"></a>3、小结</h4><p>对于SDL_Vout_Opaque来说，其主要是存储管理着一些上层的相关数据，其存在依赖于<a href="6c4c2c27.html">SDL_Vout</a>。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/e1139ab6.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-video_refresh_thread</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/e0c53a8e.html">
+        <span class="next-text nav-default">Ijkplayer-SDL_VoutOverlay</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

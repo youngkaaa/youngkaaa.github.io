@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-audio_thread"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/c0d7c607.html"/>
+
+
+<meta name="description" content="本文介绍位于ff_ffplay.c文件中的audio_thread()方法，该方法的主要作用是用来处理音频转码逻辑。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-audio_thread">
+<meta property="og:url" content="https://youngkaaa.github.io/c0d7c607.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文介绍位于ff_ffplay.c文件中的audio_thread()方法，该方法的主要作用是用来处理音频转码逻辑。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-04-12T03:10:34.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.431Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-audio_thread - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-audio_thread
+        
+      </h1>
+
+      <time class="post-time">
+          4月 12 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文介绍位于ff_ffplay.c文件中的audio_thread()方法，该方法的主要作用是用来处理音频转码逻辑。</p>
+<span id="more"></span>
+
+
+
+<h4 id="1、调用时机"><a href="#1、调用时机" class="headerlink" title="1、调用时机"></a>1、调用时机</h4><p>请先翻看<a href="15d1ed53.html">audio_open</a>中的第一部分的解释，其中有解释本方法的调用路径。</p>
+<h4 id="2、逻辑分析"><a href="#2、逻辑分析" class="headerlink" title="2、逻辑分析"></a>2、逻辑分析</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">audio_thread</span><span class="params">(<span class="type">void</span> *arg)</span> &#123;</span><br><span class="line">    FFPlayer *ffp = arg;</span><br><span class="line">    VideoState *is = ffp-&gt;is;</span><br><span class="line">    AVFrame *frame = av_frame_alloc();</span><br><span class="line">    Frame *af;</span><br><span class="line">    <span class="type">int</span> got_frame = <span class="number">0</span>;</span><br><span class="line">    AVRational tb;</span><br><span class="line">    <span class="type">int</span> ret = <span class="number">0</span>;</span><br><span class="line">    <span class="type">int</span> audio_accurate_seek_fail = <span class="number">0</span>;</span><br><span class="line">    <span class="type">int64_t</span> audio_seek_pos = <span class="number">0</span>;</span><br><span class="line">    <span class="type">double</span> frame_pts = <span class="number">0</span>;</span><br><span class="line">    <span class="type">double</span> audio_clock = <span class="number">0</span>;</span><br><span class="line">    <span class="type">int64_t</span> now = <span class="number">0</span>;</span><br><span class="line">    <span class="type">double</span> samples_duration = <span class="number">0</span>;</span><br><span class="line">    <span class="type">int64_t</span> deviation = <span class="number">0</span>;</span><br><span class="line">    <span class="type">int64_t</span> deviation2 = <span class="number">0</span>;</span><br><span class="line">    <span class="type">int64_t</span> deviation3 = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span> (!frame) &#123;</span><br><span class="line">        <span class="keyword">return</span> AVERROR(ENOMEM);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">      	<span class="comment">// 第1步</span></span><br><span class="line">        <span class="keyword">if</span> ((got_frame = decoder_decode_frame(ffp, &amp;is-&gt;auddec, frame, <span class="literal">NULL</span>)) &lt; <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">goto</span> the_end;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (got_frame) &#123;</span><br><span class="line">            tb = (AVRational) &#123;<span class="number">1</span>, frame-&gt;sample_rate&#125;;</span><br><span class="line">          	<span class="comment">// 第2步</span></span><br><span class="line">            <span class="keyword">if</span> (ffp-&gt;enable_accurate_seek &amp;&amp; is-&gt;audio_accurate_seek_req &amp;&amp; !is-&gt;seek_req) &#123;</span><br><span class="line">                frame_pts = (frame-&gt;pts == AV_NOPTS_VALUE) ? NAN : frame-&gt;pts * av_q2d(tb);</span><br><span class="line">                now = av_gettime_relative() / <span class="number">1000</span>;</span><br><span class="line">                <span class="keyword">if</span> (!isnan(frame_pts)) &#123;</span><br><span class="line">                    samples_duration = (<span class="type">double</span>) frame-&gt;nb_samples / frame-&gt;sample_rate;</span><br><span class="line">                    audio_clock = frame_pts + samples_duration;</span><br><span class="line">                    is-&gt;accurate_seek_aframe_pts = audio_clock * <span class="number">1000</span> * <span class="number">1000</span>;</span><br><span class="line">                    audio_seek_pos = is-&gt;seek_pos;</span><br><span class="line">                    deviation = llabs((<span class="type">int64_t</span>) (audio_clock * <span class="number">1000</span> * <span class="number">1000</span>) - is-&gt;seek_pos);</span><br><span class="line">                    <span class="keyword">if</span> ((audio_clock * <span class="number">1000</span> * <span class="number">1000</span> &lt; is-&gt;seek_pos) || deviation &gt; MAX_DEVIATION) &#123;</span><br><span class="line">                        <span class="keyword">if</span> (is-&gt;drop_aframe_count == <span class="number">0</span>) &#123;</span><br><span class="line">                            SDL_LockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">                            <span class="keyword">if</span> (is-&gt;accurate_seek_start_time &lt;= <span class="number">0</span> &amp;&amp;</span><br><span class="line">                                (is-&gt;video_stream &lt; <span class="number">0</span> || is-&gt;video_accurate_seek_req)) &#123;</span><br><span class="line">                                is-&gt;accurate_seek_start_time = now;</span><br><span class="line">                            &#125;</span><br><span class="line">                            SDL_UnlockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">                            av_log(<span class="literal">NULL</span>, AV_LOG_INFO,</span><br><span class="line">                                   <span class="string">&quot;audio accurate_seek start, is-&gt;seek_pos=%lld, audio_clock=%lf, is-&gt;accurate_seek_start_time = %lld\n&quot;</span>,</span><br><span class="line">                                   is-&gt;seek_pos, audio_clock, is-&gt;accurate_seek_start_time);</span><br><span class="line">                        &#125;</span><br><span class="line">                        is-&gt;drop_aframe_count++;</span><br><span class="line">                        <span class="keyword">while</span> (is-&gt;video_accurate_seek_req &amp;&amp; !is-&gt;abort_request) &#123;</span><br><span class="line">                            <span class="type">int64_t</span> vpts = is-&gt;accurate_seek_vframe_pts;</span><br><span class="line">                            deviation2 = vpts - audio_clock * <span class="number">1000</span> * <span class="number">1000</span>;</span><br><span class="line">                            deviation3 = vpts - is-&gt;seek_pos;</span><br><span class="line">                            <span class="keyword">if</span> (deviation2 &gt; <span class="number">-100</span> * <span class="number">1000</span> &amp;&amp; deviation3 &lt; <span class="number">0</span>) &#123;</span><br><span class="line">                                <span class="keyword">break</span>;</span><br><span class="line">                            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                                av_usleep(<span class="number">20</span> * <span class="number">1000</span>);</span><br><span class="line">                            &#125;</span><br><span class="line">                            now = av_gettime_relative() / <span class="number">1000</span>;</span><br><span class="line">                            <span class="keyword">if</span> ((now - is-&gt;accurate_seek_start_time) &gt; ffp-&gt;accurate_seek_timeout) &#123;</span><br><span class="line">                                <span class="keyword">break</span>;</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;</span><br><span class="line"></span><br><span class="line">                        <span class="keyword">if</span> (!is-&gt;video_accurate_seek_req &amp;&amp; is-&gt;video_stream &gt;= <span class="number">0</span> &amp;&amp;</span><br><span class="line">                            audio_clock * <span class="number">1000</span> * <span class="number">1000</span> &gt; is-&gt;accurate_seek_vframe_pts) &#123;</span><br><span class="line">                            audio_accurate_seek_fail = <span class="number">1</span>;</span><br><span class="line">                        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                            now = av_gettime_relative() / <span class="number">1000</span>;</span><br><span class="line">                            <span class="keyword">if</span> ((now - is-&gt;accurate_seek_start_time) &lt;= ffp-&gt;accurate_seek_timeout) &#123;</span><br><span class="line">                                av_frame_unref(frame);</span><br><span class="line">                                <span class="keyword">continue</span>;  <span class="comment">// drop some old frame when do accurate seek</span></span><br><span class="line">                            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                                audio_accurate_seek_fail = <span class="number">1</span>;</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        <span class="keyword">if</span> (audio_seek_pos == is-&gt;seek_pos) &#123;</span><br><span class="line">                            av_log(<span class="literal">NULL</span>, AV_LOG_INFO,</span><br><span class="line">                                   <span class="string">&quot;audio accurate_seek is ok, is-&gt;drop_aframe_count=%d, audio_clock = %lf\n&quot;</span>,</span><br><span class="line">                                   is-&gt;drop_aframe_count, audio_clock);</span><br><span class="line">                            is-&gt;drop_aframe_count = <span class="number">0</span>;</span><br><span class="line">                            SDL_LockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">                            is-&gt;audio_accurate_seek_req = <span class="number">0</span>;</span><br><span class="line">                            SDL_CondSignal(is-&gt;video_accurate_seek_cond);</span><br><span class="line">                            <span class="keyword">if</span> (audio_seek_pos == is-&gt;seek_pos &amp;&amp; is-&gt;video_accurate_seek_req &amp;&amp;</span><br><span class="line">                                !is-&gt;abort_request) &#123;</span><br><span class="line">                                SDL_CondWaitTimeout(is-&gt;audio_accurate_seek_cond, is-&gt;accurate_seek_mutex,</span><br><span class="line">                                                    ffp-&gt;accurate_seek_timeout);</span><br><span class="line">                            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                                ffp_notify_msg2(ffp, FFP_MSG_ACCURATE_SEEK_COMPLETE, (<span class="type">int</span>) (audio_clock * <span class="number">1000</span>));</span><br><span class="line">                            &#125;</span><br><span class="line"></span><br><span class="line">                            <span class="keyword">if</span> (audio_seek_pos != is-&gt;seek_pos &amp;&amp; !is-&gt;abort_request) &#123;</span><br><span class="line">                                is-&gt;audio_accurate_seek_req = <span class="number">1</span>;</span><br><span class="line">                                SDL_UnlockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">                                av_frame_unref(frame);</span><br><span class="line">                                <span class="keyword">continue</span>;</span><br><span class="line">                            &#125;</span><br><span class="line"></span><br><span class="line">                            SDL_UnlockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    audio_accurate_seek_fail = <span class="number">1</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (audio_accurate_seek_fail) &#123;</span><br><span class="line">                    av_log(<span class="literal">NULL</span>, AV_LOG_INFO,</span><br><span class="line">                           <span class="string">&quot;audio accurate_seek is error, is-&gt;drop_aframe_count=%d, now = %lld, audio_clock = %lf\n&quot;</span>,</span><br><span class="line">                           is-&gt;drop_aframe_count, now, audio_clock);</span><br><span class="line">                    is-&gt;drop_aframe_count = <span class="number">0</span>;</span><br><span class="line">                    SDL_LockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">                    is-&gt;audio_accurate_seek_req = <span class="number">0</span>;</span><br><span class="line">                    SDL_CondSignal(is-&gt;video_accurate_seek_cond);</span><br><span class="line">                    <span class="keyword">if</span> (is-&gt;video_accurate_seek_req &amp;&amp; !is-&gt;abort_request) &#123;</span><br><span class="line">                        SDL_CondWaitTimeout(is-&gt;audio_accurate_seek_cond, is-&gt;accurate_seek_mutex,</span><br><span class="line">                                            ffp-&gt;accurate_seek_timeout);</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        ffp_notify_msg2(ffp, FFP_MSG_ACCURATE_SEEK_COMPLETE, (<span class="type">int</span>) (audio_clock * <span class="number">1000</span>));</span><br><span class="line">                    &#125;</span><br><span class="line">                    SDL_UnlockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">                &#125;</span><br><span class="line">                is-&gt;accurate_seek_start_time = <span class="number">0</span>;</span><br><span class="line">                audio_accurate_seek_fail = <span class="number">0</span>;</span><br><span class="line">            &#125;</span><br><span class="line">          	<span class="comment">// 第3步</span></span><br><span class="line">            <span class="keyword">if</span> (!(af = frame_queue_peek_writable(&amp;is-&gt;sampq)))</span><br><span class="line">                <span class="keyword">goto</span> the_end;</span><br><span class="line">            af-&gt;pts = (frame-&gt;pts == AV_NOPTS_VALUE) ? NAN : frame-&gt;pts * av_q2d(tb);</span><br><span class="line">            af-&gt;pos = frame-&gt;pkt_pos;</span><br><span class="line">            af-&gt;serial = is-&gt;auddec.pkt_serial;</span><br><span class="line">            af-&gt;duration = av_q2d((AVRational) &#123;frame-&gt;nb_samples, frame-&gt;sample_rate&#125;);</span><br><span class="line"></span><br><span class="line">            av_frame_move_ref(af-&gt;frame, frame);</span><br><span class="line">            frame_queue_push(&amp;is-&gt;sampq);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// EAGAIN表示再试，主要是重新执行后调用decoder_decode_frame方法</span></span><br><span class="line">    &#125; <span class="keyword">while</span> (ret &gt;= <span class="number">0</span> || ret == AVERROR(EAGAIN) || ret == AVERROR_EOF);</span><br><span class="line">    the_end:</span><br><span class="line">    av_frame_free(&amp;frame);</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在介绍之前，建议先翻看下之前的相关文章：</p>
+<ol>
+<li><a href="33f55665.html">get_video_frame</a>：关于视频软解的逻辑，和这里的大同小异。</li>
+<li><a href="4dc50342.html">decoder_decode_frame</a>：获取解码数据的逻辑。</li>
+<li><a href="422da41d.html">accurate_seek机制</a>：ijkplayer实现的一套支持accurate seek的机制分析。当然该文章只分析了视频的，这里的便是音频的，是同理的。</li>
+</ol>
+<p>精简一下上面的代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">do</span> &#123;</span><br><span class="line">      	<span class="comment">// 第1步</span></span><br><span class="line">        <span class="keyword">if</span> (got_frame) &#123;</span><br><span class="line">          	<span class="comment">// 第2步</span></span><br><span class="line">          	<span class="comment">// 第3步</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">while</span> (ret &gt;= <span class="number">0</span> || ret == AVERROR(EAGAIN) || ret == AVERROR_EOF);</span><br></pre></td></tr></table></figure>
+
+
+
+<h5 id="第1步"><a href="#第1步" class="headerlink" title="第1步:"></a>第1步:</h5><p>第一步主要逻辑就是调用<a href="4dc50342.html">decoder_decode_frame</a>方法来获取音频解码后的数据，存入到frame中。</p>
+<h5 id="第2步"><a href="#第2步" class="headerlink" title="第2步:"></a>第2步:</h5><p><a href="422da41d.html">accurate_seek机制</a>的音频轨道实现方式。可以对照着该文章中视频轨道的实现方式来分析。大同小异。</p>
+<h5 id="第3步："><a href="#第3步：" class="headerlink" title="第3步："></a>第3步：</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (!(af = frame_queue_peek_writable(&amp;is-&gt;sampq)))</span><br><span class="line">		<span class="keyword">goto</span> the_end;</span><br><span class="line">af-&gt;pts = (frame-&gt;pts == AV_NOPTS_VALUE) ? NAN : frame-&gt;pts * av_q2d(tb);</span><br><span class="line">af-&gt;pos = frame-&gt;pkt_pos;</span><br><span class="line">af-&gt;serial = is-&gt;auddec.pkt_serial;</span><br><span class="line">af-&gt;duration = av_q2d((AVRational) &#123;frame-&gt;nb_samples, frame-&gt;sample_rate&#125;);</span><br><span class="line"></span><br><span class="line">av_frame_move_ref(af-&gt;frame, frame);</span><br><span class="line">frame_queue_push(&amp;is-&gt;sampq);</span><br></pre></td></tr></table></figure>
+
+<p>从sampq中，也就是音频对应的FrameQueue中拿到一个可写入的Frame af。然后将本次获取的解码后数据frame复制到af中。</p>
+<p>这里需要提一下duration的计算，我们知道音频的采样率sample_rate就是每秒的采样个数，那么如果此时知道采样个数n，怎么算出这些采样个数n的总时长呢？应该是用n除以sample_rate。而在ffmpeg中有一个结构体<a href="4a17d154.html">AVRational</a>，它的主要作用就是用来表示分子分母。一般用来作为time_base时间基的单位。而对应的有一个<a href="4a17d154.html">av_q2d</a>方法是用来计算<a href="4a17d154.html">AVRational</a>中分子除以分母的值的。所以这里的duration实际上就是计算的frame-&gt;nb_samples&#x2F;frame-&gt;sample_rate。（nb_samples是该AVFrame中所包含的音频采样数）</p>
+<h4 id="3、小结"><a href="#3、小结" class="headerlink" title="3、小结"></a>3、小结</h4><p>其实懂了之前视频软解的相关逻辑之后，到这里音频的解码也大同小异。相比较于视频解码来说，音频解码简单多了，因为视频解码还有一套硬解的方式，也是很复杂。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/a1824301.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-SDL_Aout</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/15d1ed53.html">
+        <span class="next-text nav-default">Ijkplayer-audio_open</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

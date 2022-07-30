@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-SDL_Aout-For-OpenSLES"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/289044cb.html"/>
+
+
+<meta name="description" content="本文主要介绍位于ijksdl_aout_android_opensles.c文件中SDL_Aout结构体的实现类(c中没有类的概念，但是这里方便叙述的话就用实现类来代替了，切勿抬杠)，即SDL_Aout结构体的OpenSLES版本。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-SDL_Aout-For-OpenSLES">
+<meta property="og:url" content="https://youngkaaa.github.io/289044cb.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍位于ijksdl_aout_android_opensles.c文件中SDL_Aout结构体的实现类(c中没有类的概念，但是这里方便叙述的话就用实现类来代替了，切勿抬杠)，即SDL_Aout结构体的OpenSLES版本。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-04-12T04:17:47.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.429Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-SDL_Aout-For-OpenSLES - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-SDL_Aout-For-OpenSLES
+        
+      </h1>
+
+      <time class="post-time">
+          4月 12 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍位于ijksdl_aout_android_opensles.c文件中SDL_Aout结构体的实现类(c中没有类的概念，但是这里方便叙述的话就用实现类来代替了，切勿抬杠)，即SDL_Aout结构体的OpenSLES版本。 </p>
+<span id="more"></span>
+
+
+
+<h4 id="1、创建"><a href="#1、创建" class="headerlink" title="1、创建"></a>1、创建</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">SDL_Aout *<span class="title function_">SDL_AoutAndroid_CreateForOpenSLES</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    SDL_Aout *aout = SDL_Aout_CreateInternal(<span class="keyword">sizeof</span>(SDL_Aout_Opaque));</span><br><span class="line">    <span class="keyword">if</span> (!aout)</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    SDL_Aout_Opaque *opaque = aout-&gt;opaque;</span><br><span class="line">    opaque-&gt;wakeup_cond = SDL_CreateCond();</span><br><span class="line">    opaque-&gt;wakeup_mutex = SDL_CreateMutex();</span><br><span class="line">    <span class="type">int</span> ret = <span class="number">0</span>;</span><br><span class="line">    SLObjectItf slObject = <span class="literal">NULL</span>;</span><br><span class="line">    ret = slCreateEngine(&amp;slObject, <span class="number">0</span>, <span class="literal">NULL</span>, <span class="number">0</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>);</span><br><span class="line">    CHECK_OPENSL_ERROR(ret, <span class="string">&quot;%s: slCreateEngine() failed&quot;</span>, __func__);</span><br><span class="line">    opaque-&gt;slObject = slObject;</span><br><span class="line">    </span><br><span class="line">    ret = (*slObject)-&gt;Realize(slObject, SL_BOOLEAN_FALSE);</span><br><span class="line">    CHECK_OPENSL_ERROR(ret, <span class="string">&quot;%s: slObject-&gt;Realize() failed&quot;</span>, __func__);</span><br><span class="line"></span><br><span class="line">    SLEngineItf slEngine = <span class="literal">NULL</span>;</span><br><span class="line">    ret = (*slObject)-&gt;GetInterface(slObject, SL_IID_ENGINE, &amp;slEngine);</span><br><span class="line">    CHECK_OPENSL_ERROR(ret, <span class="string">&quot;%s: slObject-&gt;GetInterface() failed&quot;</span>, __func__);</span><br><span class="line">    opaque-&gt;slEngine = slEngine;</span><br><span class="line"></span><br><span class="line">    SLObjectItf slOutputMixObject = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="type">const</span> SLInterfaceID ids1[] = &#123;SL_IID_VOLUME&#125;;</span><br><span class="line">    <span class="type">const</span> SLboolean req1[] = &#123;SL_BOOLEAN_FALSE&#125;;</span><br><span class="line">    ret = (*slEngine)-&gt;CreateOutputMix(slEngine, &amp;slOutputMixObject, <span class="number">1</span>, ids1, req1);</span><br><span class="line">    CHECK_OPENSL_ERROR(ret, <span class="string">&quot;%s: slEngine-&gt;CreateOutputMix() failed&quot;</span>, __func__);</span><br><span class="line">    opaque-&gt;slOutputMixObject = slOutputMixObject;</span><br><span class="line">    ret = (*slOutputMixObject)-&gt;Realize(slOutputMixObject, SL_BOOLEAN_FALSE);</span><br><span class="line">    CHECK_OPENSL_ERROR(ret, <span class="string">&quot;%s: slOutputMixObject-&gt;Realize() failed&quot;</span>, __func__);</span><br><span class="line"></span><br><span class="line">    aout-&gt;free_l       = aout_free_l;</span><br><span class="line">    aout-&gt;opaque_class = &amp;g_opensles_class;</span><br><span class="line">    aout-&gt;open_audio   = aout_open_audio;</span><br><span class="line">    aout-&gt;pause_audio  = aout_pause_audio;</span><br><span class="line">    aout-&gt;flush_audio  = aout_flush_audio;</span><br><span class="line">    aout-&gt;close_audio  = aout_close_audio;</span><br><span class="line">    aout-&gt;set_volume   = aout_set_volume;</span><br><span class="line">    aout-&gt;func_get_latency_seconds = aout_get_latency_seconds;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> aout;</span><br><span class="line">fail:</span><br><span class="line">    aout_free_l(aout);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>关于该方法的调用时机，可以翻看<a href="a1824301.html">SDL_Aout</a>中第一部分的解释。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/b3de524a.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-SDL_Aout_Opaque-For-AudioTrack</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/b8be9048.html">
+        <span class="next-text nav-default">Ijkplayer-SDL_Aout-For-AudioTrack</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

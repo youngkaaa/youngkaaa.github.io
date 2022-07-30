@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-SDL_VoutOverlay"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/e0c53a8e.html"/>
+
+
+<meta name="description" content="本文主要分析位于ijksdl_vout.h中的SDL_VoutOverlay结构体。 该结构体主要作用是承载着视频帧的绘制数据，用其来完成帧的绘制。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-SDL_VoutOverlay">
+<meta property="og:url" content="https://youngkaaa.github.io/e0c53a8e.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要分析位于ijksdl_vout.h中的SDL_VoutOverlay结构体。 该结构体主要作用是承载着视频帧的绘制数据，用其来完成帧的绘制。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-03-21T03:11:18.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.427Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-SDL_VoutOverlay - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-SDL_VoutOverlay
+        
+      </h1>
+
+      <time class="post-time">
+          3月 21 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要分析位于ijksdl_vout.h中的SDL_VoutOverlay结构体。</p>
+<p>该结构体主要作用是承载着视频帧的绘制数据，用其来完成帧的绘制。</p>
+<span id="more"></span>
+
+<blockquote>
+<p>TODO</p>
+<ol>
+<li>部分字段含义解释</li>
+<li>func_fill_frame软解实现的分析</li>
+</ol>
+</blockquote>
+<blockquote>
+<p>ijksdl_vout.h#SDL_VoutOverlay</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">SDL_VoutOverlay</span> &#123;</span></span><br><span class="line">    <span class="type">int</span> w; <span class="comment">/**&lt; Read-only */</span></span><br><span class="line">    <span class="type">int</span> h; <span class="comment">/**&lt; Read-only */</span></span><br><span class="line">    Uint32 format; <span class="comment">/**&lt; Read-only */</span></span><br><span class="line">    <span class="type">int</span> planes; <span class="comment">/**&lt; Read-only */</span></span><br><span class="line">    Uint16 *pitches; <span class="comment">/**&lt; in bytes, Read-only */</span></span><br><span class="line">    Uint8 **pixels; <span class="comment">/**&lt; Read-write */</span></span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> is_private;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> sar_num;</span><br><span class="line">    <span class="type">int</span> sar_den;</span><br><span class="line"></span><br><span class="line">    SDL_Class *opaque_class;</span><br><span class="line">    SDL_VoutOverlay_Opaque *opaque;</span><br><span class="line"></span><br><span class="line">    <span class="type">void</span> (*free_l)(SDL_VoutOverlay *overlay);</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> (*lock)(SDL_VoutOverlay *overlay);</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> (*unlock)(SDL_VoutOverlay *overlay);</span><br><span class="line"></span><br><span class="line">    <span class="type">void</span> (*unref)(SDL_VoutOverlay *overlay);</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> (*func_fill_frame)(SDL_VoutOverlay *overlay, <span class="type">const</span> AVFrame *frame);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="1、初始化"><a href="#1、初始化" class="headerlink" title="1、初始化"></a>1、初始化</h4><p>一般在将解码后的AVFrame放入FrameQueue时初始化(其实AVFrame还要包装成Frame才能放入，这里暂时以AVFrame来说，不纠结)。如果看过<a href="57193a84.html">视频解码</a>相关逻辑的话，可以知道，最终AVFrame压入FrameQueue时，是通过<a href="fe1f1f62.html">queue_picture</a>方法来实现的，其中就包括了将AVFrame转换成Frame的操作，其中最主要的就是alloc_picture()方法，该方法主要作用是给Frame中的bmp字段赋值:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">alloc_picture</span><span class="params">(FFPlayer *ffp, <span class="type">int</span> frame_format)</span> &#123;</span><br><span class="line">		<span class="comment">// 省略部分代码</span></span><br><span class="line">    SDL_VoutSetOverlayFormat(ffp-&gt;vout, ffp-&gt;overlay_format);</span><br><span class="line">    vp-&gt;bmp = SDL_Vout_CreateOverlay(vp-&gt;width, vp-&gt;height,</span><br><span class="line">                                     frame_format,</span><br><span class="line">                                     ffp-&gt;vout);</span><br><span class="line">		<span class="comment">// 省略部分代码</span></span><br><span class="line">    vp-&gt;allocated = <span class="number">1</span>; <span class="comment">// vp已被分配</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在该方法中，调用SDL_Vout_CreateOverlay()来给Frame中的vp字段赋值。而该方法中实际调用的就是ffp-&gt;vout(SDL_Vout)中的<a href="6c4c2c27.html">create_overlay()</a>方法来创建一个SDL_VoutOverlay实例，此时传入的是参数均是AVFrame中的值。创建好bmp之后，后续就可以使用SDL_Vout中的<a href="6c4c2c27.html">display_overlay()</a>方法来将这个bmp显示出来了。</p>
+<p>而对于SDL_Vout的<a href="6c4c2c27.html">create_overlay()</a>方法来说，其对应的实现为:</p>
+<blockquote>
+<p>ijksdl_vout_android_nativewindow.c#func_create_overlay_l()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> SDL_VoutOverlay *<span class="title function_">func_create_overlay_l</span><span class="params">(<span class="type">int</span> width, <span class="type">int</span> height, <span class="type">int</span> frame_format, SDL_Vout *vout)</span> &#123;</span><br><span class="line"> <span class="keyword">switch</span> (frame_format) &#123;</span><br><span class="line">     <span class="keyword">case</span> IJK_AV_PIX_FMT__ANDROID_MEDIACODEC:</span><br><span class="line">         <span class="keyword">return</span> SDL_VoutAMediaCodec_CreateOverlay(width, height, vout);</span><br><span class="line">     <span class="keyword">default</span>:</span><br><span class="line">         <span class="keyword">return</span> SDL_VoutFFmpeg_CreateOverlay(width, height, frame_format, vout);</span><br><span class="line"> &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>上面这段可以在SDL_Vout的<a href="6c4c2c27.html">create_overlay()</a>字段分析中有解释，这里简单来说就是创建硬解的软解的两种。其中先看硬解相关的:</p>
+<blockquote>
+<p>ijksdl_vout_overlay_android_mediacodec.c#SDL_VoutAMediaCodec_CreateOverlay()</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">SDL_VoutOverlay *<span class="title function_">SDL_VoutAMediaCodec_CreateOverlay</span><span class="params">(<span class="type">int</span> width, <span class="type">int</span> height, SDL_Vout *vout)</span> &#123;</span><br><span class="line">    SDL_VoutOverlay *overlay = SDL_VoutOverlay_CreateInternal(<span class="keyword">sizeof</span>(SDL_VoutOverlay_Opaque));</span><br><span class="line">    <span class="keyword">if</span> (!overlay) &#123;</span><br><span class="line">        ALOGE(<span class="string">&quot;overlay allocation failed&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    SDL_VoutOverlay_Opaque *opaque = overlay-&gt;opaque;</span><br><span class="line">    opaque-&gt;mutex = SDL_CreateMutex();</span><br><span class="line">    opaque-&gt;vout = vout;</span><br><span class="line">    opaque-&gt;acodec = <span class="literal">NULL</span>;</span><br><span class="line">    opaque-&gt;buffer_proxy = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    overlay-&gt;opaque_class = &amp;g_vout_overlay_amediacodec_class;</span><br><span class="line">    overlay-&gt;format = SDL_FCC__AMC;</span><br><span class="line">    overlay-&gt;pitches = opaque-&gt;pitches;</span><br><span class="line">    overlay-&gt;pixels = opaque-&gt;pixels;</span><br><span class="line">    overlay-&gt;w = width;</span><br><span class="line">    overlay-&gt;h = height;</span><br><span class="line">    overlay-&gt;is_private = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    overlay-&gt;free_l = overlay_free_l;</span><br><span class="line">    overlay-&gt;lock = overlay_lock;</span><br><span class="line">    overlay-&gt;unlock = overlay_unlock;</span><br><span class="line">    overlay-&gt;unref = overlay_unref;</span><br><span class="line">    overlay-&gt;func_fill_frame = func_fill_frame;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!opaque-&gt;mutex) &#123;</span><br><span class="line">        ALOGE(<span class="string">&quot;SDL_CreateMutex failed&quot;</span>);</span><br><span class="line">        <span class="keyword">goto</span> fail;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> overlay;</span><br><span class="line"></span><br><span class="line">    fail:</span><br><span class="line">    overlay_free_l(overlay);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以大概看到，硬解实现的SDL_VoutOverlay的格式是SDL_FCC__AMC，然后还有一些指针函数的赋值这里不细述。</p>
+<p>而软解的SDL_VoutOverlay的创建就很麻烦了，里面牵扯很多编码格式，暂时看不太懂，所以不展开。</p>
+<h4 id="2、字段分析"><a href="#2、字段分析" class="headerlink" title="2、字段分析"></a>2、字段分析</h4><h5 id="w"><a href="#w" class="headerlink" title="w"></a>w</h5><p>帧宽度</p>
+<h5 id="h"><a href="#h" class="headerlink" title="h"></a>h</h5><p>帧高度</p>
+<h5 id="format"><a href="#format" class="headerlink" title="format"></a>format</h5><p>当前帧格式，SDL_FCC__AMC对应硬解类型，其他的是软解。</p>
+<h5 id="planes"><a href="#planes" class="headerlink" title="planes"></a>planes</h5><p>不清楚待补充</p>
+<h5 id="pitches"><a href="#pitches" class="headerlink" title="pitches"></a>pitches</h5><p>不清楚待补充</p>
+<h5 id="pixels"><a href="#pixels" class="headerlink" title="pixels"></a>pixels</h5><p>所有帧数据，用于绘制。</p>
+<h5 id="is-private"><a href="#is-private" class="headerlink" title="is_private"></a>is_private</h5><p>硬解实现的是1，软解的是0。</p>
+<h5 id="sar-num"><a href="#sar-num" class="headerlink" title="sar_num"></a>sar_num</h5><p>不清楚待补充</p>
+<h5 id="sar-den"><a href="#sar-den" class="headerlink" title="sar_den"></a>sar_den</h5><p>不清楚待补充</p>
+<h5 id="opaque"><a href="#opaque" class="headerlink" title="opaque"></a>opaque</h5><p>SDL_VoutOverlay_Opaque结构体实例，里面保存着硬解相关的字段，比如MediaCodec实例，存储着解码后数据index的SDL_AMediaCodecBufferProxy等。</p>
+<h5 id="free-l"><a href="#free-l" class="headerlink" title="free_l"></a>free_l</h5><p>释放回收当前SDL_VoutOverlay实例</p>
+<h5 id="lock"><a href="#lock" class="headerlink" title="lock"></a>lock</h5><p>互斥量加锁</p>
+<h5 id="unlock"><a href="#unlock" class="headerlink" title="unlock"></a>unlock</h5><p>互斥量解除锁</p>
+<h5 id="unref"><a href="#unref" class="headerlink" title="unref"></a>unref</h5><p>硬解才有的实现，其实就是调用MediaCodec的releaseOutputBuffer()方法将指定opaque中SDL_AMediaCodecBufferProxy中index所对应的帧数据释放。</p>
+<h5 id="func-fill-frame"><a href="#func-fill-frame" class="headerlink" title="func_fill_frame"></a>func_fill_frame</h5><p>SDL_VoutOverlay中最核心的方法，将AVFrame中的数据填充到当前SDL_VoutOverlay实例中指定字段中去。对于硬解来说，就是将AVFrame中的opaque(也就是SDL_AMediaCodecBufferProxy)存储到SDL_VoutOverlay中的opaque里的buffer_proxy中。而软解的暂时不太了解。</p>
+<p>本方法主要的作用就是将AVFrame转移到SDL_VoutOverlay中来，以后的展示就不用AVFrame了，全依赖于SDL_VoutOverlay。</p>
+<h4 id="3、小结"><a href="#3、小结" class="headerlink" title="3、小结"></a>3、小结</h4><p>可以看到，SDL_VoutOverlay的存在，主要是用于隔离AVFrame，也可以说是AVFrame的另一种存在方式，经过SDL_VoutOverlay中func_fill_frame方法之后，AVFrame中的数据基本都已保存到SDL_VoutOverlay中去了。而关于软解的保存策略暂时不太清楚，等后续了解了ffmpeg之后再来补坑吧。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/6093ab9f.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-SDL_Vout_Opaque</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/6c4c2c27.html">
+        <span class="next-text nav-default">Ijkplayer-SDL_Vout</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

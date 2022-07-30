@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-SDL_Aout-For-AudioTrack"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/b8be9048.html"/>
+
+
+<meta name="description" content="本文主要介绍位于ijksdl_aout_android_audiotrack.c文件中SDL_Aout结构体的实现类(c中没有类的概念，但是这里方便叙述的话就用实现类来代替了，切勿抬杠)，即SDL_Aout结构体的Android AudioTrack版本。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-SDL_Aout-For-AudioTrack">
+<meta property="og:url" content="https://youngkaaa.github.io/b8be9048.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍位于ijksdl_aout_android_audiotrack.c文件中SDL_Aout结构体的实现类(c中没有类的概念，但是这里方便叙述的话就用实现类来代替了，切勿抬杠)，即SDL_Aout结构体的Android AudioTrack版本。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-04-12T04:17:24.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.429Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-SDL_Aout-For-AudioTrack - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-SDL_Aout-For-AudioTrack
+        
+      </h1>
+
+      <time class="post-time">
+          4月 12 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍位于ijksdl_aout_android_audiotrack.c文件中SDL_Aout结构体的实现类(c中没有类的概念，但是这里方便叙述的话就用实现类来代替了，切勿抬杠)，即SDL_Aout结构体的Android AudioTrack版本。 </p>
+<span id="more"></span>
+
+
+
+<h4 id="1、创建"><a href="#1、创建" class="headerlink" title="1、创建"></a>1、创建</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">SDL_Aout *<span class="title function_">SDL_AoutAndroid_CreateForAudioTrack</span><span class="params">()</span> &#123;</span><br><span class="line">    SDL_Aout *aout = SDL_Aout_CreateInternal(<span class="keyword">sizeof</span>(SDL_Aout_Opaque));</span><br><span class="line">    <span class="keyword">if</span> (!aout)</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    SDL_Aout_Opaque *opaque = aout-&gt;opaque;</span><br><span class="line">    opaque-&gt;wakeup_cond = SDL_CreateCond();</span><br><span class="line">    opaque-&gt;wakeup_mutex = SDL_CreateMutex();</span><br><span class="line">    opaque-&gt;speed = <span class="number">1.0f</span>;</span><br><span class="line"></span><br><span class="line">    aout-&gt;opaque_class = &amp;g_audiotrack_class;</span><br><span class="line">    aout-&gt;free_l = aout_free_l;</span><br><span class="line">    aout-&gt;open_audio = aout_open_audio;</span><br><span class="line">    aout-&gt;pause_audio = aout_pause_audio;</span><br><span class="line">    aout-&gt;flush_audio = aout_flush_audio;</span><br><span class="line">    aout-&gt;set_volume = aout_set_volume;</span><br><span class="line">    aout-&gt;close_audio = aout_close_audio;</span><br><span class="line">    aout-&gt;func_get_audio_session_id = aout_get_audio_session_id;</span><br><span class="line">    aout-&gt;func_set_playback_rate = func_set_playback_rate;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> aout;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>关于该方法的调用时机，可以翻看<a href="a1824301.html">SDL_Aout</a>中第一部分的解释。</p>
+<h4 id="2、字段解释"><a href="#2、字段解释" class="headerlink" title="2、字段解释"></a>2、字段解释</h4><h5 id="opaque"><a href="#opaque" class="headerlink" title="opaque:"></a>opaque:</h5><p>在AudioTrack的实现中，opaque主要指向的是ijksdl_aout_android_audiotrack.c文件中的<a href="b3de524a.html">SDL_Aout_Opaque</a>结构体实例。</p>
+<h5 id="free-l："><a href="#free-l：" class="headerlink" title="free_l："></a>free_l：</h5><p>在AudioTrack的实现中，指针函数free_l指向的是aout_free_l()函数实例:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">aout_free_l</span><span class="params">(SDL_Aout *aout)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (!aout)</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    aout_close_audio(aout);</span><br><span class="line"></span><br><span class="line">    SDL_Aout_Opaque *opaque = aout-&gt;opaque;</span><br><span class="line">    <span class="keyword">if</span> (opaque) &#123;</span><br><span class="line">        <span class="built_in">free</span>(opaque-&gt;buffer);</span><br><span class="line">        opaque-&gt;buffer = <span class="literal">NULL</span>;</span><br><span class="line">        opaque-&gt;buffer_size = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">        SDL_DestroyCond(opaque-&gt;wakeup_cond);</span><br><span class="line">        SDL_DestroyMutex(opaque-&gt;wakeup_mutex);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    SDL_Aout_FreeInternal(aout);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>主要作用就是用来关闭音频输出，比如在aout_close_audio()方法中将opaque-&gt;abort_request置为true表示音频输出停止，然后销毁回收相关内存地址。</p>
+<h5 id="open-audio"><a href="#open-audio" class="headerlink" title="open_audio:"></a>open_audio:</h5><p>在AudioTrack的实现中，指针函数open_audio指向的是aout_open_audio()函数实例，最终是aout_open_audio_n()函数:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">aout_open_audio_n</span><span class="params">(JNIEnv *env, SDL_Aout *aout, <span class="type">const</span> SDL_AudioSpec *desired, SDL_AudioSpec *obtained)</span> &#123;</span><br><span class="line">    assert(desired);</span><br><span class="line">    SDL_Aout_Opaque *opaque = aout-&gt;opaque;</span><br><span class="line"></span><br><span class="line">    opaque-&gt;spec = *desired;</span><br><span class="line">    opaque-&gt;atrack = SDL_Android_AudioTrack_new_from_sdl_spec(env, desired);</span><br><span class="line">    <span class="keyword">if</span> (!opaque-&gt;atrack) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    opaque-&gt;buffer_size = SDL_Android_AudioTrack_get_min_buffer_size(opaque-&gt;atrack);</span><br><span class="line">    <span class="keyword">if</span> (opaque-&gt;buffer_size &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">        SDL_Android_AudioTrack_free(env, opaque-&gt;atrack);</span><br><span class="line">        opaque-&gt;atrack = <span class="literal">NULL</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    opaque-&gt;buffer = <span class="built_in">malloc</span>(opaque-&gt;buffer_size);</span><br><span class="line">    <span class="keyword">if</span> (!opaque-&gt;buffer) &#123;</span><br><span class="line">        SDL_Android_AudioTrack_free(env, opaque-&gt;atrack);</span><br><span class="line">        opaque-&gt;atrack = <span class="literal">NULL</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (obtained) &#123;</span><br><span class="line">        SDL_Android_AudioTrack_get_target_spec(opaque-&gt;atrack, obtained);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    opaque-&gt;audio_session_id = SDL_Android_AudioTrack_getAudioSessionId(env, opaque-&gt;atrack);</span><br><span class="line">    opaque-&gt;pause_on = <span class="number">1</span>;</span><br><span class="line">    opaque-&gt;abort_request = <span class="number">0</span>;</span><br><span class="line">    opaque-&gt;audio_tid = SDL_CreateThreadEx(&amp;opaque-&gt;_audio_tid, aout_thread, aout, <span class="string">&quot;ff_aout_android&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (!opaque-&gt;audio_tid) &#123;</span><br><span class="line">        ALOGE(<span class="string">&quot;aout_open_audio_n: failed to create audio thread&quot;</span>);</span><br><span class="line">        SDL_Android_AudioTrack_free(env, opaque-&gt;atrack);</span><br><span class="line">        opaque-&gt;atrack = <span class="literal">NULL</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在本方法中，最主要的工作就是给SDL_Aout_Opaque赋值。</p>
+<p>比如先将入参SDL_AudioSpec *desired赋值给opaque-&gt;spec，用以保存外部所要求的音频输出配置。</p>
+<p>然后创建<a href="27b30422.html">SDL_Android_AudioTrack</a>结构体实例赋值给opaque-&gt;atrack等，这些都可以翻看<a href="b3de524a.html">SDL_Aout_Opaque</a>中的解释。</p>
+<p>这里需要解释的是:</p>
+<ol>
+<li>如果入参obtained不为空，那么就将创建好的<a href="27b30422.html">SDL_Android_AudioTrack</a>结构体实例中的spec复制给obtained。也就是SDL_Android_AudioTrack_get_target_spec()方法。</li>
+<li>创建<a href="5c9aa075.html">aout_thread</a>线程，用于处理从FrameQueue中读数据塞入到AudioTrack中的工作，也就是处理音频播放逻辑。</li>
+</ol>
+<p>所以open_audio的主要作用就是创建上层AudioTrack对象实例，以及启动相关线程处理音频输出。</p>
+<h5 id="pause-audio"><a href="#pause-audio" class="headerlink" title="pause_audio:"></a>pause_audio:</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">aout_pause_audio</span><span class="params">(SDL_Aout *aout, <span class="type">int</span> pause_on)</span> &#123;</span><br><span class="line">    SDL_Aout_Opaque *opaque = aout-&gt;opaque;</span><br><span class="line"></span><br><span class="line">    SDL_LockMutex(opaque-&gt;wakeup_mutex);</span><br><span class="line">    SDLTRACE(<span class="string">&quot;aout_pause_audio(%d)&quot;</span>, pause_on);</span><br><span class="line">    opaque-&gt;pause_on = pause_on;</span><br><span class="line">    <span class="keyword">if</span> (!pause_on)</span><br><span class="line">        SDL_CondSignal(opaque-&gt;wakeup_cond);</span><br><span class="line">    SDL_UnlockMutex(opaque-&gt;wakeup_mutex);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>很简单，就是处理音频的播放和暂停工作。主要还是依靠<a href="b3de524a.html">SDL_Aout_Opaque</a>中的pause_on字段来完成。详见<a href="b3de524a.html">SDL_Aout_Opaque</a>。</p>
+<h5 id="flush-audio"><a href="#flush-audio" class="headerlink" title="flush_audio:"></a>flush_audio:</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">aout_flush_audio</span><span class="params">(SDL_Aout *aout)</span> &#123;</span><br><span class="line">    SDL_Aout_Opaque *opaque = aout-&gt;opaque;</span><br><span class="line">    SDL_LockMutex(opaque-&gt;wakeup_mutex);</span><br><span class="line">    opaque-&gt;need_flush = <span class="number">1</span>;</span><br><span class="line">    SDL_CondSignal(opaque-&gt;wakeup_cond);</span><br><span class="line">    SDL_UnlockMutex(opaque-&gt;wakeup_mutex);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>处理音频播放过程中的flush操作。主要还是依靠<a href="b3de524a.html">SDL_Aout_Opaque</a>中的need_flush字段来完成。详见<a href="b3de524a.html">SDL_Aout_Opaque</a>。</p>
+<h5 id="set-volume"><a href="#set-volume" class="headerlink" title="set_volume:"></a>set_volume:</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">aout_set_volume</span><span class="params">(SDL_Aout *aout, <span class="type">float</span> left_volume, <span class="type">float</span> right_volume)</span> &#123;</span><br><span class="line">    SDL_Aout_Opaque *opaque = aout-&gt;opaque;</span><br><span class="line">    SDL_LockMutex(opaque-&gt;wakeup_mutex);</span><br><span class="line">    opaque-&gt;left_volume = left_volume;</span><br><span class="line">    opaque-&gt;right_volume = right_volume;</span><br><span class="line">    opaque-&gt;need_set_volume = <span class="number">1</span>;</span><br><span class="line">    SDL_CondSignal(opaque-&gt;wakeup_cond);</span><br><span class="line">    SDL_UnlockMutex(opaque-&gt;wakeup_mutex);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>处理音频播放音量逻辑。主要还是依靠<a href="b3de524a.html">SDL_Aout_Opaque</a>中的need_set_volume、left_volume、right_volume字段来完成。详见<a href="b3de524a.html">SDL_Aout_Opaque</a>。</p>
+<h5 id="close-audio"><a href="#close-audio" class="headerlink" title="close_audio:"></a>close_audio:</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">aout_close_audio</span><span class="params">(SDL_Aout *aout)</span> &#123;</span><br><span class="line">    SDL_Aout_Opaque *opaque = aout-&gt;opaque;</span><br><span class="line"></span><br><span class="line">    SDL_LockMutex(opaque-&gt;wakeup_mutex);</span><br><span class="line">    opaque-&gt;abort_request = <span class="literal">true</span>;</span><br><span class="line">    SDL_CondSignal(opaque-&gt;wakeup_cond);</span><br><span class="line">    SDL_UnlockMutex(opaque-&gt;wakeup_mutex);</span><br><span class="line"></span><br><span class="line">    SDL_WaitThread(opaque-&gt;audio_tid, <span class="literal">NULL</span>);</span><br><span class="line">    opaque-&gt;audio_tid = <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>终止音频播放。主要还是依靠<a href="b3de524a.html">SDL_Aout_Opaque</a>中的abort_request字段来完成。详见<a href="b3de524a.html">SDL_Aout_Opaque</a>。</p>
+<h5 id="func-get-audio-session-id"><a href="#func-get-audio-session-id" class="headerlink" title="func_get_audio_session_id:"></a>func_get_audio_session_id:</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">aout_get_audio_session_id</span><span class="params">(SDL_Aout *aout)</span> &#123;</span><br><span class="line">    SDL_Aout_Opaque *opaque = aout-&gt;opaque;</span><br><span class="line">    <span class="keyword">return</span> opaque-&gt;audio_session_id;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>获取AudioTrack中的sessionId。主要还是依靠<a href="b3de524a.html">SDL_Aout_Opaque</a>中的audio_session_id字段来完成。详见<a href="b3de524a.html">SDL_Aout_Opaque</a>。</p>
+<h5 id="func-set-playback-rate"><a href="#func-set-playback-rate" class="headerlink" title="func_set_playback_rate:"></a>func_set_playback_rate:</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">func_set_playback_rate</span><span class="params">(SDL_Aout *aout, <span class="type">float</span> speed)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (!aout)</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    SDL_Aout_Opaque *opaque = aout-&gt;opaque;</span><br><span class="line">    SDL_LockMutex(opaque-&gt;wakeup_mutex);</span><br><span class="line">    opaque-&gt;speed = speed;</span><br><span class="line">    opaque-&gt;speed_changed = <span class="number">1</span>;</span><br><span class="line">    SDL_CondSignal(opaque-&gt;wakeup_cond);</span><br><span class="line">    SDL_UnlockMutex(opaque-&gt;wakeup_mutex);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>设置音频播放速率。主要还是依靠<a href="b3de524a.html">SDL_Aout_Opaque</a>中的speed、speed_changed字段来完成。详见<a href="b3de524a.html">SDL_Aout_Opaque</a>。其实是通过AudioTrack中的setPlaybackParams()来实现的。</p>
+<h4 id="3、小结"><a href="#3、小结" class="headerlink" title="3、小结"></a>3、小结</h4><p>这样便是Android AudioTrack版本的SDL_Aout。其实可以看出，最主要的方法还是open_audio()，然后其他的都是控制<a href="b3de524a.html">SDL_Aout_Opaque</a>中的一些字段的值，以实现控制音频输出<a href="5c9aa075.html">aout_thread</a>线程中逻辑的目的。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/289044cb.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-SDL_Aout-For-OpenSLES</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/a1824301.html">
+        <span class="next-text nav-default">Ijkplayer-SDL_Aout</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

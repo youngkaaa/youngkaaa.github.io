@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-aout_thread"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/5c9aa075.html"/>
+
+
+<meta name="description" content="本文主要介绍位于ijksdl_aout_android_audiotrack.c文件中aout_thread()方法。该方法是AudioTrack版本的Aout中音频输出线程的主要逻辑承载者。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-aout_thread">
+<meta property="og:url" content="https://youngkaaa.github.io/5c9aa075.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍位于ijksdl_aout_android_audiotrack.c文件中aout_thread()方法。该方法是AudioTrack版本的Aout中音频输出线程的主要逻辑承载者。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-04-12T09:27:02.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.430Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-aout_thread - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-aout_thread
+        
+      </h1>
+
+      <time class="post-time">
+          4月 12 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍位于ijksdl_aout_android_audiotrack.c文件中aout_thread()方法。该方法是<a href="b8be9048.html">AudioTrack</a>版本的<a href="a1824301.html">Aout</a>中音频输出线程的主要逻辑承载者。</p>
+<span id="more"></span>
+
+
+
+<h4 id="1、创建"><a href="#1、创建" class="headerlink" title="1、创建"></a>1、创建</h4><p>详见<a href="b8be9048.html">AudioTrack</a>版本中的open_audio()函数实现。</p>
+<h4 id="2、逻辑分析"><a href="#2、逻辑分析" class="headerlink" title="2、逻辑分析"></a>2、逻辑分析</h4><blockquote>
+<p>ijksdl_aout_android_audiotrack.c文件中aout_thread_n()</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">aout_thread_n</span><span class="params">(JNIEnv *env, SDL_Aout *aout)</span> &#123;</span><br><span class="line">    SDL_Aout_Opaque *opaque = aout-&gt;opaque;</span><br><span class="line">    SDL_Android_AudioTrack *atrack = opaque-&gt;atrack;</span><br><span class="line">    SDL_AudioCallback audio_cblk = opaque-&gt;spec.callback;</span><br><span class="line">    <span class="type">void</span> *userdata = opaque-&gt;spec.userdata;</span><br><span class="line">    <span class="type">uint8_t</span> *buffer = opaque-&gt;buffer;</span><br><span class="line">    <span class="type">int</span> copy_size = <span class="number">256</span>;</span><br><span class="line"></span><br><span class="line">    assert(atrack);</span><br><span class="line">    assert(buffer);</span><br><span class="line">    SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH); </span><br><span class="line">    <span class="keyword">if</span> (!opaque-&gt;abort_request &amp;&amp; !opaque-&gt;pause_on)</span><br><span class="line">        SDL_Android_AudioTrack_play(env, atrack); </span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (!opaque-&gt;abort_request) &#123;</span><br><span class="line">        SDL_LockMutex(opaque-&gt;wakeup_mutex);</span><br><span class="line">      	<span class="comment">// 第2步</span></span><br><span class="line">        <span class="keyword">if</span> (!opaque-&gt;abort_request &amp;&amp; opaque-&gt;pause_on) &#123;</span><br><span class="line">            SDL_Android_AudioTrack_pause(env, atrack);</span><br><span class="line">            <span class="keyword">while</span> (!opaque-&gt;abort_request &amp;&amp; opaque-&gt;pause_on) &#123;</span><br><span class="line">                SDL_CondWaitTimeout(opaque-&gt;wakeup_cond, opaque-&gt;wakeup_mutex, <span class="number">1000</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (!opaque-&gt;abort_request &amp;&amp; !opaque-&gt;pause_on) &#123;</span><br><span class="line">                <span class="keyword">if</span> (opaque-&gt;need_flush) &#123;</span><br><span class="line">                    opaque-&gt;need_flush = <span class="number">0</span>;</span><br><span class="line">                    SDL_Android_AudioTrack_flush(env, atrack);</span><br><span class="line">                &#125;</span><br><span class="line">                SDL_Android_AudioTrack_play(env, atrack);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (opaque-&gt;need_flush) &#123;</span><br><span class="line">            opaque-&gt;need_flush = <span class="number">0</span>;</span><br><span class="line">            SDL_Android_AudioTrack_flush(env, atrack);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (opaque-&gt;need_set_volume) &#123;</span><br><span class="line">            opaque-&gt;need_set_volume = <span class="number">0</span>;</span><br><span class="line">            SDL_Android_AudioTrack_set_volume(env, atrack, opaque-&gt;left_volume, opaque-&gt;right_volume);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (opaque-&gt;speed_changed) &#123;</span><br><span class="line">            opaque-&gt;speed_changed = <span class="number">0</span>;</span><br><span class="line">            SDL_Android_AudioTrack_setSpeed(env, atrack, opaque-&gt;speed);</span><br><span class="line">        &#125;</span><br><span class="line">        SDL_UnlockMutex(opaque-&gt;wakeup_mutex);</span><br><span class="line">        audio_cblk(userdata, buffer, copy_size);</span><br><span class="line">        <span class="keyword">if</span> (opaque-&gt;need_flush) &#123;</span><br><span class="line">            SDL_Android_AudioTrack_flush(env, atrack);</span><br><span class="line">            opaque-&gt;need_flush = <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (opaque-&gt;need_flush) &#123;</span><br><span class="line">            opaque-&gt;need_flush = <span class="number">0</span>;</span><br><span class="line">            SDL_Android_AudioTrack_flush(env, atrack);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="type">int</span> written = SDL_Android_AudioTrack_write(env, atrack, buffer, copy_size);</span><br><span class="line">            <span class="keyword">if</span> (written != copy_size) &#123;</span><br><span class="line">                ALOGW(<span class="string">&quot;AudioTrack: not all data copied %d/%d&quot;</span>, (<span class="type">int</span>) written, (<span class="type">int</span>) copy_size);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// <span class="doctag">TODO:</span> 1 if callback return -1 or 0</span></span><br><span class="line">    &#125;</span><br><span class="line">    SDL_Android_AudioTrack_free(env, atrack);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，本方法的逻辑还是很简单的，首先先分析定义声明的相关字段:</p>
+<blockquote>
+<p>audio_cblk</p>
+<p><a href="a6d96fd1.html">SDL_AudioCallback</a>实例，主要用来获取解码后的音频数据。</p>
+</blockquote>
+<blockquote>
+<p>userdata</p>
+<p>opaque-&gt;spec.userdata，也就是FFPlayer结构体实例。详见<a href="15d1ed53.html">audio_open</a>中的赋值解释。</p>
+</blockquote>
+<blockquote>
+<p>buffer</p>
+<p>opaque-&gt;buffer，用于存放解码后数据的容器buffer地址。详见<a href="b3de524a.html">SDL_Aout_Opaque</a>中的解释。</p>
+</blockquote>
+<blockquote>
+<p>copy_size</p>
+<p>每次赋值到buffer中的数据长度。即每次固定的赋值256个字节到buffer中。</p>
+</blockquote>
+<p>然后接下来的逻辑就是判断<a href="b3de524a.html">SDL_Aout_Opaque</a>中的一些字段的值，来调用AudioTrack对象的指定方法。而<a href="b3de524a.html">SDL_Aout_Opaque</a>中的这些字段正是通过<a href="b8be9048.html">AudioTrack</a>版本的<a href="a1824301.html">Aout</a>中的函数来修改的，所以也就可以实现通过<a href="a1824301.html">Aout</a>中来控制的目的了。这些逻辑上不介绍了很简单。</p>
+<p>补充一点就是调用audio_cblk()方法来往buffer中填充数据，然后调用AudioTrack中的write()方法将填充好待播放数据的buffer写入到播放器中，以完成播放。</p>
+<p>注意这一切都是在while循环中执行的哦。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/1ae52f91.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-audio_decode_frame</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/27b30422.html">
+        <span class="next-text nav-default">Ijkplayer-SDL_Android_AudioTrack</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

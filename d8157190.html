@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-feed_input_buffer2"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/d8157190.html"/>
+
+
+<meta name="description" content="本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的feed_input_buffer2()方法。 关于本方法，其实和feed_input_buffer方法是差不多一样的，只有略微的差异，所以详细分析在feed_input_buffer中，这里只介绍差异。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-feed_input_buffer2">
+<meta property="og:url" content="https://youngkaaa.github.io/d8157190.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的feed_input_buffer2()方法。 关于本方法，其实和feed_input_buffer方法是差不多一样的，只有略微的差异，所以详细分析在feed_input_buffer中，这里只介绍差异。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-03-14T03:44:51.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.421Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-feed_input_buffer2 - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-feed_input_buffer2
+        
+      </h1>
+
+      <time class="post-time">
+          3月 14 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的feed_input_buffer2()方法。</p>
+<p>关于本方法，其实和<a href="17303abc.html">feed_input_buffer</a>方法是差不多一样的，只有略微的差异，所以详细分析在<a href="17303abc.html">feed_input_buffer</a>中，这里只介绍差异。</p>
+<span id="more"></span>
+
+<p>在<a href="17303abc.html">feed_input_buffer</a>方法中，第3.1步中有介绍当读取到的AVPacket中有标明当前视频宽高发生了变化，那么会重新配置MediaCodec和Surface，在最后有介绍如下逻辑：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">SDL_LockMutex(opaque-&gt;acodec_first_dequeue_output_mutex);</span><br><span class="line"><span class="keyword">while</span> (!q-&gt;abort_request &amp;&amp;!opaque-&gt;acodec_reconfigure_request &amp;&amp;!opaque-&gt;acodec_flush_request &amp;&amp;opaque-&gt;acodec_first_dequeue_output_request) &#123;</span><br><span class="line">    SDL_CondWaitTimeout(opaque-&gt;acodec_first_dequeue_output_cond,</span><br><span class="line">    opaque-&gt;acodec_first_dequeue_output_mutex, <span class="number">100</span>);</span><br><span class="line">&#125;</span><br><span class="line">SDL_UnlockMutex(opaque-&gt;acodec_first_dequeue_output_mutex);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>注意，本逻辑只在<a href="17303abc.html">feed_input_buffer</a>中存在，在本方法feed_input_buffer2中不存在。</p>
+<p>当时分析这段逻辑时是解释的：因为<a href="17303abc.html">feed_input_buffer</a>方法填充解码数据到解码器中和<a href="70ca7e71.html">drain_output_buffer</a>方法从解码器中中读取解码后的数据是处于不同的线程的，所以这里需要在MediaCodec和Surface重新配置configure()之后阻塞<a href="17303abc.html">feed_input_buffer</a>方法，等待另外一个线程中调用<a href="70ca7e71.html">drain_output_buffer</a>方法来读取解码器中之前的数据，此时可能会读取出错误状态，表示解码器配置发生变化。读取过之后会执行下面逻辑而通知唤醒刚才等待中的<a href="17303abc.html">feed_input_buffer</a>方法：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (opaque-&gt;acodec_first_dequeue_output_request) &#123;</span><br><span class="line">    SDL_LockMutex(opaque-&gt;acodec_first_dequeue_output_mutex);</span><br><span class="line">    opaque-&gt;acodec_first_dequeue_output_request = <span class="literal">false</span>;</span><br><span class="line">    SDL_CondSignal(opaque-&gt;acodec_first_dequeue_output_cond);</span><br><span class="line">    SDL_UnlockMutex(opaque-&gt;acodec_first_dequeue_output_mutex);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里为啥会走进这个if，因为上面刚讲过在<a href="17303abc.html">feed_input_buffer</a>方法中MediaCodec和Surface重新配置了，在重新配置的ffpipenode_android_mediacodec_vdec.c#reconfigure_codec_l()方法中会将其置为1，表示解码器配置修改过。</p>
+<p>而对于本方法feed_input_buffer2()来说，调用它的地方是:<a href="64d79e1a.html">func_run_sync_loop</a>，在<a href="64d79e1a.html">func_run_sync_loop</a>方法中，填入待解码数据和读取解码后数据都是同步执行的，也就是两者会交替顺序执行，不存在异步线程互相通知的情况，所以在本方法feed_input_buffer2()中没有上面的通知逻辑，而剩下的逻辑基本和<a href="17303abc.html">feed_input_buffer</a>方法一致，这里不再赘述。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/3da735d9.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-drain_output_buffer2</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/33f55665.html">
+        <span class="next-text nav-default">Ijkplayer-get_video_frame</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

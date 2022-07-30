@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-accurate_seek机制"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/422da41d.html"/>
+
+
+<meta name="description" content="本文主要介绍ijkplayer中的accurate_seek机制。 首先accurate_seek是在ijkplayer中才有的概念，在ffplay中没有(ffmpeg中有，但是是用于剪切视频而不是播放视频)。主要作用就是使得seek更加精准，因为在ffplay中只能seek关键帧，如果关键帧少的话，跳转误差比较大，所以ijkplayer其引入了accurate_seek机制用以解决该问题。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-accurate_seek机制">
+<meta property="og:url" content="https://youngkaaa.github.io/422da41d.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍ijkplayer中的accurate_seek机制。 首先accurate_seek是在ijkplayer中才有的概念，在ffplay中没有(ffmpeg中有，但是是用于剪切视频而不是播放视频)。主要作用就是使得seek更加精准，因为在ffplay中只能seek关键帧，如果关键帧少的话，跳转误差比较大，所以ijkplayer其引入了accurate_seek机制用以解决该问题。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-03-22T02:49:20.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.426Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-accurate_seek机制 - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-accurate_seek机制
+        
+      </h1>
+
+      <time class="post-time">
+          3月 22 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍ijkplayer中的accurate_seek机制。</p>
+<p>首先accurate_seek是在ijkplayer中才有的概念，在ffplay中没有(ffmpeg中有，但是是用于剪切视频而不是播放视频)。主要作用就是使得seek更加精准，因为在ffplay中只能seek关键帧，如果关键帧少的话，跳转误差比较大，所以ijkplayer其引入了accurate_seek机制用以解决该问题。</p>
+<span id="more"></span>
+
+
+
+<p>我们知道，在ijkplayer中(或者说以至于ffplay中)，播放的大致框架流程为：</p>
+<ul>
+<li>数据读取线程<a href="f13bb020.html">read_thread()</a>负责读取数据，以及将一些控制操作具体化，比如seek时调用avformat_seek_file()方法等。读取到的数据放置到对应的PacketQueue中。</li>
+<li>视频解码线程负责从对应PacketQueue中拿到待解码数据放入解码器，然后从解码器中读出已解码的数据放入对应FrameQueue。</li>
+<li>视频展示、音频播放等逻辑负责从对应FrameQueue中读取出已解码数据然后做相应展示、播放。</li>
+</ul>
+<p>如果要实现accurate_seek机制，应该从这三个中哪个下手呢？</p>
+<p>在ijkplayer中，将accurate_seek机制放在了<code>从解码器中读出已解码的数据放入对应FrameQueue</code>这一步中来实现。就是说当seek发生时，记录下要seek到的终点位置，然后等到 往FrameQueue中放入已解码数据时，再做判断：</p>
+<ul>
+<li><p>如果此时要放入的已解码数据AVFrame的展示时间pts是seek终点之前的，那么就丢掉，不放入FrameQueue</p>
+</li>
+<li><p>如果此时要放入的已解码数据AVFrame的展示时间pts是seek终点位置及其之后的，那么就走正常逻辑将其放入FrameQueue(中间还有一步将AVFrame转换为Frame的操作省略了，后续为了方便都说将AVFrame放入FrameQueue，切莫纠结)。</p>
+<blockquote>
+<p>备注：ijkplayer中还有额外判断：如果要放入的数据的展示时间比seek的终点位置时间大很多的话同样还是丢掉（具体是大于MAX_DEVIATION 1.2s）。</p>
+</blockquote>
+</li>
+</ul>
+<p>而上述逻辑针对音频和视频都应该有。如果只有视频有该逻辑，等seek完视频播放没问题，音频可能不同步。 </p>
+<p>下面就针对ijkplayer中源码来做分析：</p>
+<h4 id="1、前提"><a href="#1、前提" class="headerlink" title="1、前提"></a>1、前提</h4><p>accurate_seek机制要开启，前提得打开ffp-&gt;enable_accurate_seek开关，该开关默认关闭。要开启的话可以调用上层IjkMediaPlayer中的setOption()方法来设置，具体key看:ff_ffplay_options.h中ffp_context_options的定义。</p>
+<h4 id="2、触发"><a href="#2、触发" class="headerlink" title="2、触发"></a>2、触发</h4><p>在读取线程<a href="f13bb020.html">read_thread()</a>中会处理seek操作，具体相关代码如下：</p>
+<blockquote>
+<p>ff_ffplay.c#read_thread()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">read_thread</span><span class="params">(<span class="type">void</span> *arg)</span> &#123;</span><br><span class="line">  	<span class="comment">// 省略部分prepare逻辑代码</span></span><br><span class="line">		<span class="keyword">for</span> (;;) &#123;</span><br><span class="line">      	<span class="comment">// 省略部分无关代码</span></span><br><span class="line">    		<span class="keyword">if</span> (is-&gt;seek_req) &#123;</span><br><span class="line">        		<span class="comment">// 省略部分无关代码</span></span><br><span class="line">            is-&gt;seek_req = <span class="number">0</span>; </span><br><span class="line">        		<span class="keyword">if</span> (ffp-&gt;enable_accurate_seek) &#123;</span><br><span class="line">                is-&gt;drop_aframe_count = <span class="number">0</span>;</span><br><span class="line">                is-&gt;drop_vframe_count = <span class="number">0</span>;</span><br><span class="line">                SDL_LockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">                <span class="keyword">if</span> (is-&gt;video_stream &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">                    is-&gt;video_accurate_seek_req = <span class="number">1</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (is-&gt;audio_stream &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">                    is-&gt;audio_accurate_seek_req = <span class="number">1</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                SDL_CondSignal(is-&gt;audio_accurate_seek_cond);</span><br><span class="line">                SDL_CondSignal(is-&gt;video_accurate_seek_cond);</span><br><span class="line">                SDL_UnlockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      <span class="comment">// 省略部分无关代码</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>也就是在<a href="f13bb020.html">read_thread()</a>中，当用户有seek请求时，seek_req会置为1，然后处理相关seek逻辑，比如调用avformat_seek_file()方法，处理完会后会判断enable_accurate_seek开关是否打开，如果打开了的话，就将drop_aframe_count和drop_vframe_count先重置为0，然后判断如果有视频轨道的话就将video_accurate_seek_req置为1，有音频轨道的话就将audio_accurate_seek_req置为1。</p>
+<blockquote>
+<p>is-&gt;drop_aframe_count</p>
+<p>表示accurate_seek行为导致的音频丢帧数。每次accurate_seek开始或者结束时就会将其置为0。</p>
+</blockquote>
+<blockquote>
+<p>is-&gt;drop_vframe_count</p>
+<p>表示accurate_seek行为导致的视频丢帧数。每次accurate_seek开始或者结束时就会将其置为0。</p>
+</blockquote>
+<blockquote>
+<p>is-&gt;video_accurate_seek_req</p>
+<p>表示本次accurate_seek操作是否需要视频轨道做处理。当然只要有视频轨道肯定就要做处理，不然accurate_seek之后可能不同步</p>
+</blockquote>
+<blockquote>
+<p>is-&gt;audio_accurate_seek_req</p>
+<p>表示本次accurate_seek操作是否需要音频轨道做处理。当然只要有音频轨道肯定就要做处理，不然accurate_seek之后可能不同步</p>
+</blockquote>
+<p>所以说，如果打开了enable_accurate_seek开关，那么每次seek操作时，都会触发accurate_seek机制。s</p>
+<blockquote>
+<p>注意：</p>
+<p>当seek操作具体逻辑执行完后，会立马将seek_req置为0的。所以如果这里需要额外理解下seek_req和video_accurate_seek_req、audio_accurate_seek_req的差异，他们不是平行关系。</p>
+</blockquote>
+<h4 id="3、video-accurate-seek"><a href="#3、video-accurate-seek" class="headerlink" title="3、video accurate_seek"></a>3、video accurate_seek</h4><p>当触发了accurate_seek机制后，等到之后的将视频解码后数据放入FrameQueue中时，会做额外的判断丢帧操作。而在ijkplayer中，所有视频解码后的帧(包括硬解和软解)，要放入FrameQueue，都是通过<a href="fe1f1f62.html">queue_picture()</a>方法的，所以ijkplayer在这里处理视频轨的accurate_seek机制。</p>
+<blockquote>
+<p>ff_ffplay.c#queue_picture()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">queue_picture</span><span class="params">(FFPlayer *ffp, AVFrame *src_frame, <span class="type">double</span> pts, <span class="type">double</span> duration, <span class="type">int64_t</span> pos, <span class="type">int</span> serial)</span> &#123;</span><br><span class="line">  			<span class="type">int</span> video_accurate_seek_fail = <span class="number">0</span>;</span><br><span class="line">  			<span class="type">int64_t</span> video_seek_pos = <span class="number">0</span>;</span><br><span class="line">  			<span class="comment">// 省略无关代码</span></span><br><span class="line">		    <span class="keyword">if</span> (ffp-&gt;enable_accurate_seek &amp;&amp; is-&gt;video_accurate_seek_req &amp;&amp; !is-&gt;seek_req) &#123;</span><br><span class="line">        <span class="keyword">if</span> (!isnan(pts)) &#123;</span><br><span class="line">          	<span class="comment">// 第1步</span></span><br><span class="line">            video_seek_pos = is-&gt;seek_pos;</span><br><span class="line">            is-&gt;accurate_seek_vframe_pts = pts * <span class="number">1000</span> * <span class="number">1000</span>;</span><br><span class="line">            deviation = llabs((<span class="type">int64_t</span>) (pts * <span class="number">1000</span> * <span class="number">1000</span>) - is-&gt;seek_pos);</span><br><span class="line">            <span class="keyword">if</span> ((pts * <span class="number">1000</span> * <span class="number">1000</span> &lt; is-&gt;seek_pos) || deviation &gt; MAX_DEVIATION) &#123;</span><br><span class="line">              	<span class="comment">// 第2步</span></span><br><span class="line">                now = av_gettime_relative() / <span class="number">1000</span>;</span><br><span class="line">                <span class="keyword">if</span> (is-&gt;drop_vframe_count == <span class="number">0</span>) &#123;</span><br><span class="line">                    SDL_LockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">                    <span class="keyword">if</span> (is-&gt;accurate_seek_start_time &lt;= <span class="number">0</span> &amp;&amp;</span><br><span class="line">                        (is-&gt;audio_stream &lt; <span class="number">0</span> || is-&gt;audio_accurate_seek_req)) &#123;</span><br><span class="line">                        is-&gt;accurate_seek_start_time = now;</span><br><span class="line">                    &#125;</span><br><span class="line">                    SDL_UnlockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">                    av_log(<span class="literal">NULL</span>, AV_LOG_INFO,</span><br><span class="line">                           <span class="string">&quot;video accurate_seek start, is-&gt;seek_pos=%lld, pts=%lf, is-&gt;accurate_seek_time = %lld\n&quot;</span>,</span><br><span class="line">                           is-&gt;seek_pos, pts, is-&gt;accurate_seek_start_time);</span><br><span class="line">                &#125;</span><br><span class="line">                is-&gt;drop_vframe_count++;</span><br><span class="line">              	<span class="comment">// 第3步</span></span><br><span class="line">                <span class="keyword">while</span> (is-&gt;audio_accurate_seek_req &amp;&amp; !is-&gt;abort_request) &#123;</span><br><span class="line">                    <span class="type">int64_t</span> apts = is-&gt;accurate_seek_aframe_pts;</span><br><span class="line">                    deviation2 = apts - pts * <span class="number">1000</span> * <span class="number">1000</span>;</span><br><span class="line">                    deviation3 = apts - is-&gt;seek_pos;</span><br><span class="line">                    <span class="keyword">if</span> (deviation2 &gt; <span class="number">-100</span> * <span class="number">1000</span> &amp;&amp; deviation3 &lt; <span class="number">0</span>) &#123;</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        av_usleep(<span class="number">20</span> * <span class="number">1000</span>);</span><br><span class="line">                    &#125;</span><br><span class="line">                    now = av_gettime_relative() / <span class="number">1000</span>;</span><br><span class="line">                    <span class="keyword">if</span> ((now - is-&gt;accurate_seek_start_time) &gt; ffp-&gt;accurate_seek_timeout) &#123;</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">// 第4步</span></span><br><span class="line">                <span class="keyword">if</span> ((now - is-&gt;accurate_seek_start_time) &lt;= ffp-&gt;accurate_seek_timeout) &#123;</span><br><span class="line">                    <span class="keyword">return</span> <span class="number">1</span>;  <span class="comment">// drop some old frame when do accurate seek</span></span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    video_accurate_seek_fail = <span class="number">1</span>;  <span class="comment">// if KEY_FRAME interval too big, disable accurate seek</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="comment">// 第5步</span></span><br><span class="line">                <span class="keyword">if</span> (video_seek_pos == is-&gt;seek_pos) &#123;</span><br><span class="line">                    is-&gt;drop_vframe_count = <span class="number">0</span>;</span><br><span class="line">                    SDL_LockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">                    is-&gt;video_accurate_seek_req = <span class="number">0</span>;</span><br><span class="line">                    SDL_CondSignal(is-&gt;audio_accurate_seek_cond);</span><br><span class="line">                    <span class="keyword">if</span> (video_seek_pos == is-&gt;seek_pos &amp;&amp; is-&gt;audio_accurate_seek_req &amp;&amp; !is-&gt;abort_request) &#123;</span><br><span class="line">                        SDL_CondWaitTimeout(is-&gt;video_accurate_seek_cond, is-&gt;accurate_seek_mutex,</span><br><span class="line">                                            ffp-&gt;accurate_seek_timeout);</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        ffp_notify_msg2(ffp, FFP_MSG_ACCURATE_SEEK_COMPLETE, (<span class="type">int</span>) (pts * <span class="number">1000</span>));</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (video_seek_pos != is-&gt;seek_pos &amp;&amp; !is-&gt;abort_request) &#123;</span><br><span class="line">                        is-&gt;video_accurate_seek_req = <span class="number">1</span>;</span><br><span class="line">                        SDL_UnlockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">                        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                    SDL_UnlockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            video_accurate_seek_fail = <span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 第6步</span></span><br><span class="line">        <span class="keyword">if</span> (video_accurate_seek_fail) &#123;</span><br><span class="line">            is-&gt;drop_vframe_count = <span class="number">0</span>;</span><br><span class="line">            SDL_LockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">            is-&gt;video_accurate_seek_req = <span class="number">0</span>;</span><br><span class="line">            SDL_CondSignal(is-&gt;audio_accurate_seek_cond);</span><br><span class="line">            <span class="keyword">if</span> (is-&gt;audio_accurate_seek_req &amp;&amp; !is-&gt;abort_request) &#123;</span><br><span class="line">                SDL_CondWaitTimeout(is-&gt;video_accurate_seek_cond, is-&gt;accurate_seek_mutex,</span><br><span class="line">                                    ffp-&gt;accurate_seek_timeout);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (!isnan(pts)) &#123;</span><br><span class="line">                    ffp_notify_msg2(ffp, FFP_MSG_ACCURATE_SEEK_COMPLETE, (<span class="type">int</span>) (pts * <span class="number">1000</span>));</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    ffp_notify_msg2(ffp, FFP_MSG_ACCURATE_SEEK_COMPLETE, <span class="number">0</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            SDL_UnlockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 第7步</span></span><br><span class="line">        is-&gt;accurate_seek_start_time = <span class="number">0</span>;</span><br><span class="line">        video_accurate_seek_fail = <span class="number">0</span>;</span><br><span class="line">        is-&gt;accurate_seek_vframe_pts = <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  	<span class="comment">// 省略无关代码</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>代码量不大，但是结构上挺复杂，所以下面贴出省略后的结构：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">queue_picture</span><span class="params">(FFPlayer *ffp, AVFrame *src_frame, <span class="type">double</span> pts, <span class="type">double</span> duration, <span class="type">int64_t</span> pos, <span class="type">int</span> serial)</span> &#123;</span><br><span class="line">  			<span class="type">int</span> video_accurate_seek_fail = <span class="number">0</span>;</span><br><span class="line">    		<span class="type">int64_t</span> video_seek_pos = <span class="number">0</span>;</span><br><span class="line">  			<span class="comment">// 省略无关代码</span></span><br><span class="line">		    <span class="keyword">if</span> (ffp-&gt;enable_accurate_seek &amp;&amp; is-&gt;video_accurate_seek_req &amp;&amp; !is-&gt;seek_req) &#123;</span><br><span class="line">        <span class="keyword">if</span> (!isnan(pts)) &#123;</span><br><span class="line">          	<span class="comment">// 第1步</span></span><br><span class="line">            <span class="keyword">if</span> ((pts * <span class="number">1000</span> * <span class="number">1000</span> &lt; is-&gt;seek_pos) || deviation &gt; MAX_DEVIATION) &#123;</span><br><span class="line">              	<span class="comment">// 第2步</span></span><br><span class="line">              	<span class="comment">// 第3步</span></span><br><span class="line">                <span class="comment">// 第4步</span></span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="comment">// 第5步</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            video_accurate_seek_fail = <span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 第6步</span></span><br><span class="line">        <span class="comment">// 第7步</span></span><br><span class="line">    &#125;</span><br><span class="line">  	<span class="comment">// 省略无关代码</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在执行逻辑之前，肯定先得判断enable_accurate_seek开关是否开启，以及video_accurate_seek_req开关判断视频轨道是否开启accurate_seek，同时还必须保证seek_req为0。关于这三个值上面有介绍过。所以说当enable_accurate_seek开关打开时，并且发生了seek操作，一般情况下都会满足这个条件。</p>
+<p>进入if后接着就是判断pts是否合法，而pts表示的是当前要放FrameQueue的AVFrame的展示时间，详细可以看<a href="fe1f1f62.html">queue_picture</a>中关于入参的分析。</p>
+<p>当pts合法时，会走后面的第1、2、3、4、5等步，不合法的话就直接将int video_accurate_seek_fail 置为1，表示accurate_seek失败。</p>
+<h5 id="第1步："><a href="#第1步：" class="headerlink" title="第1步："></a>第1步：</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">video_seek_pos = is-&gt;seek_pos;</span><br><span class="line">is-&gt;accurate_seek_vframe_pts = pts * <span class="number">1000</span> * <span class="number">1000</span>;</span><br><span class="line">deviation = llabs((<span class="type">int64_t</span>) (pts * <span class="number">1000</span> * <span class="number">1000</span>) - is-&gt;seek_pos);</span><br></pre></td></tr></table></figure>
+
+<p>在accurate_seek之前，首先将当前seek的终点位置备份一份到video_seek_pos中，以方便后面使用。然后给accurate_seek_vframe_pts赋值。</p>
+<blockquote>
+<p>is-&gt;accurate_seek_vframe_pts</p>
+<p>表示当前视频轨道accurate_seek的进度位置，单位微秒。每次解码后视频帧入队时，判断需要accurate_seek时都会使用该视频帧的pts来更新此值。此值一般在音频accurate_seek时会用到，用来要保证音频和视频两者accurate_seek的进度同步。</p>
+</blockquote>
+<blockquote>
+<p>is-&gt;accurate_seek_aframe_pts</p>
+<p>表示当前音频轨道accurate_seek的进度位置，单位微秒。和上面accurate_seek_vframe_pts类似。一般在视频accurate_seek时会用到。</p>
+</blockquote>
+<p>计算出当前AVFrame的pts和最终seek终点的差值deviation。</p>
+<ul>
+<li>如果deviation&lt;0表示该AVFrame还没到seek的终点，是seek点之前的数据;</li>
+<li>如果deviation&#x3D;0表示该AVFrame刚好是seek的终点位置的数据。</li>
+<li>如果deviation&gt;0表示该AVFrame已超过seek的终点，是seek点之后的数据;</li>
+</ul>
+<p>然后进入if判断，两个条件如下：</p>
+<ul>
+<li><p>pts * 1000 * 1000 &lt; is-&gt;seek_pos:</p>
+<p>表示当前AVFrame是在seek终点之前的数据。</p>
+</li>
+<li><p>deviation &gt; MAX_DEVIATION:</p>
+<p>表示当前AVFrame是在seek终点之后的数据，且比seek终点位置晚MAX_DEVIATION（1200000 -&gt;1.2s）。</p>
+</li>
+</ul>
+<p>所以if条件总结下就是:如果要入队的AVFrame是位于seek终点之前的数据，或者是比seek终点晚至少1.2s的数据，那么就进入if走第2、3、4步，表示该AVFrame是需要丢弃的(何谓丢弃？就是不放入队列)。否则就走第5步表示该数据合法，是seek终点处的数据。所以这里可以看出，只要AVFrame的pts<strong>刚刚大于</strong>seek终点时，那么就不会在丢弃了，而是正常的入队。</p>
+<h5 id="第2步："><a href="#第2步：" class="headerlink" title="第2步："></a>第2步：</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">now = av_gettime_relative() / <span class="number">1000</span>;</span><br><span class="line"><span class="keyword">if</span> (is-&gt;drop_vframe_count == <span class="number">0</span>) &#123;</span><br><span class="line">    SDL_LockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">    <span class="keyword">if</span> (is-&gt;accurate_seek_start_time &lt;= <span class="number">0</span> &amp;&amp;(is-&gt;audio_stream &lt; <span class="number">0</span> || is-&gt;audio_accurate_seek_req)) &#123;</span><br><span class="line">    		is-&gt;accurate_seek_start_time = now;</span><br><span class="line">    &#125;</span><br><span class="line">    SDL_UnlockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">&#125;</span><br><span class="line">is-&gt;drop_vframe_count++;</span><br></pre></td></tr></table></figure>
+
+<p>先拿到系统当前时间now。然后判断drop_vframe_count是否等于0。关于drop_vframe_count在上面第二部分解释过了，简单来说就是用来记录丢弃的AVFrame数的，而这里等于0的判断是用来保证if中的逻辑只会在第一次的时候执行一次。</p>
+<p>进入条件体内，迎面而来的又是一个条件判断:</p>
+<ul>
+<li><p>is-&gt;accurate_seek_start_time &lt;&#x3D; 0</p>
+<p>accurate_seek_start_time表示的是本次accurate_seek的开始时间。而上面提到过，在accurate_seek机制中是包括音频和视频两个部分的，且这两个部分是两个不同的线程，那么此时accurate_seek的开始时间需要怎么确定呢？两者中先执行的来决定该值。所以说如果视频的accurate_seek执行的比音频的早时，那么此时accurate_seek_start_time就是0，如果执行的晚于音频的，那么此时accurate_seek_start_time就会在音频逻辑中赋值。</p>
+</li>
+<li><p>is-&gt;audio_stream &lt; 0</p>
+<p>音频轨道是否存在，即是否有音频轨道，决定了是否有音频输出。</p>
+</li>
+<li><p>is-&gt;audio_accurate_seek_req</p>
+<p>在上面第二部分中解释过了，在read_thread()中会赋值，如果enable_accurate_seek开关打开时，且音频轨道存在，那么发生seek时audio_accurate_seek_req肯定为1。</p>
+</li>
+</ul>
+<p>所以该if的条件不做多余解释了，但是补充一点自己的理解：</p>
+<blockquote>
+<p>accurate_seek_start_time&lt;&#x3D;0一个条件即可保证两个地方只有一次赋值（因为任何一个地方赋值了，另外一个地方&lt;&#x3D;0条件就不满足了）为何还要增加后面的两个条件呢？</p>
+<p>我的理解：</p>
+<ol>
+<li>如果audio_stream&lt;0表示只需要视频轨道的accurate_seek即可，只考虑自己就行不用管音频那边的，所以这种情况时，只要accurate_seek_start_time&lt;&#x3D;0我就更新没问题</li>
+<li>如果audio_stream&gt;0表示有音频轨道，那么此时audio_accurate_seek_req一般都为1(详见上面第二部分的分析)，那么什么情况下audio_stream&gt;0时audio_accurate_seek_req&#x3D;0呢？音频accurate_seek失败时，音频accurate_seek逻辑中在accurate_seek失败时，会将audio_accurate_seek_req置为默认的0，就跟在视频accurate_seek失败时将video_accurate_seek_req置为0一样(这个下面第6步会分析)。所以这里加上audio_accurate_seek_req的判断是为了防止音频那边处理的比视频的块时，音频那边先将accurate_seek_start_time赋值了，然后音频开始accurate_seek立马出了问题导致音频accurate_seek失败，那么此时这边就不要继续再将accurate_seek_start_time赋值了。</li>
+</ol>
+</blockquote>
+<p>然后将is-&gt;drop_vframe_count自增。该值表示本次accurate_seek过程丢弃了多少视频帧数据。</p>
+<p>所以第2步的主要作用就是给accurate_seek开始时间accurate_seek_start_time赋值。</p>
+<h5 id="第3步："><a href="#第3步：" class="headerlink" title="第3步："></a>第3步：</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> (is-&gt;audio_accurate_seek_req &amp;&amp; !is-&gt;abort_request) &#123;</span><br><span class="line">    <span class="type">int64_t</span> apts = is-&gt;accurate_seek_aframe_pts;</span><br><span class="line">    deviation2 = apts - pts * <span class="number">1000</span> * <span class="number">1000</span>;</span><br><span class="line">    deviation3 = apts - is-&gt;seek_pos;</span><br><span class="line">    <span class="keyword">if</span> (deviation2 &gt; <span class="number">-100</span> * <span class="number">1000</span> &amp;&amp; deviation3 &lt; <span class="number">0</span>) &#123;</span><br><span class="line">   		 	<span class="keyword">break</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    		av_usleep(<span class="number">20</span> * <span class="number">1000</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    now = av_gettime_relative() / <span class="number">1000</span>;</span><br><span class="line">    <span class="keyword">if</span> ((now - is-&gt;accurate_seek_start_time) &gt; ffp-&gt;accurate_seek_timeout) &#123;</span><br><span class="line">    		<span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>第3步主要逻辑是在while循环中的，循环条件为:</p>
+<ul>
+<li><p>is-&gt;audio_accurate_seek_req</p>
+<p>音频那边是否还在进行accurate_seek。上面第2步中提到过，当accurate_seek结束（包括失败），会将对应的req置为0，也就是：视频&#x2F;音频accurate_seek结束(包括失败)会将video_accurate_seek_req&#x2F;audio_accurate_seek_req置为0(视频的下面第6步会分析)。</p>
+</li>
+<li><p>!is-&gt;abort_request</p>
+<p>当前播放器有没有终止。</p>
+</li>
+</ul>
+<p>所以循环条件就是:当音频那边的accurate_seek过程还在进行，且当前播放器还在运行中那么就一直执行循环体。</p>
+<p>循环体内首先计算出deviation2和deviation3的值：</p>
+<blockquote>
+<p>deviation2</p>
+<p>表示当前音频那边accurate_seek进度和这边视频accurate_seek进度的差异差值。大于0表示音频accurate_seek进度进度比视频快。音频那边accurate_seek进度就是accurate_seek_aframe_pts，而视频这边的accurate_seek进度就是pts(也就是accurate_seek_vframe_pts)，关于accurate_seek_aframe_pts这个可以翻看上面第1步中解释。</p>
+</blockquote>
+<blockquote>
+<p>deviation3</p>
+<p>表示当前音频那边accurate_seek进度距离seek终点的差异差值。大于0表示已超过seek终点。</p>
+</blockquote>
+<p>接着就是条件判断:</p>
+<ul>
+<li><p>deviation2 &gt; -100 * 1000</p>
+<p>deviation2是音频进度减视频进度，所以deviation2大于表示音频进度快于视频，小于0表示音频慢于视频进度。所以这里就是要求音频accurate_seek进度不能比视频accurate_seek进度<strong>慢超过</strong>100毫秒。</p>
+</li>
+<li><p>deviation3 &lt; 0</p>
+<p>deviation2是音频进度减去seek终点位置的差值，小于0时表示音频在seek终点之前，未超过seek终点。</p>
+</li>
+</ul>
+<p>所以这两个条件加起来就是要求音频accurate_seek进度不能慢于视频超过100毫秒，且音频没有到seek的终点。简单来说就是保证音频和视频的进度不能相差太大，如果相差不大那么这个while就终止执行，如果相差太大那就休眠等待音频赶上来。那如果音频那边出了严重错误导致进度一直不增加呢？此时这边会无限等待？</p>
+<p>当然不是了，当这里还做了兜底，防止等待时间过长了。也就是用当前时间减去开始accurate_seek的时间，计算出本次accurate_seek已消耗的时间，如果大于accurate_seek_timeout(也就是MAX_ACCURATE_SEEK_TIMEOUT&#x3D;5000ms&#x3D;5s，因为now&#x2F;1000是毫秒)那么就终止while，避免无限等待。</p>
+<p>第3步总得来说就是保证音频、视频进度不能相差太大，始终在一个范围内(100毫秒)。</p>
+<h5 id="第4步："><a href="#第4步：" class="headerlink" title="第4步："></a>第4步：</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> ((now - is-&gt;accurate_seek_start_time) &lt;= ffp-&gt;accurate_seek_timeout) &#123;</span><br><span class="line">	 <span class="keyword">return</span> <span class="number">1</span>;  <span class="comment">// drop some old frame when do accurate seek</span></span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		video_accurate_seek_fail = <span class="number">1</span>;  <span class="comment">// if KEY_FRAME interval too big, disable accurate seek</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在上面第3步中的while循环执行完才能执行当前第4步，而上面while循环退出就两种情况：</p>
+<ol>
+<li>音频进度追赶上来了，那么break</li>
+<li>等了accurate_seek_timeout(MAX_ACCURATE_SEEK_TIMEOUT&#x3D;5000ms&#x3D;5s)这么长时间音频没有追赶上来</li>
+</ol>
+<p>所以这里判断，如果(now - is-&gt;accurate_seek_start_time) &lt;&#x3D; ffp-&gt;accurate_seek_timeout也就是没有等待超时，也就是上面第一种情况，说明音频追赶上来了，当前accurate_seek进度正常，那么返回1表示当前这一帧处理完了被丢掉了。不然的话就是上面第2种情况，等了音频5s都没赶上来，多半是出事儿了，那么就video_accurate_seek_fail吧，表示本次accurate_seek失败。video_accurate_seek_fail后面会用到。</p>
+<h5 id="第5步："><a href="#第5步：" class="headerlink" title="第5步："></a>第5步：</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (video_seek_pos == is-&gt;seek_pos) &#123;</span><br><span class="line">    is-&gt;drop_vframe_count = <span class="number">0</span>;</span><br><span class="line">    SDL_LockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">    is-&gt;video_accurate_seek_req = <span class="number">0</span>;</span><br><span class="line">    SDL_CondSignal(is-&gt;audio_accurate_seek_cond);</span><br><span class="line">    <span class="keyword">if</span> (video_seek_pos == is-&gt;seek_pos &amp;&amp; is-&gt;audio_accurate_seek_req &amp;&amp; !is-&gt;abort_request) &#123;</span><br><span class="line">        SDL_CondWaitTimeout(is-&gt;video_accurate_seek_cond, is-&gt;accurate_seek_mutex,</span><br><span class="line">        ffp-&gt;accurate_seek_timeout);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    		ffp_notify_msg2(ffp, FFP_MSG_ACCURATE_SEEK_COMPLETE, (<span class="type">int</span>) (pts * <span class="number">1000</span>));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (video_seek_pos != is-&gt;seek_pos &amp;&amp; !is-&gt;abort_request) &#123;</span><br><span class="line">        is-&gt;video_accurate_seek_req = <span class="number">1</span>;</span><br><span class="line">        SDL_UnlockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    SDL_UnlockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>翻看上面代码结构可以知道，第5步和第2、3、4步分处于不同的条件中，也就是说第2、3、4步和第5步两者只能执行其一。而第5步一般就是执行若干次2、3、4步之后，使得当前AVFrame的pts<strong>刚刚大于</strong>seek终点，那么就会执行第5步表示视频这边accurate_seek结束。</p>
+<p>首先先判断video_seek_pos和当前的seek_pos是否相同，而video_seek_pos是accurate_seek刚开始时的seek_pos副本，然后中间经历了accurate_seek过程，还包括有可能会休眠，以至于最长等待5s的过程，所以可能在这个过程中又发生了seek，即又有新的accurate_seek过程产生，而此时完成的其实是上次的accurate_seek，所以需做判断。当然一般两者是一样的，我自己尝试多次seek也没有复现这种情况，所以这个也只是我的猜测而已。</p>
+<p>然后将drop_vframe_count和video_accurate_seek_req重置为0，然后在判断audio_accurate_seek_req是否还是1，如果是的话表示音频那边还没accurate_seek结束，那么等着呗。如果音频那边结束了，而视频这边此时也刚结束，表示整体都结束了，那么就发送FFP_MSG_ACCURATE_SEEK_COMPLETE消息通知。</p>
+<p>而如果video_seek_pos !&#x3D; is-&gt;seek_pos，也就是在accurate_seek过程中又发生了seek，那么就将video_accurate_seek_req置为1表示开始下一轮，并返回1表示将当前AVFrame丢掉。</p>
+<h5 id="第6步："><a href="#第6步：" class="headerlink" title="第6步："></a>第6步：</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (video_accurate_seek_fail) &#123;</span><br><span class="line">    is-&gt;drop_vframe_count = <span class="number">0</span>;</span><br><span class="line">    SDL_LockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">    is-&gt;video_accurate_seek_req = <span class="number">0</span>;</span><br><span class="line">    SDL_CondSignal(is-&gt;audio_accurate_seek_cond);</span><br><span class="line">    <span class="keyword">if</span> (is-&gt;audio_accurate_seek_req &amp;&amp; !is-&gt;abort_request) &#123;</span><br><span class="line">        SDL_CondWaitTimeout(is-&gt;video_accurate_seek_cond, is-&gt;accurate_seek_mutex,</span><br><span class="line">        ffp-&gt;accurate_seek_timeout);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (!isnan(pts)) &#123;</span><br><span class="line">        		ffp_notify_msg2(ffp, FFP_MSG_ACCURATE_SEEK_COMPLETE, (<span class="type">int</span>) (pts * <span class="number">1000</span>));</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        		ffp_notify_msg2(ffp, FFP_MSG_ACCURATE_SEEK_COMPLETE, <span class="number">0</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    SDL_UnlockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注意上面video_accurate_seek_fail赋值为1的情况:</p>
+<ul>
+<li>第4步中等待音频进度赶上来等的太久了会将video_accurate_seek_fail置为1</li>
+<li>如果当前AVFrame的pts不合法，那么会将video_accurate_seek_fail置为1</li>
+</ul>
+<p>所以此时如果video_accurate_seek_fail&#x3D;1时，表示本次accurate_seek失败，那么还是将drop_vframe_count和video_accurate_seek_req置为0。然后和第5步中逻辑差不多，判断音频还没accurate_seek结束那么就等它结束。如果已结束那么就表示整体已结束，那么还是发送FFP_MSG_ACCURATE_SEEK_COMPLETE消息。</p>
+<h6 id="第7步："><a href="#第7步：" class="headerlink" title="第7步："></a>第7步：</h6><p>最后一步很简单，就是将accurate_seek_start_time、video_accurate_seek_fail、accurate_seek_vframe_pts都置为默认的0。</p>
+<h4 id="4、audio-accurate-seek"><a href="#4、audio-accurate-seek" class="headerlink" title="4、audio accurate_seek"></a>4、audio accurate_seek</h4><p>具体在ff_ffplay.c文件中的<a href="c0d7c607.html">audio_thread()</a>方法内，逻辑基本和上面视频的一样，可以对照着分析，这里不再赘述。</p>
+<h4 id="5、小结"><a href="#5、小结" class="headerlink" title="5、小结"></a>5、小结</h4><p>总的来说，在ijkplayer中支持accurate_seek，而其具体实现的时机就是放在了解码后数据放入队列时，这样保证了一次seek之后，FrameQueue中放置的都是seek位置及其之后的数据。而accurate_seek最大问题就是音频、视频seek进度的同步问题，而这个问题在上面<strong>video accurate_seek</strong>部分中的第3步内有简单解释。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/217ddfcf.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-Clock</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/866c32fa.html">
+        <span class="next-text nav-default">Ijkplayer-FrameQueue</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

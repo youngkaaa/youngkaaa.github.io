@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-feed_input_buffer"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/17303abc.html"/>
+
+
+<meta name="description" content="本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的feed_input_buffer()方法。 feed_input_buffer()方法是enqueue_thread_func()中的主要逻辑，主要作用是往解码器中填入待解码数据，而enqueue_thread_func()方法是运行在单独的一个线程中的，具体分析可以翻看func_ru">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-feed_input_buffer">
+<meta property="og:url" content="https://youngkaaa.github.io/17303abc.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的feed_input_buffer()方法。 feed_input_buffer()方法是enqueue_thread_func()中的主要逻辑，主要作用是往解码器中填入待解码数据，而enqueue_thread_func()方法是运行在单独的一个线程中的，具体分析可以翻看func_ru">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-03-08T02:36:20.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.419Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-feed_input_buffer - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-feed_input_buffer
+        
+      </h1>
+
+      <time class="post-time">
+          3月 08 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的feed_input_buffer()方法。</p>
+<p>feed_input_buffer()方法是enqueue_thread_func()中的主要逻辑，主要作用是往解码器中填入待解码数据，而enqueue_thread_func()方法是运行在单独的一个线程中的，具体分析可以翻看<a href="8876f557.html">func_run_sync</a>中的分析。</p>
+<span id="more"></span>
+
+<blockquote>
+<p>TODO:</p>
+<ul>
+<li>第2.5步Side data</li>
+<li>第2.6步Annex-B转换</li>
+</ul>
+</blockquote>
+<p>本方法源代码如下：</p>
+<blockquote>
+<p>ffpipenode_android_mediacodec_vdec.c#feed_input_buffer()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">feed_input_buffer</span><span class="params">(JNIEnv *env, IJKFF_Pipenode *node, <span class="type">int64_t</span> timeUs, <span class="type">int</span> *enqueue_count)</span> &#123;</span><br><span class="line">IJKFF_Pipenode_Opaque *opaque = node-&gt;opaque;</span><br><span class="line">FFPlayer *ffp = opaque-&gt;ffp;</span><br><span class="line">IJKFF_Pipeline *pipeline = opaque-&gt;pipeline;</span><br><span class="line">VideoState *is = ffp-&gt;is;</span><br><span class="line">Decoder *d = &amp;is-&gt;viddec;</span><br><span class="line">PacketQueue *q = d-&gt;<span class="built_in">queue</span>;</span><br><span class="line"><span class="type">sdl_amedia_status_t</span> amc_ret = <span class="number">0</span>;</span><br><span class="line"><span class="type">int</span> ret = <span class="number">0</span>;</span><br><span class="line"><span class="type">ssize_t</span> input_buffer_index = <span class="number">0</span>;</span><br><span class="line"><span class="type">ssize_t</span> copy_size = <span class="number">0</span>;</span><br><span class="line"><span class="type">int64_t</span> time_stamp = <span class="number">0</span>;</span><br><span class="line"><span class="type">uint32_t</span> queue_flags = <span class="number">0</span>;</span><br><span class="line">	<span class="comment">// 第1步</span></span><br><span class="line"><span class="keyword">if</span> (enqueue_count) &#123;</span><br><span class="line">*enqueue_count = <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (d-&gt;<span class="built_in">queue</span>-&gt;abort_request) &#123;</span><br><span class="line">ret = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">goto</span> fail;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 第2步</span></span><br><span class="line"><span class="keyword">if</span> (!d-&gt;packet_pending || d-&gt;<span class="built_in">queue</span>-&gt;serial != d-&gt;pkt_serial) &#123;</span><br><span class="line">H264ConvertState convert_state = &#123;<span class="number">0</span>, <span class="number">0</span>&#125;;</span><br><span class="line">AVPacket pkt;</span><br><span class="line"><span class="keyword">do</span> &#123;</span><br><span class="line">	<span class="comment">// 第2.1步</span></span><br><span class="line"><span class="keyword">if</span> (d-&gt;<span class="built_in">queue</span>-&gt;nb_packets == <span class="number">0</span>) &#123;</span><br><span class="line">    SDL_CondSignal(d-&gt;empty_queue_cond);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 第2.2步</span></span><br><span class="line"><span class="keyword">if</span> (ffp_packet_queue_get_or_buffering(ffp, d-&gt;<span class="built_in">queue</span>, &amp;pkt, &amp;d-&gt;pkt_serial, &amp;d-&gt;finished) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">    ret = <span class="number">-1</span>;</span><br><span class="line">    <span class="keyword">goto</span> fail;</span><br><span class="line">&#125;</span><br><span class="line">	<span class="comment">// 第2.3步</span></span><br><span class="line"><span class="keyword">if</span> (ffp_is_flush_packet(&amp;pkt) || opaque-&gt;acodec_flush_request) &#123;</span><br><span class="line">    <span class="comment">// request flush before lock, or never get mutex</span></span><br><span class="line">    opaque-&gt;acodec_flush_request = <span class="literal">true</span>;</span><br><span class="line">    SDL_LockMutex(opaque-&gt;acodec_mutex);</span><br><span class="line">    <span class="keyword">if</span> (SDL_AMediaCodec_isStarted(opaque-&gt;acodec)) &#123;</span><br><span class="line">        <span class="keyword">if</span> (opaque-&gt;input_packet_count &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="comment">// flush empty queue cause error on OMX.SEC.AVC.Decoder (Nexus S)</span></span><br><span class="line">            SDL_VoutAndroid_invalidateAllBuffers(opaque-&gt;weak_vout);</span><br><span class="line">            SDL_AMediaCodec_flush(opaque-&gt;acodec);</span><br><span class="line">            opaque-&gt;input_packet_count = <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// If codec is configured in synchronous mode, codec will resume automatically</span></span><br><span class="line">        <span class="comment">// SDL_AMediaCodec_start(opaque-&gt;acodec);</span></span><br><span class="line">    &#125;</span><br><span class="line">    opaque-&gt;acodec_flush_request = <span class="literal">false</span>;</span><br><span class="line">    SDL_CondSignal(opaque-&gt;acodec_cond);</span><br><span class="line">    SDL_UnlockMutex(opaque-&gt;acodec_mutex);</span><br><span class="line">    d-&gt;finished = <span class="number">0</span>;</span><br><span class="line">    d-&gt;next_pts = d-&gt;start_pts;</span><br><span class="line">    d-&gt;next_pts_tb = d-&gt;start_pts_tb;</span><br><span class="line">&#125;</span><br><span class="line">&#125; <span class="keyword">while</span> (ffp_is_flush_packet(&amp;pkt) || d-&gt;<span class="built_in">queue</span>-&gt;serial != d-&gt;pkt_serial);</span><br><span class="line"><span class="comment">// 第2.4步</span></span><br><span class="line">av_packet_split_side_data(&amp;pkt);</span><br><span class="line">av_packet_unref(&amp;d-&gt;pkt);</span><br><span class="line">d-&gt;pkt_temp = d-&gt;pkt = pkt;</span><br><span class="line">d-&gt;packet_pending = <span class="number">1</span>;</span><br><span class="line">	<span class="comment">// 第2.5步</span></span><br><span class="line"><span class="keyword">if</span> (opaque-&gt;ffp-&gt;mediacodec_handle_resolution_change &amp;&amp;</span><br><span class="line">opaque-&gt;codecpar-&gt;codec_id == AV_CODEC_ID_H264) &#123;</span><br><span class="line"><span class="type">uint8_t</span> *size_data = <span class="literal">NULL</span>;</span><br><span class="line"><span class="type">int</span> size_data_size = <span class="number">0</span>;</span><br><span class="line">AVPacket *avpkt = &amp;d-&gt;pkt_temp;</span><br><span class="line">size_data = av_packet_get_side_data(avpkt, AV_PKT_DATA_NEW_EXTRADATA, &amp;size_data_size);</span><br><span class="line"><span class="comment">// minimum avcC(sps,pps) = 7</span></span><br><span class="line"><span class="keyword">if</span> (size_data &amp;&amp; size_data_size &gt;= <span class="number">7</span>) &#123;</span><br><span class="line">    <span class="type">int</span> got_picture = <span class="number">0</span>;</span><br><span class="line">    AVFrame *frame = av_frame_alloc();</span><br><span class="line">    AVDictionary *codec_opts = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="type">const</span> AVCodec *codec = opaque-&gt;decoder-&gt;avctx-&gt;codec;</span><br><span class="line">    AVCodecContext *new_avctx = avcodec_alloc_context3(codec);</span><br><span class="line">    <span class="type">int</span> change_ret = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span> (!new_avctx)</span><br><span class="line">        <span class="keyword">return</span> AVERROR(ENOMEM);</span><br><span class="line"></span><br><span class="line">    avcodec_parameters_to_context(new_avctx, opaque-&gt;codecpar);</span><br><span class="line">    av_freep(&amp;new_avctx-&gt;extradata);</span><br><span class="line">    new_avctx-&gt;extradata = av_mallocz(size_data_size + AV_INPUT_BUFFER_PADDING_SIZE);</span><br><span class="line">    <span class="keyword">if</span> (!new_avctx-&gt;extradata) &#123;</span><br><span class="line">        avcodec_free_context(&amp;new_avctx);</span><br><span class="line">        <span class="keyword">return</span> AVERROR(ENOMEM);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">memcpy</span>(new_avctx-&gt;extradata, size_data, size_data_size);</span><br><span class="line">    new_avctx-&gt;extradata_size = size_data_size;</span><br><span class="line"></span><br><span class="line">    av_dict_set(&amp;codec_opts, <span class="string">&quot;threads&quot;</span>, <span class="string">&quot;1&quot;</span>, <span class="number">0</span>);</span><br><span class="line">    change_ret = avcodec_open2(new_avctx, codec, &amp;codec_opts);</span><br><span class="line">    av_dict_free(&amp;codec_opts);</span><br><span class="line">    <span class="keyword">if</span> (change_ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        avcodec_free_context(&amp;new_avctx);</span><br><span class="line">        <span class="keyword">return</span> change_ret;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    change_ret = avcodec_decode_video2(new_avctx, frame, &amp;got_picture, avpkt);</span><br><span class="line">    <span class="keyword">if</span> (change_ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        avcodec_free_context(&amp;new_avctx);</span><br><span class="line">        <span class="keyword">return</span> change_ret;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (opaque-&gt;codecpar-&gt;width != new_avctx-&gt;width &amp;&amp;</span><br><span class="line">            opaque-&gt;codecpar-&gt;height != new_avctx-&gt;height) &#123;</span><br><span class="line">            ALOGW(<span class="string">&quot;AV_PKT_DATA_NEW_EXTRADATA: %d x %d\n&quot;</span>, new_avctx-&gt;width, new_avctx-&gt;height);</span><br><span class="line">            avcodec_parameters_from_context(opaque-&gt;codecpar, new_avctx);</span><br><span class="line">            opaque-&gt;aformat_need_recreate = <span class="literal">true</span>;</span><br><span class="line">            ffpipeline_set_surface_need_reconfigure_l(pipeline, <span class="literal">true</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    av_frame_unref(frame);</span><br><span class="line">    avcodec_free_context(&amp;new_avctx);</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line">	<span class="comment">// 第2.6步</span></span><br><span class="line"><span class="keyword">if</span> (opaque-&gt;codecpar-&gt;codec_id == AV_CODEC_ID_H264 || opaque-&gt;codecpar-&gt;codec_id == AV_CODEC_ID_HEVC) &#123;</span><br><span class="line">convert_h264_to_annexb(d-&gt;pkt_temp.data, d-&gt;pkt_temp.size, opaque-&gt;nal_size, &amp;convert_state);</span><br><span class="line"><span class="type">int64_t</span> time_stamp = d-&gt;pkt_temp.pts;</span><br><span class="line"><span class="keyword">if</span> (!time_stamp &amp;&amp; d-&gt;pkt_temp.dts)</span><br><span class="line">    time_stamp = d-&gt;pkt_temp.dts;</span><br><span class="line"><span class="keyword">if</span> (time_stamp &gt; <span class="number">0</span>) &#123;</span><br><span class="line">    time_stamp = av_rescale_q(time_stamp, is-&gt;video_st-&gt;time_base, AV_TIME_BASE_Q);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    time_stamp = <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 第3步</span></span><br><span class="line"><span class="keyword">if</span> (d-&gt;pkt_temp.data) &#123;</span><br><span class="line"><span class="comment">// reconfigure surface if surface changed</span></span><br><span class="line"><span class="comment">// NULL surface cause no display</span></span><br><span class="line">	<span class="comment">// 第3.1步</span></span><br><span class="line"><span class="keyword">if</span> (ffpipeline_is_surface_need_reconfigure_l(pipeline)) &#123;</span><br><span class="line">jobject new_surface = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// request reconfigure before lock, or never get mutex</span></span><br><span class="line">ffpipeline_lock_surface(pipeline);</span><br><span class="line">ffpipeline_set_surface_need_reconfigure_l(pipeline, <span class="literal">false</span>);</span><br><span class="line">new_surface = ffpipeline_get_surface_as_global_ref_l(env, pipeline);</span><br><span class="line">ffpipeline_unlock_surface(pipeline);</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (!opaque-&gt;aformat_need_recreate &amp;&amp;</span><br><span class="line">    (opaque-&gt;jsurface == new_surface ||</span><br><span class="line">     (opaque-&gt;jsurface &amp;&amp; new_surface &amp;&amp; (*env)-&gt;IsSameObject(env, new_surface, opaque-&gt;jsurface)))) &#123;</span><br><span class="line">    ALOGI(<span class="string">&quot;%s: same surface, reuse previous surface\n&quot;</span>, __func__);</span><br><span class="line">    J4A_DeleteGlobalRef__p(env, &amp;new_surface);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (opaque-&gt;aformat_need_recreate) &#123;</span><br><span class="line">        ALOGI(<span class="string">&quot;%s: recreate aformat\n&quot;</span>, __func__);</span><br><span class="line">        ret = recreate_format_l(env, node);</span><br><span class="line">        <span class="keyword">if</span> (ret) &#123;</span><br><span class="line">            ALOGE(<span class="string">&quot;amc: recreate_format_l failed\n&quot;</span>);</span><br><span class="line">            <span class="keyword">goto</span> fail;</span><br><span class="line">        &#125;</span><br><span class="line">        opaque-&gt;aformat_need_recreate = <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    opaque-&gt;acodec_reconfigure_request = <span class="literal">true</span>;</span><br><span class="line">    SDL_LockMutex(opaque-&gt;acodec_mutex);</span><br><span class="line">    ret = reconfigure_codec_l(env, node, new_surface);</span><br><span class="line">    opaque-&gt;acodec_reconfigure_request = <span class="literal">false</span>;</span><br><span class="line">    SDL_CondSignal(opaque-&gt;acodec_cond);</span><br><span class="line">    SDL_UnlockMutex(opaque-&gt;acodec_mutex);</span><br><span class="line"></span><br><span class="line">    J4A_DeleteGlobalRef__p(env, &amp;new_surface);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ret != <span class="number">0</span>) &#123;</span><br><span class="line">        ALOGE(<span class="string">&quot;%s: reconfigure_codec failed\n&quot;</span>, __func__);</span><br><span class="line">        ret = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">goto</span> fail;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    SDL_LockMutex(opaque-&gt;acodec_first_dequeue_output_mutex);</span><br><span class="line">    <span class="keyword">while</span> (!q-&gt;abort_request &amp;&amp;</span><br><span class="line">           !opaque-&gt;acodec_reconfigure_request &amp;&amp;</span><br><span class="line">           !opaque-&gt;acodec_flush_request &amp;&amp;</span><br><span class="line">           opaque-&gt;acodec_first_dequeue_output_request) &#123;</span><br><span class="line">        SDL_CondWaitTimeout(opaque-&gt;acodec_first_dequeue_output_cond,</span><br><span class="line">                            opaque-&gt;acodec_first_dequeue_output_mutex, <span class="number">100</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    SDL_UnlockMutex(opaque-&gt;acodec_first_dequeue_output_mutex);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (q-&gt;abort_request || opaque-&gt;acodec_reconfigure_request || opaque-&gt;acodec_flush_request) &#123;</span><br><span class="line">        ret = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">goto</span> fail;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line">	<span class="comment">// 第3.2步</span></span><br><span class="line">queue_flags = <span class="number">0</span>;</span><br><span class="line">input_buffer_index = SDL_AMediaCodec_dequeueInputBuffer(opaque-&gt;acodec, timeUs);</span><br><span class="line"><span class="keyword">if</span> (input_buffer_index &lt; <span class="number">0</span>) &#123;</span><br><span class="line"><span class="keyword">if</span> (SDL_AMediaCodec_isInputBuffersValid(opaque-&gt;acodec)) &#123;</span><br><span class="line">    <span class="comment">// timeout</span></span><br><span class="line">    ret = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">goto</span> fail;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// enqueue fake frame</span></span><br><span class="line">    queue_flags |= AMEDIACODEC__BUFFER_FLAG_FAKE_FRAME;</span><br><span class="line">    copy_size = d-&gt;pkt_temp.size;</span><br><span class="line">&#125;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">SDL_AMediaCodecFake_flushFakeFrames(opaque-&gt;acodec);</span><br><span class="line">copy_size = SDL_AMediaCodec_writeInputData(opaque-&gt;acodec, input_buffer_index, d-&gt;pkt_temp.data,d-&gt;pkt_temp.size);</span><br><span class="line"><span class="keyword">if</span> (!copy_size) &#123;</span><br><span class="line">    ALOGE(<span class="string">&quot;%s: SDL_AMediaCodec_getInputBuffer failed\n&quot;</span>, __func__);</span><br><span class="line">    ret = <span class="number">-1</span>;</span><br><span class="line">    <span class="keyword">goto</span> fail;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line">time_stamp = d-&gt;pkt_temp.pts;</span><br><span class="line"><span class="keyword">if</span> (time_stamp == AV_NOPTS_VALUE &amp;&amp; d-&gt;pkt_temp.dts != AV_NOPTS_VALUE)</span><br><span class="line">time_stamp = d-&gt;pkt_temp.dts;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (time_stamp &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">time_stamp = av_rescale_q(time_stamp, is-&gt;video_st-&gt;time_base, AV_TIME_BASE_Q);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">time_stamp = <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line">amc_ret = SDL_AMediaCodec_queueInputBuffer(opaque-&gt;acodec, input_buffer_index, <span class="number">0</span>, copy_size, time_stamp,queue_flags);</span><br><span class="line"><span class="keyword">if</span> (amc_ret != SDL_AMEDIA_OK) &#123;</span><br><span class="line">ALOGE(<span class="string">&quot;%s: SDL_AMediaCodec_getInputBuffer failed\n&quot;</span>, __func__);</span><br><span class="line">ret = <span class="number">-1</span>;</span><br><span class="line"><span class="keyword">goto</span> fail;</span><br><span class="line">&#125;</span><br><span class="line">opaque-&gt;input_packet_count++;</span><br><span class="line"><span class="keyword">if</span> (enqueue_count)</span><br><span class="line">++*enqueue_count;</span><br><span class="line">&#125;</span><br><span class="line">	<span class="comment">// 第4步</span></span><br><span class="line"><span class="keyword">if</span> (copy_size &lt; <span class="number">0</span>) &#123;</span><br><span class="line">d-&gt;packet_pending = <span class="number">0</span>;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">d-&gt;pkt_temp.dts = d-&gt;pkt_temp.pts = AV_NOPTS_VALUE;</span><br><span class="line"><span class="keyword">if</span> (d-&gt;pkt_temp.data) &#123;</span><br><span class="line">d-&gt;pkt_temp.data += copy_size;</span><br><span class="line">d-&gt;pkt_temp.size -= copy_size;</span><br><span class="line"><span class="keyword">if</span> (d-&gt;pkt_temp.size &lt;= <span class="number">0</span>)</span><br><span class="line"> d-&gt;packet_pending = <span class="number">0</span>;</span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"><span class="comment">// <span class="doctag">FIXME:</span> detect if decode finished</span></span><br><span class="line"><span class="comment">// if (!got_frame) &#123;</span></span><br><span class="line">d-&gt;packet_pending = <span class="number">0</span>;</span><br><span class="line">d-&gt;finished = d-&gt;pkt_serial;</span><br><span class="line"><span class="comment">// &#125;</span></span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fail:</span><br><span class="line"><span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>feed_input_buffer()方法具体逻辑如上，注意源代码中插入了步骤的注释。</p>
+</blockquote>
+<p>先解释下本方法的入参(env不解释了):</p>
+<ul>
+<li>node：IJKFF_Pipenode结构体实例，用于拿到IJKFF_Pipenode_Opaque来做一些操作</li>
+<li>timeUs:调用上层MediaCodec对象实例中的dequeueInputBuffer()方法来获取时传入的值，表示等待时长，如果超过该时长还没有可用的Buffer来放置dequeueInputBuffer()方法就会返回-1；单位微秒。</li>
+<li>enqueue_count：待解码数据塞入解码器队列的个数，外部方法调用时传入，等解码数据入队成功时会自增1。也就是说在本方法执行完后，可以通过这个值是否等于1来判断本次塞入待解码数据是否成功，然后ijkplayer中该值并没有使用到，暂时无用可以不用管。</li>
+</ul>
+<p> 下面按照上面代码中标的步骤来解释，逻辑有点多，所以下面先精简下相关代码（具体逻辑用步骤代替），以展示该方法的主要框架流程:</p>
+<blockquote>
+<p>ffpipenode_android_mediacodec_vdec.c#feed_input_buffer()精简版</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">feed_input_buffer</span><span class="params">(JNIEnv *env, IJKFF_Pipenode *node, <span class="type">int64_t</span> timeUs, <span class="type">int</span> *enqueue_count)</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> (!d-&gt;packet_pending || d-&gt;<span class="built_in">queue</span>-&gt;serial != d-&gt;pkt_serial) &#123;</span><br><span class="line">				<span class="keyword">do</span> &#123;</span><br><span class="line">						第<span class="number">2.1</span>步;</span><br><span class="line">						第<span class="number">2.2</span>步;</span><br><span class="line">						第<span class="number">2.3</span>步;</span><br><span class="line">				&#125; <span class="keyword">while</span>(ffp_is_flush_packet(&amp;pkt) || d-&gt;<span class="built_in">queue</span>-&gt;serial != d-&gt;pkt_serial);</span><br><span class="line">				第<span class="number">2.4</span>步;</span><br><span class="line">				第<span class="number">2.5</span>步;</span><br><span class="line">				第<span class="number">2.6</span>步;</span><br><span class="line">		&#125;</span><br><span class="line">		</span><br><span class="line">		<span class="keyword">if</span> (d-&gt;pkt_temp.data) &#123;</span><br><span class="line">				第<span class="number">3.1</span>步;</span><br><span class="line">				第<span class="number">3.2</span>步;</span><br><span class="line">		&#125;</span><br><span class="line">		第<span class="number">4</span>步;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>后面的解释就基于上面源代码中标明的每一步来解释。</p>
+</blockquote>
+<h4 id="第1步："><a href="#第1步：" class="headerlink" title="第1步："></a>第1步：</h4><p>第1步很简单，就是将传入的enqueue_count初始化掉，置为0。然后判断解码器对应的PacketQueue是否已终止(d-&gt;queue-&gt;abort_request)，注意每个解码器(Decoder)中的queue都是其对应轨道的待解码数据队列(PacketQueue)，比如视频解码器中的queue就是videoq,音频的解码器中的queue就是audioq，具体赋值在</p>
+<p>ff_ffplay.c#read_thread() -&gt; ff_ffplay.c#stream_component_open() -&gt; ff_ffplay.c#decoder_init()中。</p>
+<h4 id="第2步："><a href="#第2步：" class="headerlink" title="第2步："></a>第2步：</h4><p> 第2大步主要是在if条件中，包括6小步：</p>
+ <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (!d-&gt;packet_pending || d-&gt;<span class="built_in">queue</span>-&gt;serial != d-&gt;pkt_serial) &#123;</span><br><span class="line">				<span class="keyword">do</span> &#123;</span><br><span class="line">						第<span class="number">2.1</span>步;</span><br><span class="line">						第<span class="number">2.2</span>步;</span><br><span class="line">						第<span class="number">2.3</span>步;</span><br><span class="line">				&#125; <span class="keyword">while</span>(ffp_is_flush_packet(&amp;pkt) || d-&gt;<span class="built_in">queue</span>-&gt;serial != d-&gt;pkt_serial);</span><br><span class="line">				第<span class="number">2.4</span>步;</span><br><span class="line">				第<span class="number">2.5</span>步;</span><br><span class="line">				第<span class="number">2.6</span>步;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p> 先解释d-&gt;packet_pending，该变量用于指示当前是否还有待解码数据(AvPacket)要处理，当然这包括两种情况：</p>
+<ul>
+<li>上次从d-&gt;queue队头取出了待解码的数据(从PacketQueue中读取队头后会自动将其从队列中移出)，然后放入解码器时失败了，那么没办法等下次调用本方法(feed_input_buffer())时再放入吧。</li>
+<li>上次往解码器中放入数据成功了，但是没放入完全，那么这次就要把上次没放完的数据放进去</li>
+</ul>
+<p> 以上两种情况都会将packet_pending置为1，那么等下次调用本方法时就会直接用上次的数据来放入解码器。</p>
+<p> 第二个条件d-&gt;queue-&gt;serial !&#x3D; d-&gt;pkt_serial，这两者分开解释:</p>
+<blockquote>
+<p>d-&gt;queue-&gt;serial</p>
+<p>PacketQueue-&gt;serial，我们知道PacketQueue是存放待解码数据(AVPacket)的队列,而AVPacket也就是队列中的每一项待解码数据。翻看定义可以知道在PacketQueue中有一个serial，AVPacket中也有一个serial，那么serial是用来干嘛的呢？简单来说主要就是用来处理seek逻辑的。每次seek后，都会往PacketQueue放入一个flush_pkt(也是AVPacket类型的)，并且该队列的seria会自增1，在此之后加入到该队列中的数据serial都是自增后的serial，简单释义如下:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span> <span class="number">1</span> <span class="number">1</span> <span class="number">1</span>  <span class="number">1</span> <span class="number">1</span> <span class="number">1</span> <span class="number">1</span> <span class="number">1</span> <span class="number">1</span> <span class="number">1</span> <span class="number">1</span> <span class="number">1</span>  <span class="number">1</span> <span class="number">1</span> flush_pkt <span class="number">2</span> <span class="number">2</span> <span class="number">2</span> <span class="number">2</span> <span class="number">2</span> <span class="number">2</span>  <span class="number">2</span> <span class="number">2</span> <span class="number">2</span> <span class="number">2</span> <span class="number">2</span> <span class="number">2</span> <span class="number">2</span> <span class="number">2</span> <span class="number">2</span> <span class="number">2</span> <span class="number">2</span></span><br><span class="line">此时:d-&gt;<span class="built_in">queue</span>-&gt;serial=<span class="number">2</span></span><br></pre></td></tr></table></figure>
+</blockquote>
+<blockquote>
+<p>d-&gt;pkt_serial</p>
+<p>Decoder-&gt;pkt_serial，表示当前解码器Decoder正在或者准备处理的AVPacket中的serial。相关赋值在ff_ffplay.c#ffp_packet_queue_get_or_buffering()中的第四个参数serial，ffp_packet_queue_get_or_buffering()方法就是从对应PacketQueue中取出队头的待解码数据AVPacket（如果数据不足会通知开始缓冲然后返回缓冲后的值除非缓冲后也没数据了）,然后同时把取出的AVPacket中的serial赋值给第四个参数serial，也就是调用本方法时传入的d-&gt;pkt_serial，表示当前正在解码该serial的数据。</p>
+</blockquote>
+<p> 所以总结一下这个if条件：如果没有待解码数据(AvPacket)要处理 或者 当前待解码数据队列的serial和当前解码器正在解码的源数据的serial不一致(也就是发生过seek之类的)，两者条件满足其一即可。</p>
+<p> 下面分析if中的逻辑，此时进入do{}while()循环中，在该循环中会执行2.1、2.2、2.3步：</p>
+ <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">do</span> &#123;</span><br><span class="line">    第<span class="number">2.1</span>步;</span><br><span class="line">    第<span class="number">2.2</span>步;</span><br><span class="line">    第<span class="number">2.3</span>步;</span><br><span class="line">&#125; <span class="keyword">while</span>(ffp_is_flush_packet(&amp;pkt) || d-&gt;<span class="built_in">queue</span>-&gt;serial != d-&gt;pkt_serial);</span><br></pre></td></tr></table></figure>
+
+<p>下面2.1、2.2、2.3分析这三步</p>
+<h5 id="第2-1步："><a href="#第2-1步：" class="headerlink" title="第2.1步："></a>第2.1步：</h5><p>​	第2.1步很简单，就是判断d-&gt;queue(也就是videoq)中是否还有数据，如果没数据了，就通知现在正在等待empty_queue_cond条件的线程，而empty_queue_cond其实就是VideoState中的continue_read_thread,通过ff_ffplay.c#decoder_init()方法来完成赋值的。</p>
+<h5 id="第2-2步："><a href="#第2-2步：" class="headerlink" title="第2.2步："></a>第2.2步：</h5><p>​	第2.2步也很简单，主要就是调用ffp_packet_queue_get_or_buffering()方法来对应PacketQueue中读取队头的待解码数据。传入的第二个参数d-&gt;queue就是该队列，而第三个参数是d-&gt;pkt_serial的地址，在ffp_packet_queue_get_or_buffering方法中读取到对头的AVPacket后，会将其serial赋值给d-&gt;pkt_serial的，这点刚刚在上面解释过了。而传入的最后一个参数d-&gt;finished用于判断当前解码是否完成，关于finished属性，主要是用于标识当前解码是否已完成，未完成时是0，完成时就是最后一个待解码数据AVPacket的serial。</p>
+<p>所以简单总结下ffp_packet_queue_get_or_buffering()方法的作用：读取d-&gt;queue队列队头的数据(如果没有数据会通知缓冲然后阻塞等待直到队列中有数据)，如果读取到位于队头的待解码数据AVPacket的话，就将其serial赋值给传入的d-&gt;pkt_serial。</p>
+<p>然后读取失败的话，就直接跳到fail，因为都没有待解码数据了，那就不必解码了。</p>
+<h5 id="第2-3步："><a href="#第2-3步：" class="headerlink" title="第2.3步："></a>第2.3步：</h5><p>第2.3步有点多，但是逻辑很简单，就是处理刷新操作。此处有两个条件:</p>
+<ul>
+<li><p>ffp_is_flush_packet(&amp;pkt)</p>
+<p>ffp_is_flush_packet()方法主要是用来判断该AVPacket是否是flush_pkt，关于flush_pkt上面有简单提到过，这里主要需要知道就是flush_pkt表示一次seek操作。详细的后面有空会分析。</p>
+</li>
+<li><p>opaque-&gt;acodec_flush_request</p>
+<p>acodec_flush_request该属性主要是在<a href="86c88415.hml">IJKFF_Pipenode</a>中的func_flush()方法中有介绍过，这里不做赘述。</p>
+</li>
+</ul>
+<p>   所以这两个条件判断的目的都是一样的:是否需要刷新解码器(都是seek时触发)。继续分析第2.3步:</p>
+<blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (ffp_is_flush_packet(&amp;pkt) || opaque-&gt;acodec_flush_request) &#123;</span><br><span class="line"> <span class="comment">// request flush before lock, or never get mutex</span></span><br><span class="line"> opaque-&gt;acodec_flush_request = <span class="literal">true</span>;</span><br><span class="line"> SDL_LockMutex(opaque-&gt;acodec_mutex);</span><br><span class="line"> <span class="keyword">if</span> (SDL_AMediaCodec_isStarted(opaque-&gt;acodec)) &#123;</span><br><span class="line">     <span class="keyword">if</span> (opaque-&gt;input_packet_count &gt; <span class="number">0</span>) &#123;</span><br><span class="line">     <span class="comment">// flush empty queue cause error on OMX.SEC.AVC.Decoder (Nexus S)</span></span><br><span class="line">     SDL_VoutAndroid_invalidateAllBuffers(opaque-&gt;weak_vout);</span><br><span class="line">     SDL_AMediaCodec_flush(opaque-&gt;acodec);</span><br><span class="line">     opaque-&gt;input_packet_count = <span class="number">0</span>;</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="comment">// If codec is configured in synchronous mode, codec will resume automatically</span></span><br><span class="line">     <span class="comment">// SDL_AMediaCodec_start(opaque-&gt;acodec);</span></span><br><span class="line"> &#125;</span><br><span class="line"> opaque-&gt;acodec_flush_request = <span class="literal">false</span>;</span><br><span class="line"> SDL_CondSignal(opaque-&gt;acodec_cond);</span><br><span class="line"> SDL_UnlockMutex(opaque-&gt;acodec_mutex);</span><br><span class="line"> d-&gt;finished = <span class="number">0</span>;</span><br><span class="line"> d-&gt;next_pts = d-&gt;start_pts;</span><br><span class="line"> d-&gt;next_pts_tb = d-&gt;start_pts_tb;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看出，主要是是调用相关方法来执行刷新操作，比如SDL_AMediaCodec_flush()最终对应调用的是上层MediaCodec实例中的flush()方法。这里值得提一下input_packet_count属性，看这里的注释引入该属性主要是用于解决空队列在Nexus S手机上刷新会出错的问题的，可以看出这个库还是针对移动端做了适配兼容的。刷新完毕会将finished置为0也就是解码未完成，关于next_pts和next_pts_tb唯一的用处是在软解音频时，这里不做分析。看这些值的修改可以看出刷新之后就相当于重新开始了，之前的都作废了。这也和上层MediaCodec中官方对于flush()方法的注释不锲而合:</p>
+<p>MediaCodec.java#flush()</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Flush both input and output ports of the component.</span></span><br><span class="line"><span class="comment">     * &lt;p&gt;</span></span><br><span class="line"><span class="comment">     * Upon return, all indices previously returned in calls to &#123;<span class="doctag">@link</span> #dequeueInputBuffer</span></span><br><span class="line"><span class="comment">     * dequeueInputBuffer&#125; and &#123;<span class="doctag">@link</span> #dequeueOutputBuffer dequeueOutputBuffer&#125; &amp;mdash; or obtained</span></span><br><span class="line"><span class="comment">     * via &#123;<span class="doctag">@link</span> Callback#onInputBufferAvailable onInputBufferAvailable&#125; or</span></span><br><span class="line"><span class="comment">     * &#123;<span class="doctag">@link</span> Callback#onOutputBufferAvailable onOutputBufferAvailable&#125; callbacks &amp;mdash; become</span></span><br><span class="line"><span class="comment">     * invalid, and all buffers are owned by the codec.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">flush</span><span class="params">()</span> &#123;</span><br><span class="line">    		<span class="comment">// 省略代码</span></span><br><span class="line">    &#125;</span><br><span class="line">     </span><br></pre></td></tr></table></figure>
+</blockquote>
+<h5 id="2-1-2-3步小结："><a href="#2-1-2-3步小结：" class="headerlink" title="2.1-2.3步小结："></a>2.1-2.3步小结：</h5><p>注意上面的2.1-2.3步是do{}while()循环中执行的:</p>
+ <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">do</span> &#123;</span><br><span class="line">    第<span class="number">2.1</span>步;</span><br><span class="line">    第<span class="number">2.2</span>步;</span><br><span class="line">    第<span class="number">2.3</span>步;</span><br><span class="line">&#125; <span class="keyword">while</span>(ffp_is_flush_packet(&amp;pkt) || d-&gt;<span class="built_in">queue</span>-&gt;serial != d-&gt;pkt_serial);</span><br></pre></td></tr></table></figure>
+
+<p>而上面看完了循环体中的的三步，这里分析下循环条件:</p>
+<ul>
+<li><p>ffp_is_flush_packet(&amp;pkt)</p>
+<p>上面分析过了，是用于判断该AVPacket是否是flush_pkt。</p>
+</li>
+<li><p>d-&gt;queue-&gt;serial !&#x3D; d-&gt;pkt_serial</p>
+<p>上面第2步开始分析的if条件中有，这里不再分析。</p>
+</li>
+</ul>
+<p>所以可以看出，如果拿到的AVPacket是flush_pkt或者说拿到的AVPacket的serial和队列的serial不一致的话，就继续循环，直到上面两个条件都不满足时终止循环。此时pkt就是合法可用的待解码数据AVPacket。</p>
+<h5 id="第2-4步："><a href="#第2-4步：" class="headerlink" title="第2.4步："></a>第2.4步：</h5><p>到这里的话pkt就指向合法可用的待解码数据AVPacket了，且该AVPacket从对应的Decoder-&gt;queue（也就是videoq）中已不包括该AVPacket了。此时先调用了av_packet_split_side_data()方法来分析该AVPacket的SlideData，这里不太了解先略过。然后调用av_packet_unref()方法抹除掉d-&gt;pkt中的数据引用，然后将pkt赋值给d-&gt;pkt_temp和d-&gt;pkt，并且将packet_pending置为1，表示有要处理的待解码数据了(关于packet_pending上面有介绍可以翻看上面的)。下面介绍下d-&gt;pkt_temp和d-&gt;pkt:</p>
+<blockquote>
+<p>d-&gt;pkt_temp</p>
+<p>视频解码器中会用到，指向的是解码器当前正在或者准备解码的AVPacket。和d-&gt;pkt不同的是d-&gt;pkt_temp中的数据data内容会变化，也就是data的内容会越来越小。因为有可能一次解码没有完全将AVPacket中data全部消耗完，会剩余一部分等下次才能放入解码器，此时d-&gt;pkt_temp-&gt;data会变小，具体就是将data的开始地址往后挪，d-&gt;pkt_temp-&gt;size减少，已达到跳过已消耗data的目的。</p>
+</blockquote>
+<blockquote>
+<p>d-&gt;pkt</p>
+<p>视频解码器中会用到，指向的是解码器当前正在或者准备解码的AVPacket。和d-&gt;pkt_temp唯一不同的就是d-&gt;pkt中的data地址不会变，变的永远是d-&gt;pkt_temp，而d-&gt;pkt永远指向的都是原封不动的待解码数据。</p>
+</blockquote>
+<h5 id="第2-5步："><a href="#第2-5步：" class="headerlink" title="第2.5步："></a>第2.5步：</h5><p>第2.5步主要是从上面获取的AVPacket中读取side data，来判断视频宽高是否发生变化以决定是否要重新创建解码器。这里判断的条件为:</p>
+<ul>
+<li><p>mediacodec_handle_resolution_change</p>
+<p>用户来开启，表示让ijkplayer库来处理视频的分辨率变化。详见ff_ffplay.c#ffp_context_options中的定义。</p>
+</li>
+<li><p>opaque-&gt;codecpar-&gt;codec_id &#x3D;&#x3D; AV_CODEC_ID_H264</p>
+<p>该视频对应编解码器为H264的。</p>
+</li>
+</ul>
+<p>剩下具体的步骤这里就不细分析了，留个<strong>TODO</strong>以后懂了side data再来填坑。这里大概逻辑是从AVPacket中读取side data，然后用其重新构建AVCodecContext，然后判断新的AVCodecContext里的宽高属性和之前的是不是一样，不一样的话就执行下面逻辑(主要还是下面这逻辑):</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">avcodec_parameters_from_context(opaque-&gt;codecpar, new_avctx);</span><br><span class="line">opaque-&gt;aformat_need_recreate = <span class="literal">true</span>;</span><br><span class="line">ffpipeline_set_surface_need_reconfigure_l(pipeline, <span class="literal">true</span>);</span><br></pre></td></tr></table></figure>
+
+<p>更新codecpar，然后将opaque-&gt;aformat_need_recreate置为true表示需要重新创建opaque-&gt;input_aformat，也就是SDL_AMediaFormat（对应到上层是MediaFormat对象实例，详细在<a href="65dc31d5.html">func_open_video_decoder</a>中有提到过可以回去翻看）。然后还调用ffpipeline_set_surface_need_reconfigure_l(true)方法，表示需要重新配置surface，也就是重新调用MediaCodec的configure()方法将Surface重新配置下。这两点一会儿后面的第3.1步中会有体现。</p>
+<h5 id="第2-6步："><a href="#第2-6步：" class="headerlink" title="第2.6步："></a>第2.6步：</h5><p> 这一步主要作用就是将h264和h265数据转换为Annex-B类型。具体的不懂，留个<strong>TODO</strong>吧。</p>
+<h4 id="第2步小结："><a href="#第2步小结：" class="headerlink" title="第2步小结："></a>第2步小结：</h4><p>先再回看下第2步的整体流程:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (!d-&gt;packet_pending || d-&gt;<span class="built_in">queue</span>-&gt;serial != d-&gt;pkt_serial) &#123;</span><br><span class="line">			<span class="keyword">do</span> &#123;</span><br><span class="line">					第<span class="number">2.1</span>步;</span><br><span class="line">					第<span class="number">2.2</span>步;</span><br><span class="line">					第<span class="number">2.3</span>步;</span><br><span class="line">			&#125; <span class="keyword">while</span>(ffp_is_flush_packet(&amp;pkt) || d-&gt;<span class="built_in">queue</span>-&gt;serial != d-&gt;pkt_serial);</span><br><span class="line">			第<span class="number">2.4</span>步;</span><br><span class="line">			第<span class="number">2.5</span>步;</span><br><span class="line">			第<span class="number">2.6</span>步;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以第2步整体还是处理取待解码数据以及取到后的初始设置逻辑。主要总结为下面三步：</p>
+<ol>
+<li>在do while循环中执行2.1-2.3步来实现从待解码队列(d-&gt;queue也就是videoq)中取出待解码数据。</li>
+<li>将取出的数据赋值给d-&gt;pkt_temp 和d-&gt;pkt，因为取出后原队列中就不包括该项了，所以得保存着。</li>
+<li>根据取出的待解码数据来做一些相应初始化设置，比如读取side data来判断是否要重新configure，以及判断是否是h264或h265数据以执行转换工作等。</li>
+</ol>
+<h4 id="第3步："><a href="#第3步：" class="headerlink" title="第3步："></a>第3步：</h4><p>前面第2步找到了即将要处理的待解码数据AVPacket,存储到了d-&gt;pkt_temp 和d-&gt;pkt中。然后第3步呢就主要是将其填入解码器了。</p>
+<p>第3步主要逻辑框架如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (d-&gt;pkt_temp.data) &#123;</span><br><span class="line">		第<span class="number">3.1</span>步;</span><br><span class="line">		第<span class="number">3.2</span>步;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>和第2步比起来，简单多了吧，就只是一个if判断，就是判断刚取到的待解码数据中是否有数据，有的话就进入条件体进行单纯的顺序处理逻辑。下面分析这些步骤：</p>
+<h5 id="第3-1步："><a href="#第3-1步：" class="headerlink" title="第3.1步："></a>第3.1步：</h5><p>这一步主要是通过ffpipeline_is_surface_need_reconfigure_l()方法判断解码器和Surface之间是否需要重新configure()配置（上面2.5步中有介绍过ffpipeline_is_surface_need_reconfigure_l），如果视频宽高发生变化，那么就需要重新配置。然后具体分析如下：</p>
+<p>先拿到当前新的surface,然后判断surface是否有变化(上层调用setSurface()方法更新过surface)，然后执行if判断:</p>
+<ol>
+<li><p>!opaque-&gt;aformat_need_recreate&amp;&amp;opaque-&gt;jsurface &#x3D;&#x3D; new_surface 等</p>
+<p>表示不需要重新创建SDL_AMediaFormat(对应到上层是MediaFormat对象实例，详细在<a href="65dc31d5.html">func_open_video_decoder</a>中有提到过可以回去翻看）且新surface对象和老的是一样的没有变化过。那么就不用做重新配置的逻辑了</p>
+</li>
+<li><p>需要做重新配置surface的逻辑，那么再判断aformat_need_recreate(2.5步中有介绍过)也就是是否需要重新创建SDL_AMediaFormat，需要的话就调用recreate_format_l方法来重新创建，然后再调用reconfigure_codec_l方法将Surface配置进去（这两个在<a href="65dc31d5.html">func_open_video_decoder</a>中有提到过可以回去翻看）。重新配置完MediaCodec之后，就会执行下面这个逻辑：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> (!q-&gt;abort_request &amp;&amp;!opaque-&gt;acodec_reconfigure_request &amp;&amp;!opaque-&gt;acodec_flush_request &amp;&amp;opaque-&gt;acodec_first_dequeue_output_request) &#123;</span><br><span class="line">                    SDL_CondWaitTimeout(opaque-&gt;acodec_first_dequeue_output_cond,</span><br><span class="line">                                        opaque-&gt;acodec_first_dequeue_output_mutex, <span class="number">100</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>因为解码器配置发生了变化，所以此时需要阻塞住本方法，不能再往解码器中塞入数据了，让读取解码后数据的线程继续读取之前的。而这里一直等待到acodec_first_dequeue_output_cond消息通知时，也就是在<a href="8876f557.html">func_run_sync</a>中当acodec_first_dequeue_output_request为1时通知的，而上面reconfigure_codec_l()中会将其置为1，表示解码器新创建。</p>
+<p>所以这里总结一下就是：在本方法中新配置完MediaCodec之后，就阻塞本方法暂时不往解码器中塞入数据了，等<a href="8876f557.html">func_run_sync</a>中读取一次之后再通知过来再往里面继续塞数据(一般情况下这次读取解码器都会返回一些错误码比如没有数据了或者格式变化了之类的)。</p>
+</li>
+</ol>
+<h5 id="第3-2步："><a href="#第3-2步：" class="headerlink" title="第3.2步："></a>第3.2步：</h5><p>到这里就开始往解码器中塞入待解码数据了，而关于MediaCodoc的使用流程这里需要解释下:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">MediaCodec</span> <span class="variable">codec</span> <span class="operator">=</span> MediaCodec.createByCodecName(name);</span><br><span class="line">codec.configure(format, …);</span><br><span class="line"><span class="type">MediaFormat</span> <span class="variable">outputFormat</span> <span class="operator">=</span> codec.getOutputFormat(); <span class="comment">// option B</span></span><br><span class="line">codec.start();</span><br><span class="line"><span class="keyword">for</span> (;;) &#123;</span><br><span class="line"> <span class="type">int</span> <span class="variable">inputBufferId</span> <span class="operator">=</span> codec.dequeueInputBuffer(timeoutUs);</span><br><span class="line"> <span class="keyword">if</span> (inputBufferId &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">   <span class="type">ByteBuffer</span> <span class="variable">inputBuffer</span> <span class="operator">=</span> codec.getInputBuffer(…);</span><br><span class="line">   <span class="comment">// fill inputBuffer with valid data</span></span><br><span class="line">   …</span><br><span class="line">   codec.queueInputBuffer(inputBufferId, …);</span><br><span class="line"> &#125;</span><br><span class="line"> <span class="type">int</span> <span class="variable">outputBufferId</span> <span class="operator">=</span> codec.dequeueOutputBuffer(…);</span><br><span class="line"> <span class="keyword">if</span> (outputBufferId &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">   <span class="type">ByteBuffer</span> <span class="variable">outputBuffer</span> <span class="operator">=</span> codec.getOutputBuffer(outputBufferId);</span><br><span class="line">   <span class="type">MediaFormat</span> <span class="variable">bufferFormat</span> <span class="operator">=</span> codec.getOutputFormat(outputBufferId); <span class="comment">// option A</span></span><br><span class="line">   <span class="comment">// bufferFormat is identical to outputFormat</span></span><br><span class="line">   <span class="comment">// outputBuffer is ready to be processed or rendered.</span></span><br><span class="line">   …</span><br><span class="line">   codec.releaseOutputBuffer(outputBufferId, …);</span><br><span class="line"> &#125; <span class="keyword">else</span> <span class="keyword">if</span> (outputBufferId == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) &#123;</span><br><span class="line">   <span class="comment">// Subsequent data will conform to new format.</span></span><br><span class="line">   <span class="comment">// Can ignore if using getOutputFormat(outputBufferId)</span></span><br><span class="line">   outputFormat = codec.getOutputFormat(); <span class="comment">// option B</span></span><br><span class="line"> &#125;</span><br><span class="line">&#125;</span><br><span class="line">codec.stop();</span><br><span class="line">codec.release();</span><br></pre></td></tr></table></figure>
+
+<p>上面是google官方给出的<a target="_blank" rel="noopener" href="https://developer.android.com/reference/android/media/MediaCodec#data-processing">MediaCodec的同步使用方式</a>，我们暂时只关注填入数据的逻辑:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="variable">inputBufferId</span> <span class="operator">=</span> codec.dequeueInputBuffer(timeoutUs);</span><br><span class="line"><span class="keyword">if</span> (inputBufferId &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">   <span class="type">ByteBuffer</span> <span class="variable">inputBuffer</span> <span class="operator">=</span> codec.getInputBuffer(…);</span><br><span class="line">   <span class="comment">// fill inputBuffer with valid data</span></span><br><span class="line">    …</span><br><span class="line">   codec.queueInputBuffer(inputBufferId, …);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>相关流程如下:</p>
+<ol>
+<li>调用MediaCodec的dequeueInputBuffer()方法(传入timeoutUs,表示最大等待时长)，获取用于填充待解码数据的ByteBuffer索引。</li>
+<li>判断索引合法，调用getInputBuffer()方法将刚才的索引传入，获取对应索引的ByteBuffer对象实例。</li>
+<li>往该ByteBuffer中填入数据。</li>
+<li>调用queueInputBuffer方法将该ByteBuffer压入解码队列。</li>
+</ol>
+<p>以上便是往解码器中放入待解码数据的正常步骤。而在ijkplayer中，顺序和上面的基本一致：</p>
+<ol>
+<li><p>调用SDL_AMediaCodec_dequeueInputBuffer()方法拿到用于填充解码数据的ByteBuffer索引。</p>
+<p>关于SDL_AMediaCodec_dequeueInputBuffer()方法，其实就是调用的SDL_AMediaCodec中的func_dequeueInputBuffer()方法，该方法有两个创建实现的地方：ijksdl_codec_android_mediacodec_dummy.c#SDL_AMediaCodecDummy_create()和ijksdl_codec_android_mediacodec_java.c#SDL_AMediaCodecJava_init()方法，而这俩方法的具体调用地方为:ffpipenode_android_mediacodec_vdec.c#create_codec_l()中，而本方法其实在<a href="65dc31d5.html">func_open_video_decoder</a>流程分析时提到过，前者是没有设置surface时调用的，也就是一个假的解码器实现。而我们这里只分析后者，也就是基于Android中MediaCodec实现的SDL_AMediaCodec:</p>
+<blockquote>
+<p>ijksdl_codec_android_mediacodec_java.c#SDL_AMediaCodecJava_dequeueInputBuffer()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ssize_t</span> <span class="title function_">SDL_AMediaCodecJava_dequeueInputBuffer</span><span class="params">(SDL_AMediaCodec *acodec, <span class="type">int64_t</span> timeoutUs)</span> &#123;</span><br><span class="line">    JNIEnv *env = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="keyword">if</span> (JNI_OK != SDL_JNI_SetupThreadEnv(&amp;env)) &#123;</span><br><span class="line">        ALOGE(<span class="string">&quot;%s: SetupThreadEnv failed&quot;</span>, __func__);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    SDL_AMediaCodec_Opaque *opaque = (SDL_AMediaCodec_Opaque *) acodec-&gt;opaque;</span><br><span class="line">    <span class="comment">// docs lie, getInputBuffers should be good after</span></span><br><span class="line">    <span class="comment">// m_codec-&gt;start() but the internal refs are not</span></span><br><span class="line">    <span class="comment">// setup until much later on some devices.</span></span><br><span class="line">    <span class="comment">//if (-1 == getInputBuffers(env, acodec)) &#123;</span></span><br><span class="line">    <span class="comment">//    ALOGE(&quot;%s: getInputBuffers failed&quot;, __func__);</span></span><br><span class="line">    <span class="comment">//    return -1;</span></span><br><span class="line">    <span class="comment">//&#125;</span></span><br><span class="line">    jobject android_media_codec = opaque-&gt;android_media_codec;</span><br><span class="line">    jint idx = J4AC_MediaCodec__dequeueInputBuffer(env, android_media_codec, (jlong) timeoutUs);</span><br><span class="line">    <span class="keyword">if</span> (J4A_ExceptionCheck__catchAll(env)) &#123;</span><br><span class="line">        ALOGE(<span class="string">&quot;%s: dequeueInputBuffer failed&quot;</span>, __func__);</span><br><span class="line">        opaque-&gt;is_input_buffer_valid = <span class="literal">false</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> idx;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看出，其实最终调用的就是上层MediaCodec中的dequeueInputBuffer()方法，然后这里需要注意的是在调用完上层的该方法之后，会有异常检查，如果上层方法抛出异常（一般是IllegalStateException），那么会将is_input_buffer_valid置为false，而is_input_buffer_valid置为true的唯一地点就是configure()时，所以总结下is_input_buffer_valid字段：</p>
+<blockquote>
+<p>SDL_AMediaCodec_Opaque.is_input_buffer_valid</p>
+<p>表示当前MediaCodec是否可正常可用可填入数据。在MediaCodec创建配置完后会置为true，在调用dequeueInputBuffer方法跑出异常后会置为false。</p>
+</blockquote>
+<p>注意此时返回值：上层dequeueInputBuffer()方法返回-1表示当前无可用的Buffer来放置待解码数据，而在SDL_AMediaCodecJava_dequeueInputBuffer()方法中如果上层抛异常也会返回-1(SDL_JNI_SetupThreadEnv失败返回的-1先不管基本不可能)，所以这是有重合的。其实此时可以使用上面说的is_input_buffer_valid来区分，如果为true表示是后者，否则就是前者。</p>
+</blockquote>
+<p>所以回到调用SDL_AMediaCodec_dequeueInputBuffer()方法这里，拿到返回值，然后判断如果小于0(可能就是-1)，那么调用SDL_AMediaCodec_isInputBuffersValid()方法判断上面刚提到的is_input_buffer_valid是否为true，如果是true的话证明不是抛异常而返回的-1，而是当前无可用的Buffer来放置数据了，所以那就直接失败吧，等下一次。如果是false的话，那么证明MediaCodec有问题，出异常了（也有可能是当前使用的ijksdl_codec_android_mediacodec_dummy.c#SDL_AMediaCodecDummy_create()的实现），那么就把copy_size置为d-&gt;pkt_temp.size，表示d-&gt;pkt_temp-&gt;data全部消耗掉了，并且此时会给queue_flags的AMEDIACODEC__BUFFER_FLAG_FAKE_FRAME位变成1。这里需要记住copy_size和queue_flags，后面会解释。</p>
+</li>
+<li><p>索引合法，那么调用SDL_AMediaCodec_writeInputData()方法来完成ByteBuffer的获取和数据填充工作。这里对于SDL_AMediaCodec_writeInputData()方法就不分析了，其主要逻辑就是: 先调用上层的getInputBuffer()方法来获取ByteBuffer对象实例。需要注意的是MediaCodec有两个getInputBuffer()方法的重载，一个有参数int index，一个没有。而现在推荐使用前者，后者已废弃。但是ijkplayer中使用的还是后者。然后SDL_AMediaCodec_writeInputData()方法返回的是往ByteBuffer中已填入的数据长度，也本次就是消耗掉的数据长度，因为有可能待解码的数据过多本次返回的ByteBuffer放不下。</p>
+</li>
+<li><p>准备调用SDL_AMediaCodec_queueInputBuffer()方法将填充好数据的该ByteBuffer压入解码器。但是这里压入时需要提供该数据的展示时间戳pts，因为MediaCodec和Surface绑定后，每次releaseOutputBuffer(true)时都会去直接展示对应视频帧，而展示是需要时间戳的，所以这里得先计算下pts:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">time_stamp = d-&gt;pkt_temp.pts;</span><br><span class="line"><span class="keyword">if</span> (time_stamp == AV_NOPTS_VALUE &amp;&amp; d-&gt;pkt_temp.dts != AV_NOPTS_VALUE)</span><br><span class="line">   time_stamp = d-&gt;pkt_temp.dts;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (time_stamp &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">  time_stamp = av_rescale_q(time_stamp, is-&gt;video_st-&gt;time_base, AV_TIME_BASE_Q);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">  time_stamp = <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里第一步先将time_stamp赋值为d-&gt;pkt_temp.pts，也就是该AVPacket的pts。该pts是从视频文件中读取时就拿到的值，表示该帧的展示时间戳（基于ic-&gt;stream[视频轨道索引]-&gt;time_base，也就是is-&gt;video_st-&gt;time_base时间基的）。然后判断该值是否为不合法的AV_NOPTS_VALUE并且该AVPacket的dts(解码时间戳，告诉解码器啥时候解码，音频轨的pts和dts一致，视频轨不一定相同)合法，那么将dts赋值给pts。然后调用av_rescale_q()方法来将pts做时间基转换。因为现在的pts的时间基是是is-&gt;video_st-&gt;time_base，而MediaCodec中的queueInputBuffer()方法需要的pts是微秒的，也就是时间基为1&#x2F;1000 000 。所以这里需要将其做时间基转换，转换工作就是由av_rescale_q()方法来实现的。简单介绍下时间基：</p>
+<blockquote>
+<p>time_base</p>
+<p>timebase时间基在ffmpeg中是以<a href="4a17d154.html">AVRational</a>来表示的，其中有两个字段num和den，分表表示分子和分母。因为在音视频中，每一帧的显示时间差都是很小的，如果以秒为单位的话会有很多小数，会有误差，所以使用时间基的概念，比如时间基为{1,15360}，那么当pts是15360时，其真实的展示时间就是1s，而pts时20000时，其真实展示时间是：20000*1&#x2F;15360≈1.302s。</p>
+</blockquote>
+<p>所以这里MediaCodec中的queueInputBuffer()方法需要的pts是微秒的，那么其时间基就是{1,1000 000}，那么加入原视频轨道的时间基is-&gt;video_st-&gt;time_base是{1,15360}，那么如果此时pts是7680时，那么将其转换到以{1,1000 000}时间基为准的pts上时对应的是多少呢？可以列出下面的比例式：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">  7680                     x</span><br><span class="line">-----------   =   -------------------   ====&gt;  x=7680*1000000 / 15360 = 50 000.</span><br><span class="line"> 15360             1000000</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>所以其转换过时间基的pts就是50 000。而此时av_rescale_q()方法完成的就是这个转换，当然本方法中还有其他兼容的操作，比如避免计算溢出等，当然其基本原理还是和上面的比例式一样的。</p>
+<p>那么后面的步骤就是调用SDL_AMediaCodec_queueInputBuffer()方法，也就是调用MediaCodec的queueInputBuffer()方法将填充好的ByteBuffer推入到解码器中</p>
+<blockquote>
+<p>ijksdl_codec_android_mediacodec.c#SDL_AMediaCodec_queueInputBuffer()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">sdl_amedia_status_t</span> <span class="title function_">SDL_AMediaCodec_queueInputBuffer</span><span class="params">(SDL_AMediaCodec* acodec, <span class="type">size_t</span> idx, <span class="type">off_t</span> offset, <span class="type">size_t</span> size, <span class="type">uint64_t</span> time, <span class="type">uint32_t</span> flags)</span>&#123;</span><br><span class="line">    assert(acodec-&gt;func_queueInputBuffer);</span><br><span class="line">    <span class="keyword">if</span> (flags &amp; AMEDIACODEC__BUFFER_FLAG_FAKE_FRAME) &#123;</span><br><span class="line">        <span class="keyword">return</span> SDL_AMediaCodec_FakeFifo_queueInputBuffer(&amp;acodec-&gt;common-&gt;fake_fifo, idx, offset, size, time, flags);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> acodec-&gt;func_queueInputBuffer(acodec, idx, offset, size, time, flags);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>关于调用的SDL_AMediaCodec_queueInputBuffer()需要解释的一点就是如果传入的flag中AMEDIACODECBUFFER_FLAG_FAKE_FRAME位为1，那么就直接调用SDL_AMediaCodec_FakeFifo_queueInputBuffer()方法而不是上层MediaCodec的queueInputBuffer()方法了，关于这里的flag其实就是上面计算出来的queue_flags，也就是如果调用上层SDL_AMediaCodec_dequeueInputBuffer()方法返回值小于0且SDL_AMediaCodec_isInputBuffersValid()为0，那么此时会queue_flags中会增加AMEDIACODECBUFFER_FLAG_FAKE_FRAME位标记。而关于SDL_AMediaCodec_FakeFifo_queueInputBuffer()方法其实就是在SDL_AMediaCodec结构体中增加了一个common（SDL_AMediaCodec_Common）属性，用于存储一些出错的待解码数据。其实最主要的作用是用于DummyCodec也就是假的解码器实现中，比如用户没有设置Surface时(也就是不需要视频帧显示只需要音频输出时)ijkplayer中会创建一个假的解码器。</p>
+</blockquote>
+<p>然后判断返回值如果推入失败就直接跳到fail处。如果推入成功就将input_packet_count自增，表示往解码器中已放入的待解码数据次数增加了。关于input_packet_count可以翻看上面，上面有关于该值的唯一使用。然后别忘了还有入参enqueue_count的自增哦。</p>
+</li>
+</ol>
+<h4 id="第3步小结："><a href="#第3步小结：" class="headerlink" title="第3步小结："></a>第3步小结：</h4><p>第3步简要逻辑如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (d-&gt;pkt_temp.data) &#123;</span><br><span class="line">		第<span class="number">3.1</span>步;</span><br><span class="line">		第<span class="number">3.2</span>步;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>简单总结就是将第二步获取到的存储在d-&gt;pkt_temp和d-&gt;pkt中的下一个待解码数据压入MediaCodec中。这里需要注意第3.2步中调用SDL_AMediaCodec_writeInputData()方法将AVPacket中的data往ByteBuffer中写入时的返回值copy_size，该值表示的是写入ByteBuffer的数据长度，也就是最终压入解码器的数据长度，当时上面解释过可能存在有可能一次没有完全将data压入，那么下次调用feed_input_buffer()方法时肯定得优先把这些剩余的压入，而不是去PacketQueue中取新的。所以下面第4步就是做这些操作的。</p>
+<h4 id="第4步："><a href="#第4步：" class="headerlink" title="第4步："></a>第4步：</h4><p>第4步很简单，代码也少，所以先附上第4步的代码:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (copy_size &lt; <span class="number">0</span>) &#123;</span><br><span class="line">		d-&gt;packet_pending = <span class="number">0</span>;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    d-&gt;pkt_temp.dts = d-&gt;pkt_temp.pts = AV_NOPTS_VALUE;</span><br><span class="line">    <span class="keyword">if</span> (d-&gt;pkt_temp.data) &#123;</span><br><span class="line">        d-&gt;pkt_temp.data += copy_size;</span><br><span class="line">        d-&gt;pkt_temp.size -= copy_size;</span><br><span class="line">        <span class="keyword">if</span> (d-&gt;pkt_temp.size &lt;= <span class="number">0</span>)</span><br><span class="line">         		d-&gt;packet_pending = <span class="number">0</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        d-&gt;packet_pending = <span class="number">0</span>;</span><br><span class="line">        d-&gt;finished = d-&gt;pkt_serial;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面第3步中介绍过copy_size，表示的是上面调用SDL_AMediaCodec_writeInputData()方法将AVPacket中的data往ByteBuffer中写入的数据长度。如果copy_size是&lt;0（也就是-1），那么表示写入失败，一般都是由于解码器抛出异常了，所以此时packet_pending置为0，下次往里面塞数据也估计还是无济于事。</p>
+<p>如果&gt;0的话，先将d-&gt;pkt_temp的中pts和dts都置为非法的值，说明pkt_temp代表的AVPacket是不完整的(而且千前面第一次放入时该pkt_temp的dts和pts已经都使用了，后面第二次往解码器中放入剩下的data时pts和dts还用之前的明确不对)。然后判断d-&gt;pkt_temp.data是否有内容，如果d-&gt;pkt_temp.data中没内容(一般表示播放到末尾了)，那么就packet_pending置为0(因为已经播放到末尾了，不需要解码了)，并且将d-&gt;finished置为 d-&gt;pkt_serial(也就是d-&gt;queue PacketQueue中的serial)。如果不为空就将data的地址往后诺动copy_size个，把size减少copy_size个，表示copy_size长度的数据本次已压入解码器下次从本次之后的位置开始。</p>
+<p>然后第4步就结束了，第4步主要还是做一些善后工作。</p>
+<h3 id="小结："><a href="#小结：" class="headerlink" title="小结："></a>小结：</h3><p>还是先贴一下feed_input_buffer()方法的精简版：</p>
+<p>ffpipenode_android_mediacodec_vdec.c#feed_input_buffer()精简版</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">feed_input_buffer</span><span class="params">(JNIEnv *env, IJKFF_Pipenode *node, <span class="type">int64_t</span> timeUs, <span class="type">int</span> *enqueue_count)</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> (!d-&gt;packet_pending || d-&gt;<span class="built_in">queue</span>-&gt;serial != d-&gt;pkt_serial) &#123;</span><br><span class="line">				<span class="keyword">do</span> &#123;</span><br><span class="line">						第<span class="number">2.1</span>步;</span><br><span class="line">						第<span class="number">2.2</span>步;</span><br><span class="line">						第<span class="number">2.3</span>步;</span><br><span class="line">				&#125; <span class="keyword">while</span>(ffp_is_flush_packet(&amp;pkt) || d-&gt;<span class="built_in">queue</span>-&gt;serial != d-&gt;pkt_serial);</span><br><span class="line">				第<span class="number">2.4</span>步;</span><br><span class="line">				第<span class="number">2.5</span>步;</span><br><span class="line">				第<span class="number">2.6</span>步;</span><br><span class="line">		&#125;</span><br><span class="line">		</span><br><span class="line">		<span class="keyword">if</span> (d-&gt;pkt_temp.data) &#123;</span><br><span class="line">				第<span class="number">3.1</span>步;</span><br><span class="line">				第<span class="number">3.2</span>步;</span><br><span class="line">		&#125;</span><br><span class="line">		第<span class="number">4</span>步;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>主要逻辑如上，主要来说本方法执行了两个逻辑：</p>
+<ol>
+<li>从待解码队列中读取出下一个需要解码的数据</li>
+<li>将取出的待解码数据压入解码器</li>
+</ol>
+<p>所以本方法的主要作用就是往解码器中压入待解码数据，而本方法是运行在单独的线程中的，这点也需要注意。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/64d79e1a.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-func_run_sync_loop</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/8876f557.html">
+        <span class="next-text nav-default">Ijkplayer-func_run_sync</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

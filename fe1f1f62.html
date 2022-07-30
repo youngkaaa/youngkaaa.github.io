@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-queue_picture"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/fe1f1f62.html"/>
+
+
+<meta name="description" content="本文主要介绍ijkplayer中位于ff_ffplay.c中的queue_picture()方法。 该方法主要作用就是将解码后的数据存入对应的FrameQueue中去，比如在视频硬解逻辑中的同步解码方式drain_output_buffer2中；视频硬解逻辑中的异步解码方式func_run_sync中；以及视频软解码ffplay_video_thread中，这三者都有使用到本方法来将解码后的AVF">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-queue_picture">
+<meta property="og:url" content="https://youngkaaa.github.io/fe1f1f62.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍ijkplayer中位于ff_ffplay.c中的queue_picture()方法。 该方法主要作用就是将解码后的数据存入对应的FrameQueue中去，比如在视频硬解逻辑中的同步解码方式drain_output_buffer2中；视频硬解逻辑中的异步解码方式func_run_sync中；以及视频软解码ffplay_video_thread中，这三者都有使用到本方法来将解码后的AVF">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-03-08T09:36:20.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.420Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-queue_picture - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-queue_picture
+        
+      </h1>
+
+      <time class="post-time">
+          3月 08 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍ijkplayer中位于ff_ffplay.c中的queue_picture()方法。</p>
+<p>该方法主要作用就是将解码后的数据存入对应的FrameQueue中去，比如在视频硬解逻辑中的同步解码方式<a href="3da735d9.html">drain_output_buffer2</a>中；视频硬解逻辑中的异步解码方式<a href="8876f557.html">func_run_sync</a>中；以及视频软解码<a href="1c5ec8b9.html">ffplay_video_thread</a>中，这三者都有使用到本方法来将解码后的AVFrame数据放入到队列中去(AVFrame会自动转为Frame)。</p>
+<span id="more"></span>
+
+<p>先解释本方法的参数:</p>
+<blockquote>
+<p>AVFrame *src_frame:</p>
+<p>即将要加入队列的AVFrame，也就是上面提到的，刚从解码器中拿到的AVFrame。</p>
+<p>这里顺便提一句，这里的AVFrame中的内容填充是有区别的：</p>
+<ul>
+<li>对于硬解来说，解码后的数据在AVFrame原结构中是没有具体对应的，只在ijkplayer新增的frame-&gt;opaque中有。frame-&gt;opaque其实就是SDL_AMediaCodecBufferProxy结构体实例，而SDL_AMediaCodecBufferProxy结构体简单来说就是将调用上层MediaCodec中的dequeueOutputBuffer()方法所返回的index和bufferInfo封装在了一起。因为MediaCodec和Surface是绑定的，所以视频帧渲染时，是通过MediaCodec的releaseOutputBuffer()方法来实现的，传入的就是之前dequeueOutputBuffer()方法所返回的index，表示渲染index所对应的那一帧，所以这里将其包装在一起，方便后续对帧的渲染。这点在<a href="70ca7e71.html">drain_output_buffer</a>中的amc_fill_frame()方法中有提到过。</li>
+<li>对于软解来说，解码后的数据在AVFrame中基本是有对应的，因为软解其实还是使用的ffmpeg中的avcodec_receive_frame()方法来实现的。具体可以翻看视频软解逻辑分析<a href="1c5ec8b9.html">ffplay_video_thread，</a>所以此时AVFrame中相关字段的赋值是avcodec_receive_frame()方法来做的。而同样的，此时frame-&gt;opaque肯定就为空了。</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>double pts</p>
+<p>该帧对应的展示时间，注意单位是s。计算方式就是frame-&gt;pts * av_q2d(is-&gt;video_st-&gt;time_base)。也就是经过视频轨道时间基转换过的最终展示时间。</p>
+</blockquote>
+<blockquote>
+<p>double duration</p>
+<p>该帧应展示持续的时长，单位s。一般是通过av_guess_frame_rate(is-&gt;ic, is-&gt;video_st, NULL)方法计算出该视频的帧率，然后帧率的倒数就是每一帧的持续时长。</p>
+</blockquote>
+<blockquote>
+<p>int64_t pos</p>
+<p>在文件中的偏移量吧。对于硬解就是通过av_frame_get_pkt_pos(frame)方法来获得，软解的话就是直接使用frame-&gt;pkt_pos。</p>
+</blockquote>
+<blockquote>
+<p>int serial</p>
+<p>当前解码后数据AVFrame所对应的serial，一般和视频解码器viddec中的pkt_serial一样。而viddec.pkt_serial表示的是当前解码器正在解码的serial，一般通过ffp_packet_queue_get_or_buffering()方法来赋值，表示每取出一个待解码数据AVPacket,就将其serial赋值给viddec.pkt_serial。在<a href="17303abc.html">feed_input_buffer</a>中第2步中有提到过。</p>
+</blockquote>
+<p>下面是本方法的主要内容:</p>
+<blockquote>
+<p>ff_ffplay.c#queue_picture()</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">queue_picture</span><span class="params">(FFPlayer *ffp, AVFrame *src_frame, <span class="type">double</span> pts, <span class="type">double</span> duration, <span class="type">int64_t</span> pos, <span class="type">int</span> serial)</span> &#123;</span><br><span class="line">    VideoState *is = ffp-&gt;is;</span><br><span class="line">    Frame *vp;</span><br><span class="line">    <span class="type">int</span> video_accurate_seek_fail = <span class="number">0</span>;</span><br><span class="line">    <span class="type">int64_t</span> video_seek_pos = <span class="number">0</span>;</span><br><span class="line">    <span class="type">int64_t</span> now = <span class="number">0</span>;</span><br><span class="line">    <span class="type">int64_t</span> deviation = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="type">int64_t</span> deviation2 = <span class="number">0</span>;</span><br><span class="line">    <span class="type">int64_t</span> deviation3 = <span class="number">0</span>;</span><br><span class="line">  	<span class="comment">// 第1步</span></span><br><span class="line">    <span class="keyword">if</span> (ffp-&gt;enable_accurate_seek &amp;&amp; is-&gt;video_accurate_seek_req &amp;&amp; !is-&gt;seek_req) &#123;</span><br><span class="line">        <span class="keyword">if</span> (!isnan(pts)) &#123;</span><br><span class="line">            video_seek_pos = is-&gt;seek_pos;</span><br><span class="line">            is-&gt;accurate_seek_vframe_pts = pts * <span class="number">1000</span> * <span class="number">1000</span>;</span><br><span class="line">            deviation = llabs((<span class="type">int64_t</span>) (pts * <span class="number">1000</span> * <span class="number">1000</span>) - is-&gt;seek_pos);</span><br><span class="line">            <span class="keyword">if</span> ((pts * <span class="number">1000</span> * <span class="number">1000</span> &lt; is-&gt;seek_pos) || deviation &gt; MAX_DEVIATION) &#123;</span><br><span class="line">                now = av_gettime_relative() / <span class="number">1000</span>;</span><br><span class="line">                <span class="keyword">if</span> (is-&gt;drop_vframe_count == <span class="number">0</span>) &#123;</span><br><span class="line">                    SDL_LockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">                    <span class="keyword">if</span> (is-&gt;accurate_seek_start_time &lt;= <span class="number">0</span> &amp;&amp;</span><br><span class="line">                        (is-&gt;audio_stream &lt; <span class="number">0</span> || is-&gt;audio_accurate_seek_req)) &#123;</span><br><span class="line">                        is-&gt;accurate_seek_start_time = now;</span><br><span class="line">                    &#125;</span><br><span class="line">                    SDL_UnlockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">                    av_log(<span class="literal">NULL</span>, AV_LOG_INFO,</span><br><span class="line">                           <span class="string">&quot;video accurate_seek start, is-&gt;seek_pos=%lld, pts=%lf, is-&gt;accurate_seek_time = %lld\n&quot;</span>,</span><br><span class="line">                           is-&gt;seek_pos, pts, is-&gt;accurate_seek_start_time);</span><br><span class="line">                &#125;</span><br><span class="line">                is-&gt;drop_vframe_count++;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">while</span> (is-&gt;audio_accurate_seek_req &amp;&amp; !is-&gt;abort_request) &#123;</span><br><span class="line">                    <span class="type">int64_t</span> apts = is-&gt;accurate_seek_aframe_pts;</span><br><span class="line">                    deviation2 = apts - pts * <span class="number">1000</span> * <span class="number">1000</span>;</span><br><span class="line">                    deviation3 = apts - is-&gt;seek_pos;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (deviation2 &gt; <span class="number">-100</span> * <span class="number">1000</span> &amp;&amp; deviation3 &lt; <span class="number">0</span>) &#123;</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        av_usleep(<span class="number">20</span> * <span class="number">1000</span>);</span><br><span class="line">                    &#125;</span><br><span class="line">                    now = av_gettime_relative() / <span class="number">1000</span>;</span><br><span class="line">                    <span class="keyword">if</span> ((now - is-&gt;accurate_seek_start_time) &gt; ffp-&gt;accurate_seek_timeout) &#123;</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> ((now - is-&gt;accurate_seek_start_time) &lt;= ffp-&gt;accurate_seek_timeout) &#123;</span><br><span class="line">                    <span class="keyword">return</span> <span class="number">1</span>;  <span class="comment">// drop some old frame when do accurate seek</span></span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    av_log(<span class="literal">NULL</span>, AV_LOG_WARNING,</span><br><span class="line">                           <span class="string">&quot;video accurate_seek is error, is-&gt;drop_vframe_count=%d, now = %lld, pts = %lf\n&quot;</span>,is-&gt;drop_vframe_count, now, pts);</span><br><span class="line">                    video_accurate_seek_fail = <span class="number">1</span>;  <span class="comment">// if KEY_FRAME interval too big, disable accurate seek</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                av_log(<span class="literal">NULL</span>, AV_LOG_INFO,<span class="string">&quot;video accurate_seek is ok, is-&gt;drop_vframe_count =%d, is-&gt;seek_pos=%lld, pts=%lf\n&quot;</span>,is-&gt;drop_vframe_count, is-&gt;seek_pos, pts);</span><br><span class="line">                <span class="keyword">if</span> (video_seek_pos == is-&gt;seek_pos) &#123;</span><br><span class="line">                    is-&gt;drop_vframe_count = <span class="number">0</span>;</span><br><span class="line">                    SDL_LockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">                    is-&gt;video_accurate_seek_req = <span class="number">0</span>;</span><br><span class="line">                    SDL_CondSignal(is-&gt;audio_accurate_seek_cond);</span><br><span class="line">                    <span class="keyword">if</span> (video_seek_pos == is-&gt;seek_pos &amp;&amp; is-&gt;audio_accurate_seek_req &amp;&amp; !is-&gt;abort_request) &#123;</span><br><span class="line">                        SDL_CondWaitTimeout(is-&gt;video_accurate_seek_cond, is-&gt;accurate_seek_mutex, ffp-&gt;accurate_seek_timeout);</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        ffp_notify_msg2(ffp, FFP_MSG_ACCURATE_SEEK_COMPLETE, (<span class="type">int</span>) (pts * <span class="number">1000</span>));</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (video_seek_pos != is-&gt;seek_pos &amp;&amp; !is-&gt;abort_request) &#123;</span><br><span class="line">                        is-&gt;video_accurate_seek_req = <span class="number">1</span>;</span><br><span class="line">                        SDL_UnlockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">                        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                    SDL_UnlockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            video_accurate_seek_fail = <span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (video_accurate_seek_fail) &#123;</span><br><span class="line">            is-&gt;drop_vframe_count = <span class="number">0</span>;</span><br><span class="line">            SDL_LockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">            is-&gt;video_accurate_seek_req = <span class="number">0</span>;</span><br><span class="line">            SDL_CondSignal(is-&gt;audio_accurate_seek_cond);</span><br><span class="line">            <span class="keyword">if</span> (is-&gt;audio_accurate_seek_req &amp;&amp; !is-&gt;abort_request) &#123;</span><br><span class="line">                SDL_CondWaitTimeout(is-&gt;video_accurate_seek_cond, is-&gt;accurate_seek_mutex,</span><br><span class="line">                                    ffp-&gt;accurate_seek_timeout);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (!isnan(pts)) &#123;</span><br><span class="line">                    ffp_notify_msg2(ffp, FFP_MSG_ACCURATE_SEEK_COMPLETE, (<span class="type">int</span>) (pts * <span class="number">1000</span>));</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    ffp_notify_msg2(ffp, FFP_MSG_ACCURATE_SEEK_COMPLETE, <span class="number">0</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            SDL_UnlockMutex(is-&gt;accurate_seek_mutex);</span><br><span class="line">        &#125;</span><br><span class="line">        is-&gt;accurate_seek_start_time = <span class="number">0</span>;</span><br><span class="line">        video_accurate_seek_fail = <span class="number">0</span>;</span><br><span class="line">        is-&gt;accurate_seek_vframe_pts = <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  	<span class="comment">// 第2步</span></span><br><span class="line">    <span class="keyword">if</span> (!(vp = frame_queue_peek_writable(&amp;is-&gt;pictq)))</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    vp-&gt;sar = src_frame-&gt;sample_aspect_ratio;</span><br><span class="line">    <span class="comment">// 第3步</span></span><br><span class="line">    <span class="comment">/* alloc or resize hardware picture buffer */</span></span><br><span class="line">    <span class="keyword">if</span> (!vp-&gt;bmp || !vp-&gt;allocated ||</span><br><span class="line">        vp-&gt;width != src_frame-&gt;width ||</span><br><span class="line">        vp-&gt;height != src_frame-&gt;height ||</span><br><span class="line">        vp-&gt;format != src_frame-&gt;format) &#123;</span><br><span class="line">        <span class="keyword">if</span> (vp-&gt;width != src_frame-&gt;width || vp-&gt;height != src_frame-&gt;height)</span><br><span class="line">            ffp_notify_msg3(ffp, FFP_MSG_VIDEO_SIZE_CHANGED, src_frame-&gt;width, src_frame-&gt;height);</span><br><span class="line">        vp-&gt;allocated = <span class="number">0</span>;</span><br><span class="line">        vp-&gt;width = src_frame-&gt;width;</span><br><span class="line">        vp-&gt;height = src_frame-&gt;height;</span><br><span class="line">        vp-&gt;format = src_frame-&gt;format;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* the allocation must be done in the main thread to avoid</span></span><br><span class="line"><span class="comment">           locking problems. */</span></span><br><span class="line">        alloc_picture(ffp, src_frame-&gt;format);</span><br><span class="line">        <span class="keyword">if</span> (is-&gt;videoq.abort_request)</span><br><span class="line">            <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  	<span class="comment">// 第4步</span></span><br><span class="line">    <span class="comment">/* if the frame is not skipped, then display it */</span></span><br><span class="line">    <span class="keyword">if</span> (vp-&gt;bmp) &#123;</span><br><span class="line">        <span class="comment">/* get a pointer on the bitmap */</span></span><br><span class="line">        SDL_VoutLockYUVOverlay(vp-&gt;bmp);</span><br><span class="line">        <span class="comment">// <span class="doctag">FIXME:</span> set swscale options</span></span><br><span class="line">        <span class="keyword">if</span> (SDL_VoutFillFrameYUVOverlay(vp-&gt;bmp, src_frame) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            av_log(<span class="literal">NULL</span>, AV_LOG_FATAL, <span class="string">&quot;Cannot initialize the conversion context\n&quot;</span>);</span><br><span class="line">            <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">/* update the bitmap content */</span></span><br><span class="line">        SDL_VoutUnlockYUVOverlay(vp-&gt;bmp);</span><br><span class="line">        vp-&gt;pts = pts;</span><br><span class="line">        vp-&gt;duration = duration;</span><br><span class="line">        vp-&gt;pos = pos;</span><br><span class="line">        vp-&gt;serial = serial;</span><br><span class="line">        vp-&gt;sar = src_frame-&gt;sample_aspect_ratio;</span><br><span class="line">        vp-&gt;bmp-&gt;sar_num = vp-&gt;sar.num;</span><br><span class="line">        vp-&gt;bmp-&gt;sar_den = vp-&gt;sar.den;</span><br><span class="line">        frame_queue_push(&amp;is-&gt;pictq);</span><br><span class="line">        <span class="keyword">if</span> (!is-&gt;viddec.first_frame_decoded) &#123;</span><br><span class="line">            ffp_notify_msg1(ffp, FFP_MSG_VIDEO_DECODED_START);</span><br><span class="line">            is-&gt;viddec.first_frame_decoded_time = SDL_GetTickHR();</span><br><span class="line">            is-&gt;viddec.first_frame_decoded = <span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h5 id="第1步："><a href="#第1步：" class="headerlink" title="第1步："></a>第1步：</h5><p>处理视频轨道的<a href="422da41d.html">accurate_seek</a>，这里不再赘述。</p>
+<h5 id="第2步"><a href="#第2步" class="headerlink" title="第2步:"></a>第2步:</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (!(vp = frame_queue_peek_writable(&amp;is-&gt;pictq)))</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">vp-&gt;sar = src_frame-&gt;sample_aspect_ratio;</span><br></pre></td></tr></table></figure>
+
+<p>首先，调用frame_queue_peek_writable()方法从<a href="866c32fa.html">FrameQueue</a>队尾申请一块可用的节点，用于放置该AVFrame。而<a href="866c32fa.html">FrameQueue</a>中节点是可复用的，所以此时返回的Frame可能是之前使用过的。</p>
+<h5 id="第3步："><a href="#第3步：" class="headerlink" title="第3步："></a>第3步：</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (!vp-&gt;bmp || !vp-&gt;allocated || vp-&gt;width != src_frame-&gt;width || vp-&gt;height != src_frame-&gt;height || vp-&gt;format != src_frame-&gt;format) &#123;</span><br><span class="line">    <span class="keyword">if</span> (vp-&gt;width != src_frame-&gt;width || vp-&gt;height != src_frame-&gt;height)</span><br><span class="line">        ffp_notify_msg3(ffp, FFP_MSG_VIDEO_SIZE_CHANGED, src_frame-&gt;width, src_frame-&gt;height);</span><br><span class="line">    vp-&gt;allocated = <span class="number">0</span>;</span><br><span class="line">    vp-&gt;width = src_frame-&gt;width;</span><br><span class="line">    vp-&gt;height = src_frame-&gt;height;</span><br><span class="line">    vp-&gt;format = src_frame-&gt;format;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* the allocation must be done in the main thread to avoid</span></span><br><span class="line"><span class="comment">    locking problems. */</span></span><br><span class="line">    alloc_picture(ffp, src_frame-&gt;format);</span><br><span class="line">    <span class="keyword">if</span> (is-&gt;videoq.abort_request)</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>由于从<a href="866c32fa.html">FrameQueue</a>队尾获取到的Frame可能是之前使用过的，所以此时判断该Frame中的bmp是否可直接使用:</p>
+<ul>
+<li><p>vp-&gt;bmp</p>
+<p>即<a href="e0c53a8e.html">SDL_VoutOverlay</a>实例，用来存储AVFrame中的相关信息的，以保证后续的绘制。</p>
+</li>
+<li><p>vp-&gt;allocated</p>
+<p>当前Frame是否已分配，当vp-&gt;bmp被赋值之后就会将allocated置为1</p>
+</li>
+<li><p>vp-&gt;width !&#x3D; src_frame-&gt;width || vp-&gt;height !&#x3D; src_frame-&gt;height</p>
+<p>原Frame的宽高和新的AVFrame中的宽高是否一致，不一样的话就不能复用。</p>
+</li>
+<li><p>vp-&gt;format !&#x3D; src_frame-&gt;format</p>
+<p>原Frame的格式和新的AVFrame中的格式是否一致，不一样的话就不能复用。</p>
+</li>
+</ul>
+<p>也就是说，当bmp为空，或者宽高格式其中一个不一样那么表示该Frame不可被直接复用，那么得重新初始化下。</p>
+<p>所以在条件体内，首先判断如果是宽高不同导致的，那么就发送FFP_MSG_VIDEO_SIZE_CHANGED消息。</p>
+<p>然后将相关字段赋值为新的，最主要的是调用alloc_picture()方法来完成bmp的赋值，而alloc_picture()方法的主要作用也正是用来给vp-&gt;bmp赋值的。可以翻看<a href="e0c53a8e.html">SDL_VoutOverlay</a>中初始化的部分。</p>
+<p>第4步：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* if the frame is not skipped, then display it */</span></span><br><span class="line"><span class="keyword">if</span> (vp-&gt;bmp) &#123;</span><br><span class="line">    <span class="comment">/* get a pointer on the bitmap */</span></span><br><span class="line">    SDL_VoutLockYUVOverlay(vp-&gt;bmp);</span><br><span class="line">    <span class="comment">// <span class="doctag">FIXME:</span> set swscale options</span></span><br><span class="line">    <span class="keyword">if</span> (SDL_VoutFillFrameYUVOverlay(vp-&gt;bmp, src_frame) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        av_log(<span class="literal">NULL</span>, AV_LOG_FATAL, <span class="string">&quot;Cannot initialize the conversion context\n&quot;</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/* update the bitmap content */</span></span><br><span class="line">    SDL_VoutUnlockYUVOverlay(vp-&gt;bmp);</span><br><span class="line">    vp-&gt;pts = pts;</span><br><span class="line">    vp-&gt;duration = duration;</span><br><span class="line">    vp-&gt;pos = pos;</span><br><span class="line">    vp-&gt;serial = serial;</span><br><span class="line">    vp-&gt;sar = src_frame-&gt;sample_aspect_ratio;</span><br><span class="line">    vp-&gt;bmp-&gt;sar_num = vp-&gt;sar.num;</span><br><span class="line">    vp-&gt;bmp-&gt;sar_den = vp-&gt;sar.den;</span><br><span class="line">    frame_queue_push(&amp;is-&gt;pictq);</span><br><span class="line">    <span class="keyword">if</span> (!is-&gt;viddec.first_frame_decoded) &#123;</span><br><span class="line">        ffp_notify_msg1(ffp, FFP_MSG_VIDEO_DECODED_START);</span><br><span class="line">        is-&gt;viddec.first_frame_decoded_time = SDL_GetTickHR();</span><br><span class="line">        is-&gt;viddec.first_frame_decoded = <span class="number">1</span>;		</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面第3步中判断Frame是否可用，不可用便会将其重新初始化。所以到这里一般情况下就都初始化好了，嗯上面只是创建出了<a href="e0c53a8e.html">SDL_VoutOverlay</a>，并没有将AVFrame中的数据填充复制到<a href="e0c53a8e.html">SDL_VoutOverlay</a>中去，所以第4步的主要作用就是填充。</p>
+<p>调用SDL_VoutFillFrameYUVOverlay()方法来填充，也就是<a href="e0c53a8e.html">SDL_VoutOverlay</a>中的func_fill_frame方法来将AVFrame中的相关数据赋值到<a href="e0c53a8e.html">SDL_VoutOverlay</a>中去，以供后续的展示绘制。当然还包括Frame中其他的字段的赋值，比如pts、pos等，等赋值完毕后就调用<a href="866c32fa.html">FrameQueue</a>中的frame_queue_push()方法来将写索引往后挪动，表示将该Frame放入队尾了。</p>
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>所以本方法主要作用就是将解码后的AVFrame放入FrameQueue中去，当然还会做一些判断过滤，比如<a href="422da41d.html">accurate_seek</a>，如果没有被过滤掉是正常的AVFrame，那么此时再将其转换为Frame然后放入队尾以供后续展示。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/6412e65f.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-func_config_video_decoder</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/65dc31d5.html">
+        <span class="next-text nav-default">Ijkplayer-func_open_video_decoder</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

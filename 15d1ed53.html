@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-audio_open"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/15d1ed53.html"/>
+
+
+<meta name="description" content="本文主要介绍位于ff_ffplay.c文件中的audio_open()方法。该方法的主要作用就是用来打开音频输出，为后续的音频输出做好准备。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-audio_open">
+<meta property="og:url" content="https://youngkaaa.github.io/15d1ed53.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍位于ff_ffplay.c文件中的audio_open()方法。该方法的主要作用就是用来打开音频输出，为后续的音频输出做好准备。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-04-05T12:36:50.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.428Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-audio_open - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-audio_open
+        
+      </h1>
+
+      <time class="post-time">
+          4月 05 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍位于ff_ffplay.c文件中的audio_open()方法。该方法的主要作用就是用来打开音频输出，为后续的音频输出做好准备。</p>
+<span id="more"></span>
+
+<h4 id="1、调用路径"><a href="#1、调用路径" class="headerlink" title="1、调用路径"></a>1、调用路径</h4><p>本方法的主要作用是用来打开音频输出，为后续的音频输出做好准备。其调用信息如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ff_ffplay.c#read_thread()</span><br><span class="line">	-&gt; ff_ffplay.c#stream_component_open()</span><br></pre></td></tr></table></figure>
+
+<p>而<a href="f13bb020.html">read_thread()</a>其实就是在播放器prepare的时候，会开启单独的线程，用它来读取视频数据存入对应的<a href="b5aae3f7.html">PacketQueue</a>中。</p>
+<p>所以可以知道本方法在播放器prepare时就会调用。</p>
+<p>而对于stream_component_open()来说，其主要作用就是通过轨道索引用来打开指定轨道，其实主要就两个步骤:</p>
+<ol>
+<li>确定解码器信息，比如codec_id等，也就是填充AVCodecContext实例。这里主要通过avcodec_parameters_to_context()方法来将对应轨道的codecpar(AVCodecParameters)转换成AVCodecContext实例。而codecpar又是什么时候赋值的呢？前面刚说过stream_component_open()方法是在read_thread()方法中调用的，而在read_thread()方法中一开始会调用avformat_open_input()方法来打开视频资源，读取文件的header信息，来获取该视频的相关信息，并且将其填充到AVFormatContext实例中，此时一般就能拿到视频的轨道数nb_streams以及每个轨道的类型，当然包括对应轨道的codecpar了。</li>
+<li>启动对应轨道的解码器。比如打开视频轨道时，会调用<a href="d2a3d8a6.html">IJKFF_Pipeline</a>中的相关方法来打开对应的视频解码器等。当然也包括音频和字幕的。</li>
+</ol>
+<p>这里开始介绍音频的相关信息，简要代码如下:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">sample_rate = avctx-&gt;sample_rate;</span><br><span class="line">nb_channels = avctx-&gt;channels;</span><br><span class="line">channel_layout = avctx-&gt;channel_layout;</span><br><span class="line"><span class="comment">/* prepare audio output */</span></span><br><span class="line"><span class="keyword">if</span> ((ret = audio_open(ffp, channel_layout, nb_channels, sample_rate, &amp;is-&gt;audio_tgt)) &lt; <span class="number">0</span>)</span><br><span class="line">		<span class="keyword">goto</span> fail;</span><br><span class="line">ffp_set_audio_codec_info(ffp, AVCODEC_MODULE_NAME, avcodec_get_name(avctx-&gt;codec_id));</span><br><span class="line">is-&gt;audio_hw_buf_size = ret;</span><br><span class="line">is-&gt;audio_src = is-&gt;audio_tgt;</span><br><span class="line">is-&gt;audio_buf_size = <span class="number">0</span>;</span><br><span class="line">is-&gt;audio_buf_index = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* init averaging filter */</span></span><br><span class="line">is-&gt;audio_diff_avg_coef = <span class="built_in">exp</span>(<span class="built_in">log</span>(<span class="number">0.01</span>) / AUDIO_DIFF_AVG_NB);</span><br><span class="line">is-&gt;audio_diff_avg_count = <span class="number">0</span>;</span><br><span class="line"><span class="comment">/* since we do not have a precise anough audio FIFO fullness,</span></span><br><span class="line"><span class="comment">we correct audio sync only if larger than this threshold */</span></span><br><span class="line">is-&gt;audio_diff_threshold = <span class="number">2.0</span> * is-&gt;audio_hw_buf_size / is-&gt;audio_tgt.bytes_per_sec;</span><br><span class="line"></span><br><span class="line">is-&gt;audio_stream = stream_index;</span><br><span class="line">is-&gt;audio_st = ic-&gt;streams[stream_index];</span><br><span class="line">decoder_init(&amp;is-&gt;auddec, avctx, &amp;is-&gt;audioq, is-&gt;continue_read_thread);</span><br><span class="line"><span class="keyword">if</span> ((is-&gt;ic-&gt;iformat-&gt;flags &amp; (AVFMT_NOBINSEARCH | AVFMT_NOGENSEARCH | AVFMT_NO_BYTE_SEEK)) &amp;&amp;</span><br><span class="line">    !is-&gt;ic-&gt;iformat-&gt;read_seek) &#123;</span><br><span class="line">    is-&gt;auddec.start_pts = is-&gt;audio_st-&gt;start_time;</span><br><span class="line">    is-&gt;auddec.start_pts_tb = is-&gt;audio_st-&gt;time_base;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> ((ret = decoder_start(&amp;is-&gt;auddec, audio_thread, ffp, <span class="string">&quot;ff_audio_dec&quot;</span>)) &lt; <span class="number">0</span>)</span><br><span class="line">		<span class="keyword">goto</span> out;</span><br><span class="line">SDL_AoutPauseAudio(ffp-&gt;aout, <span class="number">0</span>);</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li><p>音频的首先就是从填充好的AVCodecContext中读取出音频的采样率、声道数以及channel_layout等。</p>
+<blockquote>
+<p>channel_layout:</p>
+<p>关于channel_layout，其实就是一个64bit的int，每一位代表一个声道。比如如果是立体声的话，那么就左右声道对应的位置为1。</p>
+<p>那么此时通过channel_layout也是可以计算出声道数的，就只需要计算出为1的位数就行了。</p>
+</blockquote>
+</li>
+<li><p>然后调用audio_open()方法来将刚才拿到的信息传入，注意这里最后传入的&amp;is-&gt;audio_tgt参数，该参数用于保存最终成功打开音频输出时所对应相关的声道数采样率等。因为有些采样率等参数信息在当前设备上并不支持，最终打开音频输出时的信息很有可能和传入的不一致。所以可以看出，打开音频输出的主要实现逻辑其实还是在audio_open()方法中的。</p>
+</li>
+<li><p>成功打开音频输出之后，先保存相关信息，比如将is-&gt;audio_tgt保存到is-&gt;audio_src中。</p>
+</li>
+<li><p>初始化和启动解码器。启动新线程用于音频解码，具体逻辑在<a href="c0d7c607.html">audio_thread()</a>中。</p>
+</li>
+</ol>
+<p>到这里我们明确了打开音频输出的前因，也就是调用路径信息，下面就开始分析具体的打开逻辑。</p>
+<h4 id="2、具体逻辑"><a href="#2、具体逻辑" class="headerlink" title="2、具体逻辑"></a>2、具体逻辑</h4><blockquote>
+<p>ff_ffplay.c#audio_open</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">audio_open</span><span class="params">(FFPlayer *opaque, <span class="type">int64_t</span> wanted_channel_layout, <span class="type">int</span> wanted_nb_channels, <span class="type">int</span> wanted_sample_rate, <span class="keyword">struct</span> AudioParams *audio_hw_params)</span> &#123;</span><br><span class="line">    <span class="comment">// 第1步</span></span><br><span class="line">  	FFPlayer *ffp = opaque;</span><br><span class="line">    VideoState *is = ffp-&gt;is;</span><br><span class="line">    SDL_AudioSpec wanted_spec, spec;</span><br><span class="line">    <span class="type">const</span> <span class="type">char</span> *env;</span><br><span class="line">    <span class="type">static</span> <span class="type">const</span> <span class="type">int</span> next_nb_channels[] = &#123;<span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="number">6</span>, <span class="number">2</span>, <span class="number">6</span>, <span class="number">4</span>, <span class="number">6</span>&#125;;</span><br><span class="line">    <span class="type">static</span> <span class="type">const</span> <span class="type">int</span> next_sample_rates[] = &#123;<span class="number">0</span>, <span class="number">44100</span>, <span class="number">48000</span>&#125;;</span><br><span class="line">    <span class="type">int</span> next_sample_rate_idx = FF_ARRAY_ELEMS(next_sample_rates) - <span class="number">1</span>; </span><br><span class="line">  	<span class="comment">// 第2步</span></span><br><span class="line">    <span class="keyword">if</span> (!wanted_channel_layout || wanted_nb_channels != av_get_channel_layout_nb_channels(wanted_channel_layout)) &#123;</span><br><span class="line">        wanted_channel_layout = av_get_default_channel_layout(wanted_nb_channels);</span><br><span class="line">        wanted_channel_layout &amp;= ~AV_CH_LAYOUT_STEREO_DOWNMIX;</span><br><span class="line">    &#125;</span><br><span class="line">  	<span class="comment">// 第3步</span></span><br><span class="line">    wanted_nb_channels = av_get_channel_layout_nb_channels(wanted_channel_layout);</span><br><span class="line">    wanted_spec.channels = wanted_nb_channels;</span><br><span class="line">    wanted_spec.freq = wanted_sample_rate; </span><br><span class="line">    <span class="keyword">if</span> (wanted_spec.freq &lt;= <span class="number">0</span> || wanted_spec.channels &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">while</span> (next_sample_rate_idx &amp;&amp; next_sample_rates[next_sample_rate_idx] &gt;= wanted_spec.freq) &#123;</span><br><span class="line">        next_sample_rate_idx--;</span><br><span class="line">    &#125;</span><br><span class="line">    wanted_spec.format = AUDIO_S16SYS;</span><br><span class="line">    wanted_spec.silence = <span class="number">0</span>;</span><br><span class="line">    wanted_spec.samples = FFMAX(SDL_AUDIO_MIN_BUFFER_SIZE, <span class="number">2</span> &lt;&lt; av_log2(wanted_spec.freq / SDL_AoutGetAudioPerSecondCallBacks(ffp-&gt;aout)));</span><br><span class="line">    wanted_spec.callback = sdl_audio_callback; </span><br><span class="line">    wanted_spec.userdata = opaque;</span><br><span class="line">  	<span class="comment">// 第4步</span></span><br><span class="line">    <span class="keyword">while</span> (SDL_AoutOpenAudio(ffp-&gt;aout, &amp;wanted_spec, &amp;spec) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">/* avoid infinity loop on exit. --by bbcallen */</span></span><br><span class="line">        <span class="keyword">if</span> (is-&gt;abort_request)</span><br><span class="line">            <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">        wanted_spec.channels = next_nb_channels[FFMIN(<span class="number">7</span>, wanted_spec.channels)];</span><br><span class="line">        <span class="keyword">if</span> (!wanted_spec.channels) &#123;</span><br><span class="line">            wanted_spec.freq = next_sample_rates[next_sample_rate_idx--];</span><br><span class="line">            wanted_spec.channels = wanted_nb_channels;</span><br><span class="line">            <span class="keyword">if</span> (!wanted_spec.freq) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        wanted_channel_layout = av_get_default_channel_layout(wanted_spec.channels);</span><br><span class="line">    &#125;</span><br><span class="line">  	<span class="comment">// 第5步</span></span><br><span class="line">    <span class="keyword">if</span> (spec.format != AUDIO_S16SYS) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (spec.channels != wanted_spec.channels) &#123;</span><br><span class="line">        wanted_channel_layout = av_get_default_channel_layout(spec.channels);</span><br><span class="line">        <span class="keyword">if</span> (!wanted_channel_layout) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">		<span class="comment">// 第6步</span></span><br><span class="line">    audio_hw_params-&gt;fmt = AV_SAMPLE_FMT_S16;</span><br><span class="line">    audio_hw_params-&gt;freq = spec.freq;</span><br><span class="line">    audio_hw_params-&gt;channel_layout = wanted_channel_layout;</span><br><span class="line">    audio_hw_params-&gt;channels = spec.channels;</span><br><span class="line">    audio_hw_params-&gt;frame_size = av_samples_get_buffer_size(<span class="literal">NULL</span>, audio_hw_params-&gt;channels, <span class="number">1</span>, audio_hw_params-&gt;fmt, <span class="number">1</span>);</span><br><span class="line">    audio_hw_params-&gt;bytes_per_sec = av_samples_get_buffer_size(<span class="literal">NULL</span>, audio_hw_params-&gt;channels,  audio_hw_params-&gt;freq, audio_hw_params-&gt;fmt, <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">if</span> (audio_hw_params-&gt;bytes_per_sec &lt;= <span class="number">0</span> || audio_hw_params-&gt;frame_size &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    SDL_AoutSetDefaultLatencySeconds(ffp-&gt;aout, ((<span class="type">double</span>) (<span class="number">2</span> * spec.size)) / audio_hw_params-&gt;bytes_per_sec);</span><br><span class="line">    <span class="keyword">return</span> spec.size;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>关于audio_open()方法的主要代码逻辑如上，主要分为6步，下面依次分析介绍:</p>
+<h5 id="第1步"><a href="#第1步" class="headerlink" title="第1步:"></a>第1步:</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">FFPlayer *ffp = opaque;</span><br><span class="line">VideoState *is = ffp-&gt;is;</span><br><span class="line">SDL_AudioSpec wanted_spec, spec;</span><br><span class="line"><span class="type">const</span> <span class="type">char</span> *env;</span><br><span class="line"><span class="type">static</span> <span class="type">const</span> <span class="type">int</span> next_nb_channels[] = &#123;<span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="number">6</span>, <span class="number">2</span>, <span class="number">6</span>, <span class="number">4</span>, <span class="number">6</span>&#125;;</span><br><span class="line"><span class="type">static</span> <span class="type">const</span> <span class="type">int</span> next_sample_rates[] = &#123;<span class="number">0</span>, <span class="number">44100</span>, <span class="number">48000</span>&#125;;</span><br><span class="line"><span class="type">int</span> next_sample_rate_idx = FF_ARRAY_ELEMS(next_sample_rates) - <span class="number">1</span>; </span><br></pre></td></tr></table></figure>
+
+<p>第1步很简单，主要就是相关变量的定义</p>
+<blockquote>
+<p>wanted_spec、spec</p>
+<p>SDL_AudioSpec结构体类型，主要是原ffmpeg中的结构，存储着音频的采样率、声道数等信息。这里用wanted_spec表示的是外部想要相关音频配置，主要和spec做区分。而spec存储的是最终打开音频输出时的音频配置信息，也就是最终的信息。wanted_spec(内容)和spec(内容)可能不同。</p>
+</blockquote>
+<blockquote>
+<p>next_nb_channels</p>
+<p>当前支持的所有声道数列表，这里ijkplayer和ffpmeg中是一致的，没有做修改。</p>
+</blockquote>
+<blockquote>
+<p>next_sample_rates</p>
+<p>当前支持的所有采样率列表(需从小到大排列)，用处就是当当前采样率打开音频输出失败时，会尝试使用下一个比它小的采样率去重试，也就是从next_sample_rates后往前来试。</p>
+</blockquote>
+<blockquote>
+<p>next_sample_rate_idx</p>
+<p>动态计算next_sample_rates数组的大小。</p>
+</blockquote>
+<h5 id="第2步"><a href="#第2步" class="headerlink" title="第2步:"></a>第2步:</h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">if (!wanted_channel_layout || wanted_nb_channels !=av_get_channel_layout_nb_channels(wanted_channel_layout)) &#123;</span><br><span class="line">        wanted_channel_layout = av_get_default_channel_layout(wanted_nb_channels);</span><br><span class="line">        wanted_channel_layout &amp;= ~AV_CH_LAYOUT_STEREO_DOWNMIX;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>第2步主要作用是用来矫正输入参数wanted_channel_layout和wanted_nb_channels。前面提到过，channel_layout是每一位代表一个声道，可以从channel_layout中计算出声道数，而传入的另外一个参数wanted_nb_channels也表示的是声道数，这俩可能会有冲突，也就是不一样的情况，比如传入channel_layout为AV_CH_LAYOUT_STEREO立体声(2声道)，而wanted_nb_channels又是1，那么具体以哪个为准呢？以wanted_nb_channels为准，也就是说出现这种情况时channel_layout要以wanted_nb_channels来做矫正。</p>
+<p>而if条件中的av_get_channel_layout_nb_channels()方法就是从channel_layout中计算出声道数，具体就是计算64bit的channel_layout中位为1的个数，感兴趣可以翻看源码看其是怎么计算的，挺有趣的，这里不展开了。所以if条件解释起来就是:</p>
+<ol>
+<li><p>wanted_channel_layout为空，不合法时，需要进入if条件体中根据wanted_nb_channels来矫正channel_layout</p>
+</li>
+<li><p>channel_layout中对应的声道数和wanted_nb_channels不一致，那么根据根据wanted_nb_channels来矫正channel_layout。</p>
+<p>这里又用到了av_get_default_channel_layout()方法，该方法的主要作用就是从一个内置的数组中，通过声道数来拿到对应的channel_layout。详细可以翻阅channel_layout.c中关于channel_layout_map的定义。</p>
+</li>
+</ol>
+<h5 id="第三步"><a href="#第三步" class="headerlink" title="第三步"></a>第三步</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">wanted_nb_channels = av_get_channel_layout_nb_channels(wanted_channel_layout);</span><br><span class="line">wanted_spec.channels = wanted_nb_channels;</span><br><span class="line">wanted_spec.freq = wanted_sample_rate; </span><br><span class="line"><span class="keyword">if</span> (wanted_spec.freq &lt;= <span class="number">0</span> || wanted_spec.channels &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">while</span> (next_sample_rate_idx &amp;&amp; next_sample_rates[next_sample_rate_idx] &gt;= wanted_spec.freq) &#123;</span><br><span class="line">		next_sample_rate_idx--;</span><br><span class="line">&#125;</span><br><span class="line">wanted_spec.format = AUDIO_S16SYS;</span><br><span class="line">wanted_spec.silence = <span class="number">0</span>;</span><br><span class="line">wanted_spec.samples = FFMAX(SDL_AUDIO_MIN_BUFFER_SIZE, <span class="number">2</span> &lt;&lt; av_log2(wanted_spec.freq / SDL_AoutGetAudioPerSecondCallBacks(ffp-&gt;aout)));</span><br><span class="line">wanted_spec.callback = sdl_audio_callback; </span><br><span class="line">wanted_spec.userdata = opaque;</span><br></pre></td></tr></table></figure>
+
+<p>第3步还是在第2步的基础上再来做一些音频参数校验矫正工作。主要就是将入参复制到wanted_spec中去。</p>
+<blockquote>
+<p>wanted_spec.channels</p>
+<p>声道数，赋值为最终的wanted_nb_channels</p>
+</blockquote>
+<blockquote>
+<p>wanted_spec.freq</p>
+<p>采样率。</p>
+</blockquote>
+<blockquote>
+<p>wanted_spec.format</p>
+<p>每个采样的格式(大小)，有符号的16bit。</p>
+</blockquote>
+<blockquote>
+<p>wanted_spec.silence</p>
+<p>音量值？不是很清楚，ijkplayer中里面没咋用到过。</p>
+</blockquote>
+<blockquote>
+<p>wanted_spec.samples</p>
+<p>我理解是每次采样的数量。具体是采样率除以每秒获取采样数据的次数。</p>
+<p>比如采样率为44100，表示每秒采样44100次，一次采样的大小是wanted_spec.format*wanted_spec.channels。而音频播放数据时每秒读44100次音频数据，一次拿一个采样吧。如果每秒拿30次，那么每次就应该拿wanted_spec.freq&#x2F;30，也就是44100&#x2F;30个采样数据。所以我理解此时samples和刚说的44100&#x2F;30是一个意思吧。但是这里还做了额外操作来保证samples必须是2的n次方。所以使用 2 &lt;&lt; av_log2()。</p>
+</blockquote>
+<blockquote>
+<p>wanted_spec.callback</p>
+<p>获取待播放音频数据的接口(指针函数)。用它来获取后面的待播放数据。详见<a href="a6d96fd1.html">SDL_AudioCallback</a>。</p>
+</blockquote>
+<blockquote>
+<p>wanted_spec.userdata</p>
+<p>存储音频数据的容器。其实就是FFPlayer结构体实例。后面还是会原封不动传给wanted_spec.callback的。</p>
+</blockquote>
+<h5 id="第四步"><a href="#第四步" class="headerlink" title="第四步"></a>第四步</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> (SDL_AoutOpenAudio(ffp-&gt;aout, &amp;wanted_spec, &amp;spec) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="comment">/* avoid infinity loop on exit. --by bbcallen */</span></span><br><span class="line">    <span class="keyword">if</span> (is-&gt;abort_request)</span><br><span class="line">   		 <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    wanted_spec.channels = next_nb_channels[FFMIN(<span class="number">7</span>, wanted_spec.channels)];</span><br><span class="line">    <span class="keyword">if</span> (!wanted_spec.channels) &#123;</span><br><span class="line">        wanted_spec.freq = next_sample_rates[next_sample_rate_idx--];</span><br><span class="line">        wanted_spec.channels = wanted_nb_channels;</span><br><span class="line">        <span class="keyword">if</span> (!wanted_spec.freq) &#123;</span><br><span class="line">        		<span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    wanted_channel_layout = av_get_default_channel_layout(wanted_spec.channels);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面将wanted_spec填充好之后，那么现在就可以用其来打开音频输出了，这里调用的是SDL_AoutOpenAudio()方法传入参数为<a href="a1824301.html">SDL_Aout</a>、wanted_spec以及spec。<a href="a1824301.html">SDL_Aout</a>是承载着主要的打开逻辑，其实就是调用其open_audio()方法；wanted_spec是存放着本次要打开的音频输出配置；spec是用于存放最终打开时的音频输出配置。</p>
+<p>如果打开失败，返回值小于0，那么此时在while循环体内修改打开参数，然后重试，比如修改wanted_spec.channels、wanted_spec.freq等。具体策略为：<code>先保证采样率不变，修减少声道数，如果声道数减为0了，那么再降采样率</code>。</p>
+<p>这里便使用到了next_nb_channels数组，假如刚才试的是双声道的打开失败了，那么此时next_nb_channels[2]&#x3D;1，也就是下次用单声道的开始试。</p>
+<p>如果声道数为0了，那么此时就该降采样率了，此时就用到next_sample_rates了，而next_sample_rate_idx的计算比较简单不解释了。如果此时采样率也降到0了，那么没招了，返回-1表示打开音频输出失败。</p>
+<p>所以第4步总结下就是主要用来打开音频输出，主要逻辑详见<a href="a1824301.html">SDL_Aout</a>中的open_audio()方法，如果打开失败，那么就修改音频参数重新打开，修改策略为:<code>先保证采样率不变，减少声道数;如果声道数减为0了，那么再降采样率</code>。如果采样率也降为0了，就返回-1表示打开失败。</p>
+<h5 id="第五步"><a href="#第五步" class="headerlink" title="第五步"></a>第五步</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (spec.format != AUDIO_S16SYS) &#123;</span><br><span class="line">  	<span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> (spec.channels != wanted_spec.channels) &#123;</span><br><span class="line">    wanted_channel_layout = av_get_default_channel_layout(spec.channels);</span><br><span class="line">    <span class="keyword">if</span> (!wanted_channel_layout) &#123;</span><br><span class="line">      	<span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>能执行到第5步，表示上面肯定打开音频输出成功了，并且最终的音频输出配置存储在spec中了。</p>
+<p>那么此时首先判断最终的参数中的采样格式是否是AUDIO_S16SYS，如果不是那么就返回失败。</p>
+<p>再判断最终打开的声道数是否和要求的不一样，不一样的话就看最终的声道数是否有对应的channel_layout，也就是在channel_layout.c中的channel_layout_map里有没有定义，没有定义的话表示该声道数不支持，返回-1吧。</p>
+<h5 id="第六步"><a href="#第六步" class="headerlink" title="第六步"></a>第六步</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">audio_hw_params-&gt;fmt = AV_SAMPLE_FMT_S16;</span><br><span class="line">audio_hw_params-&gt;freq = spec.freq;</span><br><span class="line">audio_hw_params-&gt;channel_layout = wanted_channel_layout;</span><br><span class="line">audio_hw_params-&gt;channels = spec.channels;</span><br><span class="line">audio_hw_params-&gt;frame_size = av_samples_get_buffer_size(<span class="literal">NULL</span>, audio_hw_params-&gt;channels, <span class="number">1</span>, audio_hw_params-&gt;fmt, <span class="number">1</span>);</span><br><span class="line">audio_hw_params-&gt;bytes_per_sec = av_samples_get_buffer_size(<span class="literal">NULL</span>, audio_hw_params-&gt;channels,  audio_hw_params-&gt;freq, audio_hw_params-&gt;fmt, <span class="number">1</span>);</span><br><span class="line"><span class="keyword">if</span> (audio_hw_params-&gt;bytes_per_sec &lt;= <span class="number">0</span> || audio_hw_params-&gt;frame_size &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br><span class="line">SDL_AoutSetDefaultLatencySeconds(ffp-&gt;aout, ((<span class="type">double</span>) (<span class="number">2</span> * spec.size)) / audio_hw_params-&gt;bytes_per_sec);</span><br><span class="line"><span class="keyword">return</span> spec.size;</span><br></pre></td></tr></table></figure>
+
+<p>还记得前面说过audio_open()传入的最后一个参数的用处吗？audio_hw_params就是最终一个参数，此时就可以给它赋值了，将最后成功打开时的音频配置赋值给它。</p>
+<p>注意这里的av_samples_get_buffer_size()方法，其主要作用是用来计算相关采样总大小，比如要计算每个采样的大小就是format*channel_count，比如16bit的采样格式，双声道，那么每个采样数据大小就是:16&#x2F;8*2&#x3D;4byte。而这里av_samples_get_buffer_size()方法大概的逻辑就是完成上面的计算，这里注意当计算每个采样大小时传入的采样率是1，而计算比特率也就是每秒总得采样大小时，传入的是正常的采样率audio_hw_params-&gt;freq。</p>
+<h4 id="3、总结"><a href="#3、总结" class="headerlink" title="3、总结"></a>3、总结</h4><p>要打开音频输出，不可缺少的就是声道数、采样率以及采样格式。而上面的逻辑主要就是围绕这三个值来进行的，最主要的打开逻辑其实本文并没有介绍，具体在<a href="a1824301.html">SDL_Aout</a>的open_audio()方法中。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/c0d7c607.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-audio_thread</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/f13bb020.html">
+        <span class="next-text nav-default">Ijkplayer-read_thread</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

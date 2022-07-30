@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Ijkplayer-func_init_video_decoder"/>
+
+
+
+
+  <meta name="keywords" content="ijkplayer," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/b99add2a.html"/>
+
+
+<meta name="description" content="本文主要介绍ijkplayer中位于ffpipeline_android.c中的func_init_video_decoder()方法。 func_init_video_decoder()方法是IJKFF_Pipeline中func_init_video_decoder指针函数对应的硬解实现，而func_init_video_decoder主要是用于异步打开(初始化+配置)解码器的，详细分析可以翻">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ijkplayer-func_init_video_decoder">
+<meta property="og:url" content="https://youngkaaa.github.io/b99add2a.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="本文主要介绍ijkplayer中位于ffpipeline_android.c中的func_init_video_decoder()方法。 func_init_video_decoder()方法是IJKFF_Pipeline中func_init_video_decoder指针函数对应的硬解实现，而func_init_video_decoder主要是用于异步打开(初始化+配置)解码器的，详细分析可以翻">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-03-08T11:22:54.000Z">
+<meta property="article:modified_time" content="2022-07-29T15:03:31.421Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="ijkplayer">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Ijkplayer-func_init_video_decoder - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Ijkplayer-func_init_video_decoder
+        
+      </h1>
+
+      <time class="post-time">
+          3月 08 2020
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>本文主要介绍ijkplayer中位于ffpipeline_android.c中的func_init_video_decoder()方法。</p>
+<p>func_init_video_decoder()方法是<a href="d2a3d8a6.html">IJKFF_Pipeline</a>中func_init_video_decoder指针函数对应的硬解实现，而func_init_video_decoder主要是用于异步打开(初始化+配置)解码器的，详细分析可以翻看<a href="d2a3d8a6.html">IJKFF_Pipeline</a>中的分析。</p>
+<span id="more"></span>
+
+<blockquote>
+<p> ffpipeline_android.c#func_init_video_decoder()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> IJKFF_Pipenode *<span class="title function_">func_init_video_decoder</span><span class="params">(IJKFF_Pipeline *pipeline, FFPlayer *ffp)</span> &#123;</span><br><span class="line">    IJKFF_Pipeline_Opaque *opaque = pipeline-&gt;opaque;</span><br><span class="line">    IJKFF_Pipenode *node = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="comment">// 硬解</span></span><br><span class="line">    <span class="keyword">if</span> (ffp-&gt;mediacodec_all_videos || ffp-&gt;mediacodec_avc || ffp-&gt;mediacodec_hevc || ffp-&gt;mediacodec_mpeg2) &#123;</span><br><span class="line">        node = ffpipenode_init_decoder_from_android_mediacodec(ffp, pipeline, opaque-&gt;weak_vout);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> node;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>很简单，就是<a href="65dc31d5.html">func_open_video_decoder</a>方法中的前半部分，也就是只有开启硬解时才会走具体的逻辑，否则本方法不执行任何逻辑。</p>
+<blockquote>
+<p>ffpipenode_android_mediacodec_vdec.c#ffpipenode_init_decoder_from_android_mediacodec()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line">IJKFF_Pipenode *<span class="title function_">ffpipenode_init_decoder_from_android_mediacodec</span><span class="params">(FFPlayer *ffp, IJKFF_Pipeline *pipeline, SDL_Vout *vout)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (SDL_Android_GetApiLevel() &lt; IJK_API_16_JELLY_BEAN)</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!ffp || !ffp-&gt;is)</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    IJKFF_Pipenode *node = ffpipenode_alloc(<span class="keyword">sizeof</span>(IJKFF_Pipenode_Opaque));</span><br><span class="line">    <span class="keyword">if</span> (!node)</span><br><span class="line">        <span class="keyword">return</span> node;</span><br><span class="line"></span><br><span class="line">    VideoState *is = ffp-&gt;is;</span><br><span class="line">    IJKFF_Pipenode_Opaque *opaque = node-&gt;opaque;</span><br><span class="line">    JNIEnv *env = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    node-&gt;func_destroy = func_destroy;</span><br><span class="line">    <span class="keyword">if</span> (ffp-&gt;mediacodec_sync) &#123;</span><br><span class="line">        node-&gt;func_run_sync = func_run_sync_loop;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        node-&gt;func_run_sync = func_run_sync;</span><br><span class="line">    &#125;</span><br><span class="line">    node-&gt;func_flush = func_flush;</span><br><span class="line">    opaque-&gt;pipeline = pipeline;</span><br><span class="line">    opaque-&gt;ffp = ffp;</span><br><span class="line">    opaque-&gt;decoder = &amp;is-&gt;viddec;</span><br><span class="line">    opaque-&gt;weak_vout = vout;</span><br><span class="line"></span><br><span class="line">    opaque-&gt;acodec_mutex = SDL_CreateMutex();</span><br><span class="line">    opaque-&gt;acodec_cond = SDL_CreateCond();</span><br><span class="line">    opaque-&gt;acodec_first_dequeue_output_mutex = SDL_CreateMutex();</span><br><span class="line">    opaque-&gt;acodec_first_dequeue_output_cond = SDL_CreateCond();</span><br><span class="line">    opaque-&gt;any_input_mutex = SDL_CreateMutex();</span><br><span class="line">    opaque-&gt;any_input_cond = SDL_CreateCond();</span><br><span class="line">    <span class="keyword">if</span> (!opaque-&gt;acodec_cond || !opaque-&gt;acodec_cond || !opaque-&gt;acodec_first_dequeue_output_mutex ||</span><br><span class="line">        !opaque-&gt;acodec_first_dequeue_output_cond) &#123;</span><br><span class="line">        ALOGE(<span class="string">&quot;%s:open_video_decoder: SDL_CreateCond() failed\n&quot;</span>, __func__);</span><br><span class="line">        <span class="keyword">goto</span> fail;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    opaque-&gt;codecpar = avcodec_parameters_alloc();</span><br><span class="line">    <span class="keyword">if</span> (!opaque-&gt;codecpar)</span><br><span class="line">        <span class="keyword">goto</span> fail;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (JNI_OK != SDL_JNI_SetupThreadEnv(&amp;env)) &#123;</span><br><span class="line">        ALOGE(<span class="string">&quot;%s:create: SetupThreadEnv failed\n&quot;</span>, __func__);</span><br><span class="line">        <span class="keyword">goto</span> fail;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">strcpy</span>(opaque-&gt;mcc.codec_name, ffp-&gt;mediacodec_default_name);</span><br><span class="line">    opaque-&gt;acodec = SDL_AMediaCodecJava_createByCodecName(env, ffp-&gt;mediacodec_default_name);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!opaque-&gt;acodec) &#123;</span><br><span class="line">        <span class="keyword">goto</span> fail;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> node;</span><br><span class="line">    fail:</span><br><span class="line">    ALOGW(<span class="string">&quot;%s: init fail\n&quot;</span>, __func__);</span><br><span class="line">    ffpipenode_free_p(&amp;node);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>关于本方法就解释两点:</p>
+<ol>
+<li><p>关于:strcpy(opaque-&gt;mcc.codec_name, ffp-&gt;mediacodec_default_name);，这里可以看出使用了mediacodec_default_name字段作为编解码器的名称，关于该值的解释可以看<a href="d2a3d8a6.html">IJKFF_Pipeline</a>中func_init_video_decoder的解释。</p>
+</li>
+<li><p>SDL_AMediaCodecJava_createByCodecName()方法，而在和<a href="65dc31d5.html">func_open_video_decoder</a>方法中创建编解码器时调用的ffpipenode_android_mediacodec_vdec.c#create_codec_l()方法，该方法中包括了对没有配置Surface时AMediaCodecDummy的创建(也就是假编解码器的创建判断)，而本方法没有该逻辑。</p>
+<p>剩下的和<a href="65dc31d5.html">func_open_video_decoder</a>方法中相关初始化的逻辑基本一致，这里不再赘述。</p>
+</li>
+</ol>
+</blockquote>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/ijkplayer/">ijkplayer</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/4dc50342.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Ijkplayer-decoder_decode_frame</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/6412e65f.html">
+        <span class="next-text nav-default">Ijkplayer-func_config_video_decoder</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>
