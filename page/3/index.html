@@ -109,6 +109,232 @@
     <header class="post-header">
       <h1 class="post-title">
         
+          <a class="post-link" href="/205c40e1.html">Ijkplayer-video_display2</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 22 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍位于ff_ffplay.c文件中的video_display2()方法。</p>
+<p>该方法主要的作用是用来刷新展示视频帧的，具体调用路径分析详见<a href="e1139ab6.html">video_refresh_thread</a>。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/217ddfcf.html">Ijkplayer-Clock</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 22 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/422da41d.html">Ijkplayer-accurate_seek机制</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 22 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍ijkplayer中的accurate_seek机制。</p>
+<p>首先accurate_seek是在ijkplayer中才有的概念，在ffplay中没有(ffmpeg中有，但是是用于剪切视频而不是播放视频)。主要作用就是使得seek更加精准，因为在ffplay中只能seek关键帧，如果关键帧少的话，跳转误差比较大，所以ijkplayer其引入了accurate_seek机制用以解决该问题。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/866c32fa.html">Ijkplayer-FrameQueue</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 22 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/e1139ab6.html">Ijkplayer-video_refresh_thread</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 22 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍位于ff_ffplay.c文件中的video_refresh_thread()方法。</p>
+<p>本方法的主要作用是实现视频帧刷新显示，主要逻辑为：从对应<a href="866c32fa.html">FrameQueue</a>中取出之前解码时存入的解码后数据，然后做相关播放同步操作之后(包括丢帧以加快播放或重复播放以减缓播放)，再做帧展示操作。主要是这三步。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/6093ab9f.html">Ijkplayer-SDL_Vout_Opaque</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 21 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍位于ijksdl_vout_android_nativewindow.c文件中的SDL_Vout_Opaque结构体。</p>
+<p>SDL_Vout_Opaque结构体主要是用来存储一些上层的有关视频输出的信息，比如对应着上层Surface的native_window、对应着上层MediaCodec的acodec等。而SDL_Vout_Opaque主要是对应着<a href="6c4c2c27.html">SDL_Vout</a>中的opaque字段。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/e0c53a8e.html">Ijkplayer-SDL_VoutOverlay</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 21 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要分析位于ijksdl_vout.h中的SDL_VoutOverlay结构体。</p>
+<p>该结构体主要作用是承载着视频帧的绘制数据，用其来完成帧的绘制。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
           <a class="post-link" href="/6c4c2c27.html">Ijkplayer-SDL_Vout</a>
         
       </h1>
@@ -206,238 +432,6 @@
   </article>
 
         
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/f38a2dac.html">Ijkplayer-ffpipenode_create_video_decoder_from_ffplay</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 15 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要分析位于ffpipenode_ffplay_vdec.c文件中的ffpipenode_create_video_decoder_from_ffplay()方法。</p>
-<p>简单说，本方法主要是创建视频软解相关逻辑，而视频硬解相关的可以翻看<a href="65dc31d5.html">func_open_video_decoder</a>中关于ffpipenode_create_video_decoder_from_android_mediacodec()方法的介绍，以及可以找到本方法的调用场景。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/4a17d154.html">Ijkplayer-AVRational</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 15 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/3da735d9.html">Ijkplayer-drain_output_buffer2</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 14 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的drain_output_buffer2()方法。</p>
-<p>关于本方法呢？其实和<a href="70ca7e71.html">drain_output_buffer</a>是有差异的，最大的差异就是在<a href="70ca7e71.html">drain_output_buffer</a>方法中，其主要逻辑是从解码器中读取出解码后的数据并且填充到入参frame中，但是本方法不仅做了该工作，还包括了填充了数据的frame的入队工作，也就是说抢了<a href="64d79e1a.html">func_run_sync_loop</a>的工作。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/d8157190.html">Ijkplayer-feed_input_buffer2</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 14 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的feed_input_buffer2()方法。</p>
-<p>关于本方法，其实和<a href="17303abc.html">feed_input_buffer</a>方法是差不多一样的，只有略微的差异，所以详细分析在<a href="17303abc.html">feed_input_buffer</a>中，这里只介绍差异。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/33f55665.html">Ijkplayer-get_video_frame</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 14 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍位于ff_ffplay.c文件中的get_video_frame()方法。</p>
-<p>该方法的唯一调用就是在<a href="1c5ec8b9.html">ffplay_video_thread</a>中，也就是视频软解的逻辑。本方法的主要作用就是调用<a href="4dc50342.html">decoder_decode_frame</a>方法获取解码后数据，然后做相关丢帧操作。其实本方法的主要存在理由就是处理丢帧操作。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/4dc50342.html">Ijkplayer-decoder_decode_frame</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 14 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍位于ff_ffplay.c文件中的decoder_decode_frame()方法。</p>
-<p>该方法是视频软解、音频解码、字幕解码的主要执行逻辑，主要逻辑包括从解码器中读取出解码后的数据以及往解码器中放入下一个待解码数据。类似于视频硬解(异步)逻辑中<a href="17303abc">feed_input_buffer</a>的<a href="70ca7e71.html">drain_output_buffer</a>方法的逻辑总和。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/b99add2a.html">Ijkplayer-func_init_video_decoder</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 08 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍ijkplayer中位于ffpipeline_android.c中的func_init_video_decoder()方法。</p>
-<p>func_init_video_decoder()方法是<a href="d2a3d8a6.html">IJKFF_Pipeline</a>中func_init_video_decoder指针函数对应的硬解实现，而func_init_video_decoder主要是用于异步打开(初始化+配置)解码器的，详细分析可以翻看<a href="d2a3d8a6.html">IJKFF_Pipeline</a>中的分析。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
         
   <nav class="pagination">
     
@@ -463,7 +457,7 @@
     
     <section id="tags" class="widget-area widget_tags">
         <h3 class="widget-title">Tags</h3>
-        <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/ijkplayer/" rel="tag">ijkplayer</a><span class="tag-list-count">40</span></li></ul>
+        <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/AndroidFrameworks/" rel="tag">AndroidFrameworks</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SurfaceFlinger/" rel="tag">SurfaceFlinger</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ijkplayer/" rel="tag">ijkplayer</a><span class="tag-list-count">40</span></li></ul>
     </section>
 
 

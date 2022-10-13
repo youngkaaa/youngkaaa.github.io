@@ -42,11 +42,14 @@
 <meta property="og:site_name" content="咔咔咔">
 <meta property="og:description" content="本文主要介绍位于ff_ffplay.c文件中的video_refresh_thread()方法。 本方法的主要作用是实现视频帧刷新显示，主要逻辑为：从对应FrameQueue中取出之前解码时存入的解码后数据，然后做相关播放同步操作之后(包括丢帧以加快播放或重复播放以减缓播放)，再做帧展示操作。主要是这三步。">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://youngkaaa.github.io/e1139ab6/vp_guide.png">
+<meta property="og:image" content="https://youngkaaa.github.io/e1139ab6/sync_threshold.png">
 <meta property="article:published_time" content="2020-03-22T01:20:54.000Z">
 <meta property="article:modified_time" content="2022-07-29T15:03:31.424Z">
 <meta property="article:author" content="咔咔咔">
 <meta property="article:tag" content="ijkplayer">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://youngkaaa.github.io/e1139ab6/vp_guide.png">
 
 
 <link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
@@ -196,7 +199,7 @@
 <li>vp:后面要显示的下一帧，也就是本次即将要显示的帧。这里需多多理解，不要和后面第5步中的nextvp混淆了。</li>
 </ul>
 <p>对于上面提到的lastvp，vp，nextvp(往后翻看第5步)，可以看如下的示意图:</p>
-
+<img src="/e1139ab6/vp_guide.png" class="" title="lastvp vp guide">
 
 <p>这里需注意<a href="866c32fa.html">FrameQueue</a>其实是使用数组实现的环形队列，这里为了看起来方便就没有画成环形。</p>
 <p>上图可以看出，lastvp和vp以及后面的nextvp、nextvpA、nextvpB此刻在<a href="866c32fa.html">FrameQueue</a>中的顺序。后面会多次使用本图中的属性名。</p>
@@ -250,7 +253,7 @@
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (!isnan(diff) &amp;&amp; <span class="built_in">fabs</span>(diff) &lt; AV_NOSYNC_THRESHOLD) &#123;</span><br><span class="line">  <span class="keyword">if</span> (diff &lt;= -sync_threshold) &#123;</span><br><span class="line">    	delay = FFMAX(<span class="number">0</span>, delay + diff);</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (diff &gt;= sync_threshold)&#123;</span><br><span class="line">      <span class="keyword">if</span> (delay &gt; AV_SYNC_FRAMEDUP_THRESHOLD) &#123;</span><br><span class="line">          delay = delay + diff;</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          delay = <span class="number">2</span> * delay;</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>所以可以按照diff为坐标轴，画出如下的示意图:</p>
-
+<img src="/e1139ab6/sync_threshold.png" class="" title="sync_threshold guide">
 
 <p>所以根据上图可以看出：</p>
 <ul>
