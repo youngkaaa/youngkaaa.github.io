@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Kotlin协程 - 概述"/>
+
+
+
+
+  <meta name="keywords" content="Kotlin Coroutine," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/64b5b134.html"/>
+
+
+<meta name="description" content="协程 -概览协程，对于我来说是一个新的概念，隐约记得之前听后端同学提起过Golang的协程，直至kotlin协程推出之前，对这个概念的理解在我脑袋里基本为0。但实际上协程这个概念很早之前就有提出。它是一种编程思想，而不局限于某种语言,比如在 c++、Swift、Golang 中均有协程的实现。 说到协程，定然是先反应出：进程、线程和它是什么关系？我们知道，进程是操作系统分配资源的基本单位，而线程是">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kotlin协程 - 概述">
+<meta property="og:url" content="https://youngkaaa.github.io/64b5b134.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="协程 -概览协程，对于我来说是一个新的概念，隐约记得之前听后端同学提起过Golang的协程，直至kotlin协程推出之前，对这个概念的理解在我脑袋里基本为0。但实际上协程这个概念很早之前就有提出。它是一种编程思想，而不局限于某种语言,比如在 c++、Swift、Golang 中均有协程的实现。 说到协程，定然是先反应出：进程、线程和它是什么关系？我们知道，进程是操作系统分配资源的基本单位，而线程是">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-05-05T02:48:56.000Z">
+<meta property="article:modified_time" content="2022-11-02T13:04:45.434Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="Kotlin Coroutine">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Kotlin协程 - 概述 - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Kotlin协程 - 概述
+        
+      </h1>
+
+      <time class="post-time">
+          5月 05 2022
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <h2 id="协程-概览"><a href="#协程-概览" class="headerlink" title="协程 -概览"></a>协程 -概览</h2><p>协程，对于我来说是一个新的概念，隐约记得之前听后端同学提起过Golang的协程，直至kotlin协程推出之前，对这个概念的理解在我脑袋里基本为0。但实际上协程这个概念很早之前就有提出。它是一种编程思想，而不局限于某种语言,比如在 c++、Swift、Golang 中均有协程的实现。</p>
+<p>说到协程，定然是先反应出：进程、线程和它是什么关系？我们知道，进程是操作系统分配资源的基本单位，而线程是操作系统调度的基本单位，一个进程宏观上理解就是一个应用，比如Android中的一个APP，而线程是一段待执行的代码逻辑，执行完毕之后它就会消失，它运行在进程中，一个进程内有诺干个线程，对于进程内的资源各个线程间可以共享，也就可以同时访问，所以也就有了并发问题。</p>
+<p>而协程是什么呢？他可以理解为是一个线程框架，一个封装了线程的库。每个协程内部包裹着一些要执行的代码逻辑，它运行在线程中。即：代码包裹在协程中，协程运行在线程中，线程运行在进程中。操作系统可以调度线程，而线程可以调度（或者说是执行）协程。所以有人会把协程和线程拿在一起作比较，是不是协程比线程效率更高？因为协程是线程的封装，最终协程内的代码还是运行在线程内，只是尽量减少了操作系统的线程切换时间，当单线程中使用协程执行的时间未必比不用的时候少。所以说，协程最大的好处可能不在这。</p>
+<h3 id="定义说明"><a href="#定义说明" class="headerlink" title="定义说明"></a>定义说明</h3><h4 id="CoroutineScope"><a href="#CoroutineScope" class="headerlink" title="CoroutineScope"></a>CoroutineScope</h4><p>代表的是协程域,它是一个接口，内部只有一个变量：CoroutineContext coroutineContext，用来表示该协程域内的上下文，在其内部启动的协程所对应的context都会受到该coroutineContext的影响。比如CoroutineScope中的context为coroutineContext1，在其内部启动协程A时，协程A内部的context为context1，那么最终context1中的内容会受到coroutineContext1的影响，具体是将 context1 和 coroutineContext1合并起来。正是由于这个特性，定义一个协程域之后，为其指定固定的Dispathcers的话，后续使用该协程域默认启动的协程都会在同一个线程中，这正是因为内部协程继承了协程域的上下文引起的。</p>
+<p>而为什么挂起方法必须要在协程域内调用呢？因为协程和线程环境还是有差异的，协程中的挂起方法其必须和线程环境中的普通方法隔离开，所以使用协程域来进行隔离，相当于在线程环境中为协程隔离出一片空间来运行。另外一个原因是可以使用协程域来管理零散的这些协程任务，比如取消时，可以直接取消协程域，则其内部运行的所被他管理的协程都会被自动取消掉。</p>
+<h4 id="CoroutineContext"><a href="#CoroutineContext" class="headerlink" title="CoroutineContext"></a>CoroutineContext</h4><p>协程上下文。Android开发人员的话对Context应该很了解了。上下文正如它的名字一样，代表了上下文(这不废话么….)，可以在上下文进行传递，里面存储着上下文相关信息。这里的CoroutineContext也是类似的，可以把它理解为一个Map，它内部存储着若干个Element元素，可以通过指定的Key来完成查询。而开发过程中可以使用它来进行上下文传递数据。比如常见的可以放置进去的Element元素有：Dispatchers.Default 、CoroutineId 等，一次传入多个时可以使用重载符号 + 来实现。所以只要遇到CoroutineContext入参的，这些都可以传入，具体这些元素和CoroutineContext的继承关系等后续单独分析。</p>
+<h4 id="suspend-fun"><a href="#suspend-fun" class="headerlink" title="suspend fun"></a>suspend fun</h4><p>挂起方法。定义挂起方式时，只需要在其定义前加上 suspend 关键字即可。挂起方法只可以在协程域内或者其他挂起方法中被调用，不能在普通方法内被调用。它内部可以调用其他的挂起方法以实现代码逻辑的挂起，而不阻塞当前线程。协程之所以可以以同步的方式编写异步代码(省去callback)，正是因为挂起方法的”非阻塞式挂起”。通俗来讲就是当执行一段挂起方法时，执行到某处之后该方法会被暂停执行从而挂起，释放当前线程让其去处理其他的任务，等待一段时间之后（比如其一个挂起方法结束了）再接着让该线程去执行剩余的逻辑。举个可能不恰当的例子，比如在Android中，执行一个方法到一半，然后往主线程postDelay一个Runnable，该Runnable内部包着剩余的代码逻辑，等一段时间之后，主线程接着执行该Runnable以完成剩余逻辑的执行。</p>
+<h3 id="简单举例"><a href="#简单举例" class="headerlink" title="简单举例"></a>简单举例</h3><p>下面举两个简单的示例：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">getUserId</span><span class="params">()</span></span>: String &#123;</span><br><span class="line">    <span class="comment">// 假设网络请求耗时</span></span><br><span class="line">    delay(<span class="number">1000</span>)</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;kakaka&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">getUserInfo</span><span class="params">(userId: <span class="type">String</span>)</span></span>: String &#123;</span><br><span class="line">    <span class="comment">// 假设网络请求耗时</span></span><br><span class="line">    delay(<span class="number">1000</span>)</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;UserInfo[<span class="subst">$&#123;userId&#125;</span>]&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">test</span><span class="params">()</span></span> &#123;</span><br><span class="line">    println(<span class="string">&quot;start in <span class="subst">$&#123;Thread.currentThread()&#125;</span>&quot;</span>)</span><br><span class="line">    CoroutineScope(Dispatchers.Main).launch &#123;</span><br><span class="line">        println(<span class="string">&quot;launch in <span class="subst">$&#123;Thread.currentThread()&#125;</span>&quot;</span>)</span><br><span class="line">        <span class="comment">// 先异步去获取 userId</span></span><br><span class="line">        <span class="keyword">val</span> userId = getUserId()</span><br><span class="line">        <span class="comment">// 再通过 userId 去获取 userInfo</span></span><br><span class="line">        <span class="keyword">val</span> userInfo = getUserInfo(userId)</span><br><span class="line">        println(<span class="string">&quot;userInfo in <span class="subst">$&#123;Thread.currentThread()&#125;</span>&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    println(<span class="string">&quot;loading in <span class="subst">$&#123;Thread.currentThread()&#125;</span>&quot;</span>)</span><br><span class="line">    Thread.sleep(<span class="number">5</span> * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出如下：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">start <span class="keyword">in</span> Thread[main,<span class="number">5</span>,main]</span><br><span class="line">loading <span class="keyword">in</span> Thread[main,<span class="number">5</span>,main]</span><br><span class="line">launch <span class="keyword">in</span> Thread[main,<span class="number">5</span>,main]</span><br><span class="line">userInfo <span class="keyword">in</span> Thread[main,<span class="number">5</span>,main]</span><br></pre></td></tr></table></figure>
+
+<p>简单解释下上述逻辑：先不管 getUserId 和 getUserInfo 方法的定义后面会介绍。这两个方法内部会执行耗时操作比如网络请求等操作。然后在 test 方法内部定义了 CoroutineScope 协程域并指定了其context&#x3D;Dispatchers.Main也就是主线程，然后在其协程域内部先调用 getUserId 获取了userId，然后再通过userId去获取userInfo。如果这两个操作都需要耗时的网络请求的话，那么其内部实现可以使用同步请求或者异步请求两种方式来编写。在传统方式中调用这俩方法时，如果是同步方式时会阻塞调用它的线程，而异步操作时不会阻塞但是需要额外增加回调。</p>
+<p>在协程中则不需要这么麻烦，只需要按同步顺序来写就行了，比如上面的写法先 getUserId 再 getUserInfo 方法最终拿到返回值 userInfo。这一切看起来就像是在写同步代码一样，但实际上getUserId 和 getUserInfo 这两个方法并不会阻塞线程的执行（可以看输出日志，都是在同一个线程main中执行的，loading 比 userinfo 先执行），可以理解为先执行了getUserId之后就接着执行后续的loading代码了，等getUserId执行完之后再回来执行getUserInfo，最后输出userInfo，所以他俩可以理解为是异步方式的实现，因为没有阻塞线程。这一切听起来就像是使用了异步回调一样，但你在这里却看不到到有任何回调的存在。</p>
+<blockquote>
+<p>例2</p>
+</blockquote>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">suspend</span> <span class="function"><span class="keyword">fun</span> <span class="title">getUserInfo</span><span class="params">(userId: <span class="type">String</span>)</span></span>: String &#123;</span><br><span class="line">    println(<span class="string">&quot;getUserInfo [start] in <span class="subst">$&#123;Thread.currentThread()&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="keyword">return</span> withContext(Dispatchers.IO + CoroutineName(<span class="string">&quot;sdsd&quot;</span>)) &#123;</span><br><span class="line">        println(<span class="string">&quot;getUserInfo [fetching] in <span class="subst">$&#123;Thread.currentThread()&#125;</span>&quot;</span>)</span><br><span class="line">        delay(<span class="number">1000</span>)</span><br><span class="line">        <span class="string">&quot;<span class="subst">$&#123;userId&#125;</span>&#x27;s info&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">test</span><span class="params">()</span></span> &#123;</span><br><span class="line">    println(<span class="string">&quot;test [start] in <span class="subst">$&#123;Thread.currentThread()&#125;</span>&quot;</span>)</span><br><span class="line">    CoroutineScope(Dispatchers.Main).launch &#123;</span><br><span class="line">        <span class="keyword">val</span> userId = <span class="string">&quot;kakaka&quot;</span></span><br><span class="line">        <span class="keyword">val</span> userInfo = getUserInfo(userId)</span><br><span class="line">        println(<span class="string">&quot;GlobalScope [finish] in <span class="subst">$&#123;Thread.currentThread()&#125;</span> with userInfo:<span class="variable">$userInfo</span>&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    println(<span class="string">&quot;test [loading] in <span class="subst">$&#123;Thread.currentThread()&#125;</span>&quot;</span>)</span><br><span class="line">    Thread.sleep(<span class="number">5</span> * <span class="number">1000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出如下：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">test [start] <span class="keyword">in</span> Thread[main,<span class="number">5</span>,main]</span><br><span class="line">test [loading] <span class="keyword">in</span> Thread[main,<span class="number">5</span>,main]</span><br><span class="line">getUserInfo [start] <span class="keyword">in</span> Thread[main,<span class="number">5</span>,main]</span><br><span class="line">getUserInfo [fetching] <span class="keyword">in</span> Thread[DefaultDispatcher-worker-<span class="number">1</span>,<span class="number">5</span>,main]</span><br><span class="line">GlobalScope [finish] <span class="keyword">in</span> Thread[main,<span class="number">5</span>,main] with userInfo:kakaka<span class="string">&#x27;s info</span></span><br></pre></td></tr></table></figure>
+
+<p>和上面例1比较接近，但是这里使用了 withContext 来切换线程。通过输出可以看出整个过程只有[fetching]部分是运行在DefaultDispatcher-worker-1线程内的，其他都是运行在main主线程内的。也就是说在test中的协程域内调用 getUserInfo 时，发生了线程切换，即从 main 线程切换到了DefaultDispatcher-worker-1线程来执行，然后拿到其返回结果userInfo。常规的做法是使用回调在main线程中来接收userInfo，最后输出userInfo。但是这里在协程中的调用方式并没有看出啥区别，就是多了withContext，没有看到常规的 new Thread 或者 线程池execute 等操作就实现了线程的切换。好神奇。这也就是协程的第二个特点：线程切换很方便。在这个示例中，你甚至感知不到它是切换了线程去执行的。</p>
+<p>这个示例也很像常规的Android业务开发逻辑。因为在Android中，不允许在主线程中请求网络，否则会抛出异常。更准确来说是不允许在主线程中执行耗时操作，否则会产生ANR，因为UI的刷新重绘也是在主线程中的，这会导致UI卡顿。所以一般都是会将耗时操作挪到子线程去做，等拿到耗时操作的结果之后再回调出来在主线程中更新UI。所以对于Android开发来说，官方提供了AsyncTask，Handler等方式来满足这些场景的需求，另外还有一个三方库比如Rxjava等。而有了协程之后，这一场景就更容易满足了，如上很简单的就可以实现线程的切换了，并且逻辑还变得更加简单(代码可以按照同步方式去写)。所以官方提供了一系列的协程支持，比如viewModelScope和lifecycleScope。</p>
+<p>所以说，协程的引入有如下好处：按照同步方式编写异步代码、线程切换方便以及代码执行效率增加。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/Kotlin-Coroutine/">Kotlin Coroutine</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/ec1be5bf.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Kotlin协程 - 基础概念介绍</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/a6d96fd1.html">
+        <span class="next-text nav-default">Ijkplayer-SDL_AudioCallback</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

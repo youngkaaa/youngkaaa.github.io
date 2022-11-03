@@ -28,12 +28,12 @@
 
 
 
-<link rel="canonical" href="https://youngkaaa.github.io/"/>
+<link rel="canonical" href="https://youngkaaa.github.io/page/6/"/>
 
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="咔咔咔">
-<meta property="og:url" content="https://youngkaaa.github.io/index.html">
+<meta property="og:url" content="https://youngkaaa.github.io/page/6/index.html">
 <meta property="og:site_name" content="咔咔咔">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:author" content="咔咔咔">
@@ -109,12 +109,12 @@
     <header class="post-header">
       <h1 class="post-title">
         
-          <a class="post-link" href="/7b339bd2.html">SurfaceFlinger|Vsync - EventThread</a>
+          <a class="post-link" href="/86c88415.html">ijkplayer-IJKFF_Pipenode</a>
         
       </h1>
 
       <time class="post-time">
-          8月 05 2022
+          3月 07 2020
       </time>
     </header>
 
@@ -124,7 +124,14 @@
         <div class="post-excerpt post-content">
             
             
+              
+            
 
+            
+              <p>本文主要介绍ijkplayer中位于ff_ffpipenode.h中的IJKFF_Pipenode结构体。</p>
+<p>IJKFF_Pipenode也是<code>ijkplayer</code>中才有的概念，其主要是依附于IJKFF_Pipeline而存在的，而关于IJKFF_Pipeline可以翻看前面的分析。</p>
+<p>IJKFF_Pipenode的存在主要是实现<code>视频解码</code>过程逻辑，其可能会有两种实现:<code>硬解码</code>和<code>软解码</code>，其中前者是使用<code>MediaCodec</code>类来实现的(针对<code>Android</code>平台而言)，后者则基本使用的<code>ffplay</code>中的解码方式。本文主要分析前者也就是<code>硬解码</code>方式的逻辑，相关的类为ffpipenode_android_mediacodec_vdec.c。而软解的相关实现本文暂不做分析，其相关的类为ffpipenode_ffplay_vdec.c。</p>
+        </div>
             
           
 
@@ -137,12 +144,12 @@
     <header class="post-header">
       <h1 class="post-title">
         
-          <a class="post-link" href="/5e3d97eb.html">SurfaceFlinger|Vsync - EventControlThread</a>
+          <a class="post-link" href="/d2a3d8a6.html">ijkplayer-IJKFF_Pipeline</a>
         
       </h1>
 
       <time class="post-time">
-          8月 05 2022
+          3月 07 2020
       </time>
     </header>
 
@@ -152,7 +159,13 @@
         <div class="post-excerpt post-content">
             
             
+              
+            
 
+            
+              <p>本文主要介绍ijkplayer中位于ff_ffpipeline.h中的IJKFF_Pipeline结构体。</p>
+<p>关于IJKFF_Pipeline,它是ijkplayer独有的，区别于ffmpeg的一套音视频解码实现。该结构体的定义主要是用来实现对应的<code>视频解码器实现</code>以及<code>音频输出实现</code>。</p>
+        </div>
             
           
 
@@ -165,12 +178,12 @@
     <header class="post-header">
       <h1 class="post-title">
         
-          <a class="post-link" href="/6caea16d.html">SurfaceFlinger|Vsync - DispSync & DispSyncSource</a>
+          <a class="post-link" href="/7f796fe4.html">ijkplayer之IjkMediaPlayer</a>
         
       </h1>
 
       <time class="post-time">
-          8月 05 2022
+          3月 07 2020
       </time>
     </header>
 
@@ -180,203 +193,13 @@
         <div class="post-excerpt post-content">
             
             
-
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/b9b33037.html">SurfaceFlinger|Vsync - SurfaceFlinger(二)</a>
-        
-      </h1>
-
-      <time class="post-time">
-          8月 05 2022
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
+              
             
 
             
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/2fa835ad.html">SurfaceFlinger|Vsync - SurfaceFlinger(一)</a>
-        
-      </h1>
-
-      <time class="post-time">
-          8月 05 2022
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/3c031a43.html">AOSP-BP-File</a>
-        
-      </h1>
-
-      <time class="post-time">
-          8月 02 2022
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/de9ff6b8.html">AOSP-RC-File</a>
-        
-      </h1>
-
-      <time class="post-time">
-          8月 02 2022
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/692c4604.html">02-AOSP-OPENGL_ES</a>
-        
-      </h1>
-
-      <time class="post-time">
-          8月 02 2022
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/ff74222f.html">Kotlin协程 - 拦截器原理</a>
-        
-      </h1>
-
-      <time class="post-time">
-          5月 05 2022
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/e2cf098c.html">Kotlin协程 - 协程挂起原理</a>
-        
-      </h1>
-
-      <time class="post-time">
-          5月 05 2022
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-
+              <p>本文主要介绍ijkplayer中位于ijkplayer_internal.h中的IjkMediaPlayer结构体。</p>
+<p>关于IjkMediaPlayer结构体，它是IjkPlayer中最基本的结构体，存储着最基本的一些信息。</p>
+        </div>
             
           
 
@@ -387,11 +210,11 @@
         
   <nav class="pagination">
     
-    
-      <a class="next" href="/page/2/">
-        <span class="next-text">下一页</span>
-        <i class="iconfont icon-right"></i>
+      <a class="prev" href="/page/5/">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text">上一页</span>
       </a>
+    
     
   </nav>
 

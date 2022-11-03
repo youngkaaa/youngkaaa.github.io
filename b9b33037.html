@@ -12,12 +12,12 @@
 
 
 
-  <meta name="description" content="AOSP-BP-File"/>
+  <meta name="description" content="SurfaceFlinger|Vsync - SurfaceFlinger(二)"/>
 
 
 
 
-  <meta name="keywords" content="AndroidFrameworks," />
+  <meta name="keywords" content="AndroidFrameworks,SurfaceFlinger," />
 
 
 
@@ -32,18 +32,21 @@
 
 
 
-<link rel="canonical" href="https://youngkaaa.github.io/3c031a43.html"/>
+<link rel="canonical" href="https://youngkaaa.github.io/b9b33037.html"/>
 
 
+<meta name="description" content="SurfaceFlinger它还有另外一个重要的任务：合成Layer。。。。。 INVALIDATEINVALIDATE消息类型表示刷新，从上文 SurfaceFlinger 可以知道：SurfaceFlinger中的MessageQueue会监听来自sf EventThread的vsync事件，然后将其加入到消息队列中挨个处理，最终会将其转换为 INVALIDATE 消息类型传递到 Surfac">
 <meta property="og:type" content="article">
-<meta property="og:title" content="AOSP-BP-File">
-<meta property="og:url" content="https://youngkaaa.github.io/3c031a43.html">
+<meta property="og:title" content="SurfaceFlinger|Vsync - SurfaceFlinger(二)">
+<meta property="og:url" content="https://youngkaaa.github.io/b9b33037.html">
 <meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="SurfaceFlinger它还有另外一个重要的任务：合成Layer。。。。。 INVALIDATEINVALIDATE消息类型表示刷新，从上文 SurfaceFlinger 可以知道：SurfaceFlinger中的MessageQueue会监听来自sf EventThread的vsync事件，然后将其加入到消息队列中挨个处理，最终会将其转换为 INVALIDATE 消息类型传递到 Surfac">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2022-08-02T11:48:56.000Z">
-<meta property="article:modified_time" content="2022-08-02T13:15:37.761Z">
+<meta property="article:published_time" content="2022-08-05T12:48:56.000Z">
+<meta property="article:modified_time" content="2022-11-02T13:05:55.649Z">
 <meta property="article:author" content="咔咔咔">
 <meta property="article:tag" content="AndroidFrameworks">
+<meta property="article:tag" content="SurfaceFlinger">
 <meta name="twitter:card" content="summary">
 
 
@@ -69,7 +72,7 @@
 
 
 
-    <title> AOSP-BP-File - 咔咔咔 </title>
+    <title> SurfaceFlinger|Vsync - SurfaceFlinger(二) - 咔咔咔 </title>
   <meta name="generator" content="Hexo 6.2.0"></head>
 
   <body>
@@ -115,12 +118,12 @@
     <header class="post-header">
       <h1 class="post-title">
         
-          AOSP-BP-File
+          SurfaceFlinger|Vsync - SurfaceFlinger(二)
         
       </h1>
 
       <time class="post-time">
-          8月 02 2022
+          8月 05 2022
       </time>
     </header>
 
@@ -128,7 +131,9 @@
 
     
             <div class="post-content">
-            
+            <p>SurfaceFlinger它还有另外一个重要的任务：合成Layer。。。。。</p>
+<h4 id="INVALIDATE"><a href="#INVALIDATE" class="headerlink" title="INVALIDATE"></a>INVALIDATE</h4><p>INVALIDATE消息类型表示刷新，从上文 <a href="2fa835ad.html">SurfaceFlinger</a> 可以知道：SurfaceFlinger中的MessageQueue会监听来自sf <a href="7b339bd2.html">EventThread</a>的vsync事件，然后将其加入到消息队列中挨个处理，最终会将其转换为 INVALIDATE 消息类型传递到 SurfaceFlinger::onMessageReceived 中，来</p>
+<h4 id="REFRESH"><a href="#REFRESH" class="headerlink" title="REFRESH"></a>REFRESH</h4><h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4>
             </div>
           
 
@@ -139,6 +144,8 @@
 		  
 			<a href="/tags/AndroidFrameworks/">AndroidFrameworks</a>
 		  
+			<a href="/tags/SurfaceFlinger/">SurfaceFlinger</a>
+		  
 		</div>
 		
 
@@ -146,15 +153,15 @@
         
   <nav class="post-nav">
     
-      <a class="prev" href="/2fa835ad.html">
+      <a class="prev" href="/6caea16d.html">
         <i class="iconfont icon-left"></i>
-        <span class="prev-text nav-default">SurfaceFlinger|Vsync - SurfaceFlinger(一)</span>
+        <span class="prev-text nav-default">SurfaceFlinger|Vsync - DispSync & DispSyncSource</span>
         <span class="prev-text nav-mobile">上一篇</span>
       </a>
     
     
-      <a class="next" href="/de9ff6b8.html">
-        <span class="next-text nav-default">AOSP-RC-File</span>
+      <a class="next" href="/2fa835ad.html">
+        <span class="next-text nav-default">SurfaceFlinger|Vsync - SurfaceFlinger(一)</span>
         <span class="prev-text nav-mobile">下一篇</span>
         <i class="iconfont icon-right"></i>
       </a>
