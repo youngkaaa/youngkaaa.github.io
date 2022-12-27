@@ -109,6 +109,191 @@
     <header class="post-header">
       <h1 class="post-title">
         
+          <a class="post-link" href="/f13bb020.html">Ijkplayer-read_thread</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 28 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍位于ff_ffplay.c文件中的read_thread()方法。该方法主要作用是从视频文件里面读取数据放入到对应轨道的<a href="b5aae3f7.html">PacketQueue</a>中去，以供后续解码使用。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/b5aae3f7.html">Ijkplayer-PacketQueue</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 28 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/205c40e1.html">Ijkplayer-video_display2</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 22 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍位于ff_ffplay.c文件中的video_display2()方法。</p>
+<p>该方法主要的作用是用来刷新展示视频帧的，具体调用路径分析详见<a href="e1139ab6.html">video_refresh_thread</a>。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/217ddfcf.html">Ijkplayer-Clock</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 22 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/422da41d.html">Ijkplayer-accurate_seek机制</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 22 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍ijkplayer中的accurate_seek机制。</p>
+<p>首先accurate_seek是在ijkplayer中才有的概念，在ffplay中没有(ffmpeg中有，但是是用于剪切视频而不是播放视频)。主要作用就是使得seek更加精准，因为在ffplay中只能seek关键帧，如果关键帧少的话，跳转误差比较大，所以ijkplayer其引入了accurate_seek机制用以解决该问题。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/866c32fa.html">Ijkplayer-FrameQueue</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 22 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
           <a class="post-link" href="/e1139ab6.html">Ijkplayer-video_refresh_thread</a>
         
       </h1>
@@ -240,204 +425,6 @@
   </article>
 
         
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/57193a84.html">Ijkplayer-VideoDecodeGuide</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 15 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要总结一下ijkplayer中的视频解码逻辑</p>
-<p>在ijkplayer中，支持硬解和软解，也就是说在ffmpeg的基础上，ijkplayer扩充了硬解的解码方式，而软解还是使用的ffmpeg。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/1c5ec8b9.html">Ijkplayer-ffplay_video_thread</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 15 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要分析位于ff_ffplay.c中的ffplay_video_thread()方法。</p>
-<p>本方法主要作用是实现视频软解，类似于硬解中的<a href="8876f557.html">func_run_sync</a>方法(异步解码)和<a href="64d79e1a.html">func_run_sync_loop</a>方法(同步解码)。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/f38a2dac.html">Ijkplayer-ffpipenode_create_video_decoder_from_ffplay</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 15 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要分析位于ffpipenode_ffplay_vdec.c文件中的ffpipenode_create_video_decoder_from_ffplay()方法。</p>
-<p>简单说，本方法主要是创建视频软解相关逻辑，而视频硬解相关的可以翻看<a href="65dc31d5.html">func_open_video_decoder</a>中关于ffpipenode_create_video_decoder_from_android_mediacodec()方法的介绍，以及可以找到本方法的调用场景。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/4a17d154.html">Ijkplayer-AVRational</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 15 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/3da735d9.html">Ijkplayer-drain_output_buffer2</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 14 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的drain_output_buffer2()方法。</p>
-<p>关于本方法呢？其实和<a href="70ca7e71.html">drain_output_buffer</a>是有差异的，最大的差异就是在<a href="70ca7e71.html">drain_output_buffer</a>方法中，其主要逻辑是从解码器中读取出解码后的数据并且填充到入参frame中，但是本方法不仅做了该工作，还包括了填充了数据的frame的入队工作，也就是说抢了<a href="64d79e1a.html">func_run_sync_loop</a>的工作。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/d8157190.html">Ijkplayer-feed_input_buffer2</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 14 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的feed_input_buffer2()方法。</p>
-<p>关于本方法，其实和<a href="17303abc.html">feed_input_buffer</a>方法是差不多一样的，只有略微的差异，所以详细分析在<a href="17303abc.html">feed_input_buffer</a>中，这里只介绍差异。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
         
   <nav class="pagination">
     
@@ -463,7 +450,7 @@
     
     <section id="tags" class="widget-area widget_tags">
         <h3 class="widget-title">Tags</h3>
-        <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/AndroidFrameworks/" rel="tag">AndroidFrameworks</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SurfaceFlinger/" rel="tag">SurfaceFlinger</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Kotlin-Coroutine/" rel="tag">Kotlin Coroutine</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ijkplayer/" rel="tag">ijkplayer</a><span class="tag-list-count">40</span></li></ul>
+        <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/ijkplayer/" rel="tag">ijkplayer</a><span class="tag-list-count">40</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Kotlin-Coroutine/" rel="tag">Kotlin Coroutine</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Binder/" rel="tag">Binder</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/AndroidFrameworks/" rel="tag">AndroidFrameworks</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SurfaceFlinger/" rel="tag">SurfaceFlinger</a><span class="tag-list-count">5</span></li></ul>
     </section>
 
 

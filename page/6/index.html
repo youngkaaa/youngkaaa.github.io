@@ -109,6 +109,210 @@
     <header class="post-header">
       <h1 class="post-title">
         
+          <a class="post-link" href="/fe1f1f62.html">Ijkplayer-queue_picture</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 08 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍ijkplayer中位于ff_ffplay.c中的queue_picture()方法。</p>
+<p>该方法主要作用就是将解码后的数据存入对应的FrameQueue中去，比如在视频硬解逻辑中的同步解码方式<a href="3da735d9.html">drain_output_buffer2</a>中；视频硬解逻辑中的异步解码方式<a href="8876f557.html">func_run_sync</a>中；以及视频软解码<a href="1c5ec8b9.html">ffplay_video_thread</a>中，这三者都有使用到本方法来将解码后的AVFrame数据放入到队列中去(AVFrame会自动转为Frame)。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/65dc31d5.html">Ijkplayer-func_open_video_decoder</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 08 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍ijkplayer中位于ffpipeline_android.c中的func_open_video_decoder()方法。</p>
+<p>该方法是IJKFF_Pipeline结构体中func_open_video_decoder指针函数的主要执行逻辑。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/70ca7e71.html">Ijkplayer-drain_output_buffer</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 08 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的drain_output_buffer()方法。</p>
+<p>关于本方法，主要作用就是从解码器中取出已解码完成的数据。本方法和<a href="17303abc.html">feed_input_buffer</a>方法一起被ffpipenode_android_mediacodec_vdec.c#<a href="8876f557.html">func_run_sync()</a>方法所调用，分别完成往解码器中填入待解码数据和从解码器中取出解码后数据。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/64d79e1a.html">Ijkplayer-func_run_sync_loop</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 08 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的func_run_sync_loop()方法。</p>
+<p>该方法是IJKFF_Pipenode结构体中func_run_sync指针函数的主要执行逻辑(前提是开启mediacodec_sync开关)。本方法主要逻辑为：在同一线程中(同步方式)往视频解码器中填入待解码数据和从中读取出解码后数据。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/17303abc.html">Ijkplayer-feed_input_buffer</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 08 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的feed_input_buffer()方法。</p>
+<p>feed_input_buffer()方法是enqueue_thread_func()中的主要逻辑，主要作用是往解码器中填入待解码数据，而enqueue_thread_func()方法是运行在单独的一个线程中的，具体分析可以翻看<a href="8876f557.html">func_run_sync</a>中的分析。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/8876f557.html">Ijkplayer-func_run_sync</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 08 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的func_run_sync()方法。</p>
+<p>该方法是IJKFF_Pipenode结构体中func_run_sync指针函数的主要执行逻辑(前提是没有开启mediacodec_sync开关)。本方法主要逻辑为：在不同的线程中分别往视频解码器中填入待解码数据和从中读取出解码后数据。其中前者在新线程中执行。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
           <a class="post-link" href="/86c88415.html">ijkplayer-IJKFF_Pipenode</a>
         
       </h1>
@@ -227,7 +431,7 @@
     
     <section id="tags" class="widget-area widget_tags">
         <h3 class="widget-title">Tags</h3>
-        <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/AndroidFrameworks/" rel="tag">AndroidFrameworks</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SurfaceFlinger/" rel="tag">SurfaceFlinger</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Kotlin-Coroutine/" rel="tag">Kotlin Coroutine</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ijkplayer/" rel="tag">ijkplayer</a><span class="tag-list-count">40</span></li></ul>
+        <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/ijkplayer/" rel="tag">ijkplayer</a><span class="tag-list-count">40</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Kotlin-Coroutine/" rel="tag">Kotlin Coroutine</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Binder/" rel="tag">Binder</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/AndroidFrameworks/" rel="tag">AndroidFrameworks</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SurfaceFlinger/" rel="tag">SurfaceFlinger</a><span class="tag-list-count">5</span></li></ul>
     </section>
 
 

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="Binder - 简介"/>
+
+
+
+
+  <meta name="keywords" content="Binder," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/4edb72cd.html"/>
+
+
+<meta name="description" content="Linux系统中存在很多种进程间通讯(IPC)的方式，如 管道(Pipe)、信号量(Semaphores)、共享内存、socket 等方式，而基于Linux衍生出来的Android系统却更多使用的用的是Binder来进行进程间通讯。 背景介绍因为在手持移动设备上，起初资源比较紧缺，自然不能和台式设备相比的。传统的Linux上的IPC在这种设备上可能就有些不适合了。而为何要使用 Binder，得先看">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Binder - 简介">
+<meta property="og:url" content="https://youngkaaa.github.io/4edb72cd.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="Linux系统中存在很多种进程间通讯(IPC)的方式，如 管道(Pipe)、信号量(Semaphores)、共享内存、socket 等方式，而基于Linux衍生出来的Android系统却更多使用的用的是Binder来进行进程间通讯。 背景介绍因为在手持移动设备上，起初资源比较紧缺，自然不能和台式设备相比的。传统的Linux上的IPC在这种设备上可能就有些不适合了。而为何要使用 Binder，得先看">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-06-05T02:48:56.000Z">
+<meta property="article:modified_time" content="2022-12-27T13:11:47.309Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="Binder">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> Binder - 简介 - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Binder - 简介
+        
+      </h1>
+
+      <time class="post-time">
+          6月 05 2022
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>Linux系统中存在很多种进程间通讯(IPC)的方式，如 管道(Pipe)、信号量(Semaphores)、共享内存、socket 等方式，而基于Linux衍生出来的Android系统却更多使用的用的是Binder来进行进程间通讯。</p>
+<h3 id="背景介绍"><a href="#背景介绍" class="headerlink" title="背景介绍"></a>背景介绍</h3><p>因为在手持移动设备上，起初资源比较紧缺，自然不能和台式设备相比的。传统的Linux上的IPC在这种设备上可能就有些不适合了。而为何要使用 Binder，得先看看它的优点了：</p>
+<h4 id="1、传输性能"><a href="#1、传输性能" class="headerlink" title="1、传输性能"></a>1、传输性能</h4><p>Linux常用的IPC 基本都是通过：先将数据从进程A复制到内核空间，然后再从内核空间复制到进程B 这两步来实现的；而这其中的共享内存虽然没有两次复制操作，但是由于可同时访问同一块内存，所以会存在并发问题，需要较为复杂的逻辑来保证正确性。</p>
+<blockquote>
+<p>在Linux中会将地址空间分为内核空间和用户空间。所有用户进程都运行在用户空间，系统操作系统都运行在内核空间，且所有进程都共享内核空间（因为每个进程可以通过系统调用进入内核）。这样是为了更加安全，不然随随便便一个进程就都可以任意访问内存空间的话，程序不稳定的话经常会把操作系统搞崩。</p>
+</blockquote>
+<h4 id="2、安全性"><a href="#2、安全性" class="headerlink" title="2、安全性"></a>2、安全性</h4><p>Android是一个开放式的系统，用户可以下载任何来源的APK，也为其带来了很大的安全风险。而传统IPC没有任何安全措施，基本都依赖上层协议来确保安全。比如传统IPC的接收方无法获得发起方进程可靠的用户标识（比如UID&#x2F;PID），也就无法鉴别对方的身份，因为传统IPC只能由发起方在数据包里自行填入自己的用户标识，但这样不可靠（可靠的身份标识只有是由IPC机制本身来添加）。其次传统IPC访问点是开放的，比如Socket的IP地址，只要知道这些访问点的进程都可以和对其建立连接，这也加剧了风险。</p>
+<p>基于以上的问题，Android 使用了 Binder 机制来进行 IPC。它在CS架构模式上实现了：1)传输过程只需一次拷贝 ;  2)自动为进程发送方添加UID身份，既支持实名Binder也支持匿名Binder，安全性高。</p>
+<h4 id="3、稳定性"><a href="#3、稳定性" class="headerlink" title="3、稳定性"></a>3、稳定性</h4><p>Android系统中存在很多种服务，比如相机、音视频播放等，这些服务都由系统提供的Server来提供，其他APP进程想要使用这些服务时，只需要作为 Client 端去请求 Server端让其为自身提供服务即可。CS架构的好处是 Client 和 Server 相对独立，稳定性好。但是</p>
+<h3 id="相关概念"><a href="#相关概念" class="headerlink" title="相关概念"></a>相关概念</h3><p>Binder中引入了以下四个常用的角色：</p>
+<h4 id="1、Server"><a href="#1、Server" class="headerlink" title="1、Server"></a>1、Server</h4><p>这里的Server其实可以理解为 CS 架构中的 Server 端，用来提供服务。</p>
+<p>比如 ActivityManagerService（AMS） ，用来管理和调度四大组件中的 Activity ，它运行在 system_server 进程内。当在某个APP进程内调用 startActivivty 启动Activity 时，会通过 Binder 将请求发送到 system_server 进程中的 AMS 中去处理。此时 AMS 就相当于是  Server 端，为 Client 端(某个APP进程) 通过 Binder 提供了服务。</p>
+<h4 id="2、Client"><a href="#2、Client" class="headerlink" title="2、Client"></a>2、Client</h4><p>和上面 Server 类似，这个是 CS 架构中的 client 端。可以请求服务端来完成自身业务。</p>
+<p>还是用上面 AMS 来举例，当某个APP进程请求了 AMS 去 startActivity 时，此时这里的”某个APP进程”就作为了 Client 端。当 AMS 在处理完一堆操作之后，会通知回 APP进程，让他去创建Activity 实例等，此时AMS 就作为 Client 端，APP进程就作为 Server端了。</p>
+<blockquote>
+<p>Binder 的弊端或者说是不足之处就是无法主动由Server端通知Client端，只能是单向的Client到Server。所以常用的方式就是两个进程互相持有对方，分别切换扮演Client &#x2F; Server 角色。</p>
+<p>比如上面的 AMS 中会持有 APP进程的 IApplicationThread (其实现类) 用来作为 Client 来请求操作 APP进程；而APP进程会持有 AMS 的 IActivityManager(其实现类)来请求操作 AMS</p>
+</blockquote>
+<h4 id="3、ServiceManager"><a href="#3、ServiceManager" class="headerlink" title="3、ServiceManager"></a>3、ServiceManager</h4><p>Android系统中提供了很多种服务，比如前面提及的操作四大组件的 AMS ，或者管理页面展示 Window 的 WindowManagerService （WMS） 等其他丰富的服务，以及一些后续运行时动态添加的服务。而Client怎么找到它想要的那些服务呢？ServiceManager（SM）的作用便体现出来了。服务提供方统一往全局唯一的 SM 中注册自己，后续Client需要查询获取指定服务支持时，只需要去 SM 中查找即可。</p>
+<blockquote>
+<p>不太准确的理解：可以把SM 当做一个Map ，key是一个String 表示唯一的服务名，而value就是服务方接口实现类在其自身进程内的地址(比如叫地址A)。</p>
+<p>而其他进程通过SM去获取该服务时，SM通过binder驱动返回给它的是一个handle 标识值(可以认为是一个int)，而在binder 驱动中该 handle标识值指向的就是地址A。因为把地址A给另外一个进程也没用，他俩是不同的进程地址不能混用。</p>
+</blockquote>
+<p>而需要注意的是 SM 是运行在 service_manager 进程的，而上面提及的那些 AMS 服务是运行在 system_server 进程的，而常用的APP 作为 Client 角色是分别运行在自己的进程中的。这就是三个不同的进程了。所以假设如下场景：</p>
+<p>APP想要通过SM去获取指定服务时，1) 第一步APP进程使用固定字符串Key去SM(service_manager进程) 中查找，2) 第二步根据查到的服务通过Binder去与之通讯。</p>
+<p>但现在的问题是上面第一步：APP进程怎么跟 SM IPC 通讯呢？通过Binder嘛？可是前面不是说了Binder中得先通过SM 查到对应的服务才能调用嘛，怎么现在要拿到SM服务还得先去SM中查嘛？这不就死锁了嘛。</p>
+<p>实际上的对于 SM 来说，它在每个进程中都是有一个固定地址(或者叫做handle标志&#x3D;0)来表示它，Binder请求时，把这个 handle标志0发送到binder驱动中，binder驱动就知道这个对应的是 SM 了。也就是说这个0就是为SM 固定占位的。</p>
+<p>类比下就是 SM 相当于是DNS，每个Client是单独的终端设备，都要提前预置好DNS的IP地址（在这里就是 handle &#x3D; 0）才可以访问到DNS并通过它来解析域名IP从而发起请求到Server</p>
+<h4 id="4、Binder-driver"><a href="#4、Binder-driver" class="headerlink" title="4、Binder driver"></a>4、Binder driver</h4><p>Binder的驱动，它和其他的Linux驱动差不多，差别是别的驱动一般是用来操作硬件外设，而Binder驱动主要是操作内存。在Linux中，系统分为内核态和用户态，只有在内核态才能访问到硬件设备，而驱动可以算是内核态中提供出的API，供用户态的代码访问到硬件设备。</p>
+<p>正是由于驱动的性质，所以Binder驱动的作用自然是运行在内核空间，将来自不同用户空间传来的数据传递过去，相当于是两个用户空间的桥梁。而跟前面的举例对齐的话此时Binder驱动就类似于路由器的角色。</p>
+<blockquote>
+<p>Server，Client 和 SM 都运行于用户空间，分别位于不同的进程。而Binder驱动运行于内核空间，作为不同用户空间传递数据时的桥梁。</p>
+</blockquote>
+<h4 id="5、内存映射"><a href="#5、内存映射" class="headerlink" title="5、内存映射"></a>5、内存映射</h4><p>内存映射并非是Android上的特性，而是Linux系统就支持的。要实现内存映射主要通过的是 mmap() 方法。而使用了内存映射mmap()之后，会在当前用户进程创建一块虚拟内存地址（这个虚拟内存地址通过mmap方法返回值来拿到），并且会将该虚拟内存地址其和磁盘中一片对应的空间(通过入参fd来指定)映射，后续在用户进程操作（读写）这片虚拟内存地址中的数据时，就自然会映射到磁盘上去。</p>
+<p>传统的进程读取文件IO操作流程是：</p>
+<p>用户进程发起读文件请求，内核查找该文件是否存在于缓存中，存在的话直接返回；不存在的话需要从磁盘查找文件并将其复制到缓存中，然后再将缓存中的内容复制到用户空间，会存在两次复制操作。</p>
+<p>而使用了mmap内存映射之后：</p>
+<p>用户进程发起读文件请求，去访问虚拟内存地址区域，实际是直接访问了对应的磁盘文件，最后会将磁盘文件内容复制到用户空间内，相当于只存在一次内存复制了。</p>
+<p>并且多个不同用户进程同时内存映射到同一块区域的话，其中一个用户进程对其进行的IO操作其他的用户进程也是可见的，这样的话可以使用它来进行进程通讯，即共享内存，但会存在同步问题。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/Binder/">Binder</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/5d545083.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Binder - 类介绍</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/ff74222f.html">
+        <span class="next-text nav-default">Kotlin协程 - 拦截器原理</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2022
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>
