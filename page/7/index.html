@@ -109,6 +109,108 @@
     <header class="post-header">
       <h1 class="post-title">
         
+          <a class="post-link" href="/b99add2a.html">Ijkplayer-func_init_video_decoder</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 08 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍ijkplayer中位于ffpipeline_android.c中的func_init_video_decoder()方法。</p>
+<p>func_init_video_decoder()方法是<a href="d2a3d8a6.html">IJKFF_Pipeline</a>中func_init_video_decoder指针函数对应的硬解实现，而func_init_video_decoder主要是用于异步打开(初始化+配置)解码器的，详细分析可以翻看<a href="d2a3d8a6.html">IJKFF_Pipeline</a>中的分析。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/6412e65f.html">Ijkplayer-func_config_video_decoder</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 08 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍ijkplayer中位于ffpipeline_android.c中的func_config_video_decoder()方法。</p>
+<p>func_config_video_decoder()方法是<a href="d2a3d8a6.html">IJKFF_Pipeline</a>中func_config_video_decoder指针函数对应的硬解实现，而func_config_video_decoder主要是用于异步打开(初始化+配置)解码器的，详细分析可以翻看<a href="d2a3d8a6.html">IJKFF_Pipeline</a>中的分析。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/fe1f1f62.html">Ijkplayer-queue_picture</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 08 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍ijkplayer中位于ff_ffplay.c中的queue_picture()方法。</p>
+<p>该方法主要作用就是将解码后的数据存入对应的FrameQueue中去，比如在视频硬解逻辑中的同步解码方式<a href="3da735d9.html">drain_output_buffer2</a>中；视频硬解逻辑中的异步解码方式<a href="8876f557.html">func_run_sync</a>中；以及视频软解码<a href="1c5ec8b9.html">ffplay_video_thread</a>中，这三者都有使用到本方法来将解码后的AVFrame数据放入到队列中去(AVFrame会自动转为Frame)。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
           <a class="post-link" href="/65dc31d5.html">Ijkplayer-func_open_video_decoder</a>
         
       </h1>
@@ -343,40 +445,6 @@
   </article>
 
         
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/7f796fe4.html">ijkplayer之IjkMediaPlayer</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 07 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍ijkplayer中位于ijkplayer_internal.h中的IjkMediaPlayer结构体。</p>
-<p>关于IjkMediaPlayer结构体，它是IjkPlayer中最基本的结构体，存储着最基本的一些信息。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
         
   <nav class="pagination">
     
@@ -385,6 +453,11 @@
         <span class="prev-text">上一页</span>
       </a>
     
+    
+      <a class="next" href="/page/8/">
+        <span class="next-text">下一页</span>
+        <i class="iconfont icon-right"></i>
+      </a>
     
   </nav>
 
@@ -397,7 +470,7 @@
     
     <section id="tags" class="widget-area widget_tags">
         <h3 class="widget-title">Tags</h3>
-        <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/ijkplayer/" rel="tag">ijkplayer</a><span class="tag-list-count">40</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Kotlin-Coroutine/" rel="tag">Kotlin Coroutine</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Binder/" rel="tag">Binder</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/AndroidFrameworks/" rel="tag">AndroidFrameworks</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SurfaceFlinger/" rel="tag">SurfaceFlinger</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Jetpack/" rel="tag">Jetpack</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/BufferQueue/" rel="tag">BufferQueue</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/AndroidFrameworks-Surface/" rel="tag">AndroidFrameworks Surface</a><span class="tag-list-count">3</span></li></ul>
+        <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/BufferQueue/" rel="tag">BufferQueue</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Kotlin-Coroutine/" rel="tag">Kotlin Coroutine</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ijkplayer/" rel="tag">ijkplayer</a><span class="tag-list-count">40</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Binder/" rel="tag">Binder</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Jetpack/" rel="tag">Jetpack</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/AndroidFrameworks/" rel="tag">AndroidFrameworks</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SurfaceFlinger/" rel="tag">SurfaceFlinger</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Display/" rel="tag">Display</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/VSync/" rel="tag">VSync</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Surface/" rel="tag">Surface</a><span class="tag-list-count">3</span></li></ul>
     </section>
 
 
