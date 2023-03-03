@@ -109,6 +109,306 @@
     <header class="post-header">
       <h1 class="post-title">
         
+          <a class="post-link" href="/6c4c2c27.html">Ijkplayer-SDL_Vout</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 21 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍位于ijksdl_vout.h文件中的SDL_Vout结构体。</p>
+<p>SDL_Vout结构体主要作用是用来做视频帧展示的，更准确的来说是SDL_Vout控制<a href="e0c53a8e.html">SDL_VoutOverlay</a>来实现视频帧展示的，<a href="e0c53a8e.html">SDL_VoutOverlay</a>中有相关要展示绘制的帧数据，而SDL_Vout就是将这些数据妥善处理以展示出来的。与之对应的音频输出为<a href="a1824301.html">SDL_Aout</a>。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/57193a84.html">Ijkplayer-VideoDecodeGuide</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 15 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要总结一下ijkplayer中的视频解码逻辑</p>
+<p>在ijkplayer中，支持硬解和软解，也就是说在ffmpeg的基础上，ijkplayer扩充了硬解的解码方式，而软解还是使用的ffmpeg。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/1c5ec8b9.html">Ijkplayer-ffplay_video_thread</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 15 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要分析位于ff_ffplay.c中的ffplay_video_thread()方法。</p>
+<p>本方法主要作用是实现视频软解，类似于硬解中的<a href="8876f557.html">func_run_sync</a>方法(异步解码)和<a href="64d79e1a.html">func_run_sync_loop</a>方法(同步解码)。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/f38a2dac.html">Ijkplayer-ffpipenode_create_video_decoder_from_ffplay</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 15 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要分析位于ffpipenode_ffplay_vdec.c文件中的ffpipenode_create_video_decoder_from_ffplay()方法。</p>
+<p>简单说，本方法主要是创建视频软解相关逻辑，而视频硬解相关的可以翻看<a href="65dc31d5.html">func_open_video_decoder</a>中关于ffpipenode_create_video_decoder_from_android_mediacodec()方法的介绍，以及可以找到本方法的调用场景。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/4a17d154.html">Ijkplayer-AVRational</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 15 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/3da735d9.html">Ijkplayer-drain_output_buffer2</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 14 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的drain_output_buffer2()方法。</p>
+<p>关于本方法呢？其实和<a href="70ca7e71.html">drain_output_buffer</a>是有差异的，最大的差异就是在<a href="70ca7e71.html">drain_output_buffer</a>方法中，其主要逻辑是从解码器中读取出解码后的数据并且填充到入参frame中，但是本方法不仅做了该工作，还包括了填充了数据的frame的入队工作，也就是说抢了<a href="64d79e1a.html">func_run_sync_loop</a>的工作。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/d8157190.html">Ijkplayer-feed_input_buffer2</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 14 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的feed_input_buffer2()方法。</p>
+<p>关于本方法，其实和<a href="17303abc.html">feed_input_buffer</a>方法是差不多一样的，只有略微的差异，所以详细分析在<a href="17303abc.html">feed_input_buffer</a>中，这里只介绍差异。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/33f55665.html">Ijkplayer-get_video_frame</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 14 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍位于ff_ffplay.c文件中的get_video_frame()方法。</p>
+<p>该方法的唯一调用就是在<a href="1c5ec8b9.html">ffplay_video_thread</a>中，也就是视频软解的逻辑。本方法的主要作用就是调用<a href="4dc50342.html">decoder_decode_frame</a>方法获取解码后数据，然后做相关丢帧操作。其实本方法的主要存在理由就是处理丢帧操作。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/4dc50342.html">Ijkplayer-decoder_decode_frame</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 14 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍位于ff_ffplay.c文件中的decoder_decode_frame()方法。</p>
+<p>该方法是视频软解、音频解码、字幕解码的主要执行逻辑，主要逻辑包括从解码器中读取出解码后的数据以及往解码器中放入下一个待解码数据。类似于视频硬解(异步)逻辑中<a href="17303abc">feed_input_buffer</a>的<a href="70ca7e71.html">drain_output_buffer</a>方法的逻辑总和。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
           <a class="post-link" href="/b99add2a.html">Ijkplayer-func_init_video_decoder</a>
         
       </h1>
@@ -130,313 +430,6 @@
             
               <p>本文主要介绍ijkplayer中位于ffpipeline_android.c中的func_init_video_decoder()方法。</p>
 <p>func_init_video_decoder()方法是<a href="d2a3d8a6.html">IJKFF_Pipeline</a>中func_init_video_decoder指针函数对应的硬解实现，而func_init_video_decoder主要是用于异步打开(初始化+配置)解码器的，详细分析可以翻看<a href="d2a3d8a6.html">IJKFF_Pipeline</a>中的分析。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/6412e65f.html">Ijkplayer-func_config_video_decoder</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 08 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍ijkplayer中位于ffpipeline_android.c中的func_config_video_decoder()方法。</p>
-<p>func_config_video_decoder()方法是<a href="d2a3d8a6.html">IJKFF_Pipeline</a>中func_config_video_decoder指针函数对应的硬解实现，而func_config_video_decoder主要是用于异步打开(初始化+配置)解码器的，详细分析可以翻看<a href="d2a3d8a6.html">IJKFF_Pipeline</a>中的分析。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/fe1f1f62.html">Ijkplayer-queue_picture</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 08 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍ijkplayer中位于ff_ffplay.c中的queue_picture()方法。</p>
-<p>该方法主要作用就是将解码后的数据存入对应的FrameQueue中去，比如在视频硬解逻辑中的同步解码方式<a href="3da735d9.html">drain_output_buffer2</a>中；视频硬解逻辑中的异步解码方式<a href="8876f557.html">func_run_sync</a>中；以及视频软解码<a href="1c5ec8b9.html">ffplay_video_thread</a>中，这三者都有使用到本方法来将解码后的AVFrame数据放入到队列中去(AVFrame会自动转为Frame)。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/65dc31d5.html">Ijkplayer-func_open_video_decoder</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 08 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍ijkplayer中位于ffpipeline_android.c中的func_open_video_decoder()方法。</p>
-<p>该方法是IJKFF_Pipeline结构体中func_open_video_decoder指针函数的主要执行逻辑。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/70ca7e71.html">Ijkplayer-drain_output_buffer</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 08 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的drain_output_buffer()方法。</p>
-<p>关于本方法，主要作用就是从解码器中取出已解码完成的数据。本方法和<a href="17303abc.html">feed_input_buffer</a>方法一起被ffpipenode_android_mediacodec_vdec.c#<a href="8876f557.html">func_run_sync()</a>方法所调用，分别完成往解码器中填入待解码数据和从解码器中取出解码后数据。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/64d79e1a.html">Ijkplayer-func_run_sync_loop</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 08 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的func_run_sync_loop()方法。</p>
-<p>该方法是IJKFF_Pipenode结构体中func_run_sync指针函数的主要执行逻辑(前提是开启mediacodec_sync开关)。本方法主要逻辑为：在同一线程中(同步方式)往视频解码器中填入待解码数据和从中读取出解码后数据。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/17303abc.html">Ijkplayer-feed_input_buffer</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 08 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的feed_input_buffer()方法。</p>
-<p>feed_input_buffer()方法是enqueue_thread_func()中的主要逻辑，主要作用是往解码器中填入待解码数据，而enqueue_thread_func()方法是运行在单独的一个线程中的，具体分析可以翻看<a href="8876f557.html">func_run_sync</a>中的分析。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/8876f557.html">Ijkplayer-func_run_sync</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 08 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的func_run_sync()方法。</p>
-<p>该方法是IJKFF_Pipenode结构体中func_run_sync指针函数的主要执行逻辑(前提是没有开启mediacodec_sync开关)。本方法主要逻辑为：在不同的线程中分别往视频解码器中填入待解码数据和从中读取出解码后数据。其中前者在新线程中执行。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/86c88415.html">ijkplayer-IJKFF_Pipenode</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 07 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍ijkplayer中位于ff_ffpipenode.h中的IJKFF_Pipenode结构体。</p>
-<p>IJKFF_Pipenode也是<code>ijkplayer</code>中才有的概念，其主要是依附于IJKFF_Pipeline而存在的，而关于IJKFF_Pipeline可以翻看前面的分析。</p>
-<p>IJKFF_Pipenode的存在主要是实现<code>视频解码</code>过程逻辑，其可能会有两种实现:<code>硬解码</code>和<code>软解码</code>，其中前者是使用<code>MediaCodec</code>类来实现的(针对<code>Android</code>平台而言)，后者则基本使用的<code>ffplay</code>中的解码方式。本文主要分析前者也就是<code>硬解码</code>方式的逻辑，相关的类为ffpipenode_android_mediacodec_vdec.c。而软解的相关实现本文暂不做分析，其相关的类为ffpipenode_ffplay_vdec.c。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/d2a3d8a6.html">ijkplayer-IJKFF_Pipeline</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 07 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍ijkplayer中位于ff_ffpipeline.h中的IJKFF_Pipeline结构体。</p>
-<p>关于IJKFF_Pipeline,它是ijkplayer独有的，区别于ffmpeg的一套音视频解码实现。该结构体的定义主要是用来实现对应的<code>视频解码器实现</code>以及<code>音频输出实现</code>。</p>
         </div>
             
           
@@ -470,7 +463,7 @@
     
     <section id="tags" class="widget-area widget_tags">
         <h3 class="widget-title">Tags</h3>
-        <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/BufferQueue/" rel="tag">BufferQueue</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Kotlin-Coroutine/" rel="tag">Kotlin Coroutine</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ijkplayer/" rel="tag">ijkplayer</a><span class="tag-list-count">40</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Binder/" rel="tag">Binder</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Jetpack/" rel="tag">Jetpack</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/AndroidFrameworks/" rel="tag">AndroidFrameworks</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SurfaceFlinger/" rel="tag">SurfaceFlinger</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Display/" rel="tag">Display</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/VSync/" rel="tag">VSync</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Surface/" rel="tag">Surface</a><span class="tag-list-count">3</span></li></ul>
+        <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/BufferQueue/" rel="tag">BufferQueue</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Kotlin-Coroutine/" rel="tag">Kotlin Coroutine</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ijkplayer/" rel="tag">ijkplayer</a><span class="tag-list-count">40</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Binder/" rel="tag">Binder</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Jetpack/" rel="tag">Jetpack</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/AndroidFrameworks/" rel="tag">AndroidFrameworks</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SurfaceFlinger/" rel="tag">SurfaceFlinger</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Display/" rel="tag">Display</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/VSync/" rel="tag">VSync</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Surface/" rel="tag">Surface</a><span class="tag-list-count">3</span></li></ul>
     </section>
 
 

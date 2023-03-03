@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="GLES&EGL-总述"/>
+
+
+
+
+  <meta name="keywords" content="AndroidFrameworks,OpenGLES,EGL," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/c4a594c7.html"/>
+
+
+<meta name="description" content="OpenGL ES我们常提起的 OpenGL ，其实是一套 API 接口。而我们在学习了这套接口之后，就可以调用这些接口来在屏幕上绘制一些自己想要的内容，当然前提是这些屏幕设备是在支持 OpenGL 的机器上使用的，更准确来说是这些机器中必须是支持OpenGL API 的。这里说的支持可以是硬件上支持，比如该系统的GPU设备中支持，这里说的“支持”表示的时：这些GPU的厂家会根据 OpenGL A">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GLES&amp;EGL-总述">
+<meta property="og:url" content="https://youngkaaa.github.io/c4a594c7.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="OpenGL ES我们常提起的 OpenGL ，其实是一套 API 接口。而我们在学习了这套接口之后，就可以调用这些接口来在屏幕上绘制一些自己想要的内容，当然前提是这些屏幕设备是在支持 OpenGL 的机器上使用的，更准确来说是这些机器中必须是支持OpenGL API 的。这里说的支持可以是硬件上支持，比如该系统的GPU设备中支持，这里说的“支持”表示的时：这些GPU的厂家会根据 OpenGL A">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-07-20T11:48:56.000Z">
+<meta property="article:modified_time" content="2023-03-03T13:42:32.994Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="AndroidFrameworks">
+<meta property="article:tag" content="OpenGLES">
+<meta property="article:tag" content="EGL">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> GLES&EGL-总述 - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          GLES&EGL-总述
+        
+      </h1>
+
+      <time class="post-time">
+          7月 20 2022
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <h3 id="OpenGL-ES"><a href="#OpenGL-ES" class="headerlink" title="OpenGL ES"></a>OpenGL ES</h3><p>我们常提起的 OpenGL ，其实是一套 API 接口。而我们在学习了这套接口之后，就可以调用这些接口来在屏幕上绘制一些自己想要的内容，当然前提是这些屏幕设备是在支持 OpenGL 的机器上使用的，更准确来说是这些机器中必须是支持OpenGL API 的。这里说的支持可以是硬件上支持，比如该系统的GPU设备中支持，这里说的“支持”表示的时：这些GPU的厂家会根据 OpenGL API来提供一套自己的实现。如果没有硬件GPU支持的话，也可以降级到软件层面支持，即使用CPU去完成支持，但是性能肯定是大打折扣的。</p>
+<p>所以说 OpenGL 是一套规范，而这套规范的具体实现基本都是来自GPU的硬件开发商，而这些实现就是我们通常说的“显卡驱动”。</p>
+<blockquote>
+<p>OpenGL 是一套通用的规范，用来实现绘画，他的这套规范是开源开放的，但是具体实现的库一般不公开。</p>
+</blockquote>
+<p>而在Android系统中，也存在一套 OpenGL 的API ，但是它此时叫做另外另外一个名字：OpenGL ES，全称是OpenGL for Embedded Systems ，它是 Open GL 三维图形 API 的子集，它主要是针手机等嵌入式设备来设计的，因为这些嵌入式设备与PC等硬件的处理能力还是有差距的。</p>
+<p>但是OpenGL ES 和 OpenGL 类似，都是一套与平台无关的规范，或者说是一系列的函数名，比如平时在Java开发中遇到的interface，它并不能直接使用。既然是接口，那么真正使用时肯定得有具体的实现类。在Android中为其提供了两种实现类型：硬件实现和软件实现。</p>
+<p>①硬件实现：正如前面提到的 OpenGL ，这里 OpenGL ES  和它类似，也都是主要和 GPU 这个硬件来进行交互的。所以说，各个GPU硬件厂商会提供相关的实现，比如常见的高通GPU中的 Adreno 。</p>
+<p>②软件实现：在Android中同时提供了一套OpenGL ES的软件实现，完全使用软件方式来实现画图功能，也就是说不用GPU了。它对应的库是 <a target="_blank" rel="noopener" href="https://android.googlesource.com/platform/frameworks/native/+/4d3b5c1/opengl/libagl/">libagl</a> 。</p>
+<p>但是，正如前面所言，OpenGL ES 跟 OpenGL 类似，是和平台无关的一套规范，它的具体实现确实是由各家GPU厂商来提供，但是对于具体的系统来说，存在多样性，比如Android，iOS等，这些不同的系统中都存在自己的窗口管理系统，因此怎么在这些不同的操作系统中的不同窗口系统中中使用OpenGLES 呢？因此产生了另外一个规范：EGL。</p>
+<h3 id="EGL"><a href="#EGL" class="headerlink" title="EGL"></a>EGL</h3><p>EGL 的全称一般认为是：Embedded-System Graphics Library ，详见：<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/EGL_(API)#See_also">EGL WIKI</a> ，它是 OpenGL ES 与底层的本地窗口系统之间的接口，打通了这两层，起到承上启下的作用，使用 EGL 可以为 OpenGL ES 创建一个绘制环境，比如绘制的容器。</p>
+<p>前面提到了，OpenGL ES作为上层的绘图API，使用它可以完成显示内容的绘制，他作为一套规范是具有通用性的，但是它的通用性所适用的角色是GPU(硬件绘制的话)，即它这套规范主要是 GPU 厂商关注。但是对于它所运行的不同操作系统来说，它的通用性并没有多大作用，因为不同的操作系统中，表示窗口的类，概念都不同。而 EGL 的出现正是来解决这个问题的，因此也不难理解：EGL规范的具体实现应该是由具体的操作系统来提供的，所以对于 Android 、iOS来说，都分别提供了对于 EGL 规范的具体实现库。</p>
+<p>因此说，EGL的出现，使得OpenGL ES具有了更强的平台移植性，它屏蔽了不同平台的差异，开发者只需要面向接口编程就行。</p>
+<h3 id="举例"><a href="#举例" class="headerlink" title="举例"></a>举例</h3><p>为方便理解，我们现在可以想象画画的场景。 在画画之前你得有一个画笔吧。而对于画笔来说，有一些一些约定俗成的规范，比如形状都是：“便于用手握着”。因此有很多家厂商就可以生产自己特色的画笔，但基本都符合这个规范(切勿钻牛角尖，只是举例方便理解而已😄)。而这里的“便于用手握着”的规范就像是 OpenGL和 OpenGL ES规范，并没有具体实现，只是定的规范而已，这些规范只有生产画笔的厂家关心。</p>
+<p>不同的是OpenGL 、 OpenGL ES 的规范是由 <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Khronos_Group">Khronos Group</a>组织制定的，各家GPU硬件产商遵循并实现的；而这里的画笔的“便于用手握着”的规范是约定俗成的。</p>
+<p>有了画笔，你在画画之前，是不是得有纸啊，在纸上你可以画出来山水画，或者素描画；但是同样的你可以在墙上涂鸦，也算是一种画画；另外你可以在墙上画年画，比如<a target="_blank" rel="noopener" href="https://baike.baidu.com/item/%E6%88%B7%E5%8E%BF%E5%86%9C%E6%B0%91%E7%94%BB/5222263?fr=aladdin">户县农民画</a>，好多都是在墙上画的，等等。就算你画笔确定了，光画画的“纸”都有好多种，而这些不同的纸就像是不同的操作系统中的本地窗口系统，而造画笔的厂家肯定不知道这些具体的环境，所以 EGL 的出现就是解决这些不同的“纸”的问题的，使得使用画笔绘画可以变得更加通用。注意EGL并不是“纸”本身，它是用来提供绘画所需要的“纸”的一套规范，使用EGL可以创建出“纸”等环境来给画笔使用。</p>
+<h3 id="使用步骤"><a href="#使用步骤" class="headerlink" title="使用步骤"></a>使用步骤</h3><p>因此，在正式使用 OpenGL ES 绘画之前，都需要使用当前操作系统中提供的 “EGL实现” 来为其准备好绘画环境。即为画画准备好“纸”，步骤一般如下：</p>
+<p>① 获取 EGL Display 对象：eglGetDisplay()</p>
+<p>② 初始化与 EGLDisplay 之间的连接：eglInitialize()</p>
+<p>③ 获取 EGLConfig 对象：eglChooseConfig()</p>
+<p>④ 创建 EGLContext 实例：eglCreateContext()</p>
+<p>⑤ 创建 EGLSurface 实例：eglCreateWindowSurface()</p>
+<p>⑥ 连接 EGLContext 和 EGLSurface：eglMakeCurrent() ，这一步会将 EGLContext 和 EGLSurface 绑定起来，并且操作 EGLSurface 使其提供一个缓冲区 GraphicBuffer ，用来存储下一步 gl 中绘制操作的结果。</p>
+<p>⑦ 使用 OpenGL ES API 绘制图形，即一系列的 gl 开头的方法。而这些 gl 开头的方法也有调用顺序</p>
+<ul>
+<li>调用 glGenTextures () 方法来创建生成一个纹理id，或者说是纹理句柄</li>
+<li>调用 glBindTexture() 方法来绑定这个纹理id，此时会为其创建一个纹理对象EGLTextureObject</li>
+<li>调用 glTexParameteri() 方法来设置纹理参数。最终这些参数属性会存储到该纹理id所对应的 纹理对象EGLTextureObject中。</li>
+<li>调用 glTexImage2D() 方法来输入像素数据，包括图像宽、高、格式以及其像素信息，内部会将其存储起来</li>
+<li>调用 glActiveTexture() 方法来激活指定纹理id，比如默认都是 GL_TEXTURE0 </li>
+<li>调用 glDrawElements() 方法完成最后的渲染工作，这一步执行后，会将最后生成的渲染数据存储到上面第⑥步中创建的缓冲区 GraphicBuffer 中。</li>
+</ul>
+<p>⑧ 切换 front buffer 和 back buffer 送显：eglSwapBuffer()  ，这一步会将上面第⑦步中最后渲染出来的数据所对应的缓冲区 GraphicBuffer 放入到生产消费队列中去，等待消费者去消费，此时消费者一般是显示设备，拿到这些数据直接显示出来。最后会再出队一个 缓冲区 GraphicBuffer 用于存储下一帧数据，接着执行上面的第⑦步，直到渲染完成执行后面的第⑨步。</p>
+<p>⑨ 断开并释放与 EGLSurface 关联的 EGLContext 对象：eglRelease()</p>
+<p>⑩ 删除 EGLSurface 对象</p>
+<p>⑪ 删除 EGLContext 对象</p>
+<p>⑫ 终止与 EGLDisplay 之间的连接</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/AndroidFrameworks/">AndroidFrameworks</a>
+		  
+			<a href="/tags/OpenGLES/">OpenGLES</a>
+		  
+			<a href="/tags/EGL/">EGL</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/aa48ac49.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">GLES&EGL-EGL-01</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/dff29dd0.html">
+        <span class="next-text nav-default">BufferQueue 分析</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2023
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>
