@@ -43,7 +43,7 @@
 <meta property="og:description" content="正如前文 SurfaceFlinger - REFRESH - (1) 中所分析的 preComposition() 、rebuildLayerStacks() 和 calculateWorkingSet() 这三个方法，完成了合成之前的准备工作，本文接着它往后看。 在看之前，还是先复习下 handleMessageRefresh() 方法中的逻辑： 12345678910111213141516">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-08-05T12:50:56.000Z">
-<meta property="article:modified_time" content="2023-03-05T03:00:47.608Z">
+<meta property="article:modified_time" content="2023-03-08T11:58:51.408Z">
 <meta property="article:author" content="咔咔咔">
 <meta property="article:tag" content="AndroidFrameworks">
 <meta property="article:tag" content="SurfaceFlinger">
@@ -162,7 +162,8 @@
 <p>然而这里计算出来的 compositionType 最终传入到了 mDisplaySurface-&gt;prepareFrame() 中去，而它此时对应的是 FramebufferSurface ，它内部是空实现……白计算了，当然还存在其他实现，其他实现中并不是空的，当然这里只看 FramebufferSurface 。而至于为什么是 FramebufferSurface  请看： <a href="127ce872.html">DisplayDevice</a> 中。</p>
 <p>虽然 compositionType  计算的值没计算出来没用到，但是 prepare() 方法中</p>
 <h3 id="doDebugFlashRegions"><a href="#doDebugFlashRegions" class="headerlink" title="doDebugFlashRegions"></a>doDebugFlashRegions</h3><p>打开 debug 调试绘制模式，可以不考虑，跳过吧。</p>
-<h3 id="doComposition"><a href="#doComposition" class="headerlink" title="doComposition"></a>doComposition</h3>
+<h3 id="doComposition"><a href="#doComposition" class="headerlink" title="doComposition"></a>doComposition</h3><p>正在备货中….</p>
+
             </div>
           
 
