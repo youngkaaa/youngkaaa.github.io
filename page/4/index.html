@@ -109,6 +109,40 @@
     <header class="post-header">
       <h1 class="post-title">
         
+          <a class="post-link" href="/422da41d.html">Ijkplayer-accurate_seek机制</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 22 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍ijkplayer中的accurate_seek机制。</p>
+<p>首先accurate_seek是在ijkplayer中才有的概念，在ffplay中没有(ffmpeg中有，但是是用于剪切视频而不是播放视频)。主要作用就是使得seek更加精准，因为在ffplay中只能seek关键帧，如果关键帧少的话，跳转误差比较大，所以ijkplayer其引入了accurate_seek机制用以解决该问题。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
           <a class="post-link" href="/866c32fa.html">Ijkplayer-FrameQueue</a>
         
       </h1>
@@ -730,40 +764,6 @@
             
               <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的func_run_sync_loop()方法。</p>
 <p>该方法是IJKFF_Pipenode结构体中func_run_sync指针函数的主要执行逻辑(前提是开启mediacodec_sync开关)。本方法主要逻辑为：在同一线程中(同步方式)往视频解码器中填入待解码数据和从中读取出解码后数据。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/17303abc.html">Ijkplayer-feed_input_buffer</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 08 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的feed_input_buffer()方法。</p>
-<p>feed_input_buffer()方法是enqueue_thread_func()中的主要逻辑，主要作用是往解码器中填入待解码数据，而enqueue_thread_func()方法是运行在单独的一个线程中的，具体分析可以翻看<a href="8876f557.html">func_run_sync</a>中的分析。</p>
         </div>
             
           

@@ -33,15 +33,15 @@
 <link rel="canonical" href="https://youngkaaa.github.io/4ee2033c.html"/>
 
 
-<meta name="description" content="断断续续的好几年，写了挺多，也比较杂，这里作为总的引导来将这些杂七杂八的文章分类下，方便查阅。  ijkplayer当时刚大学毕业，接到一个音视频相关的需求，组内没有其他人熟悉，所以就只能自己去学习。期间看完了 B站开源的 ijkplayer 开源项目 和 google的 ExoPlayer  中的部分源码。但是在后面需求做完之后就没有再往下看了，也算是烂尾了，不过对于音视频的理解还是有的，捡起来">
+<meta name="description" content="断断续续的好几年，写了挺多，也比较杂，这里作为总的引导来将这些杂七杂八的文章分类下，方便查阅。   ijkplayer当时刚大学毕业，接到一个音视频相关的需求，组内没有其他人熟悉，所以就只能自己去学习。期间看完了 B站开源的 ijkplayer 开源项目 和 google的 ExoPlayer  中的部分源码。但是在后面需求做完之后就没有再往下看了，也算是烂尾了，不过对于音视频的理解还是有的，捡起">
 <meta property="og:type" content="article">
 <meta property="og:title" content="站点文章索引">
 <meta property="og:url" content="https://youngkaaa.github.io/4ee2033c.html">
 <meta property="og:site_name" content="咔咔咔">
-<meta property="og:description" content="断断续续的好几年，写了挺多，也比较杂，这里作为总的引导来将这些杂七杂八的文章分类下，方便查阅。  ijkplayer当时刚大学毕业，接到一个音视频相关的需求，组内没有其他人熟悉，所以就只能自己去学习。期间看完了 B站开源的 ijkplayer 开源项目 和 google的 ExoPlayer  中的部分源码。但是在后面需求做完之后就没有再往下看了，也算是烂尾了，不过对于音视频的理解还是有的，捡起来">
+<meta property="og:description" content="断断续续的好几年，写了挺多，也比较杂，这里作为总的引导来将这些杂七杂八的文章分类下，方便查阅。   ijkplayer当时刚大学毕业，接到一个音视频相关的需求，组内没有其他人熟悉，所以就只能自己去学习。期间看完了 B站开源的 ijkplayer 开源项目 和 google的 ExoPlayer  中的部分源码。但是在后面需求做完之后就没有再往下看了，也算是烂尾了，不过对于音视频的理解还是有的，捡起">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2096-04-24T16:00:01.000Z">
-<meta property="article:modified_time" content="2023-03-08T11:55:24.285Z">
+<meta property="article:modified_time" content="2023-03-08T14:00:50.605Z">
 <meta property="article:author" content="咔咔咔">
 <meta name="twitter:card" content="summary">
 
@@ -129,9 +129,11 @@
             <div class="post-content">
             <p>断断续续的好几年，写了挺多，也比较杂，这里作为总的引导来将这些杂七杂八的文章分类下，方便查阅。</p>
 <hr>
+<h3 id=""><a href="#" class="headerlink" title=""></a></h3><hr>
 <h3 id="ijkplayer"><a href="#ijkplayer" class="headerlink" title="ijkplayer"></a>ijkplayer</h3><p>当时刚大学毕业，接到一个音视频相关的需求，组内没有其他人熟悉，所以就只能自己去学习。期间看完了 B站开源的 <a target="_blank" rel="noopener" href="https://github.com/bilibili/ijkplayer">ijkplayer 开源项目</a> 和 google的 <a target="_blank" rel="noopener" href="https://github.com/google/ExoPlayer">ExoPlayer </a> 中的部分源码。但是在后面需求做完之后就没有再往下看了，也算是烂尾了，不过对于音视频的理解还是有的，捡起来这些东西接着往后学习也是很快的。下面贴出当时写的一些文章(文章太多就只贴出来总的列表)。</p>
 <p><a href="https://youngkaaa.github.io/tags/ijkplayer/">ijkplayer 所有文章</a> </p>
 <hr>
+<h3 id="-1"><a href="#-1" class="headerlink" title=""></a></h3><hr>
 <h3 id="Binder"><a href="#Binder" class="headerlink" title="Binder"></a>Binder</h3><p>Binder 这个东西，在 Android 中是一个很重要的角色，但是绝大多数Android应用层开发人员都很少使用它，更准确来说是很少能感知到它的存在，顶多使用官方提供的 AIDL 来完成匿名Binder通讯，或者使用提供好的方法获取系统服务。但是它作为一个优秀的跨进程方案实现，还是很值得学习的，尤其是当你进入到Native Framework学习时，会经常遇到 BpBinder ，BBinder 等类，不先学习它的话，后续会总感觉懵懵懂懂的。</p>
 <ol>
 <li>简要介绍 Binder 是啥，为啥要使用它？不牵扯代码，只是概念介绍： <a href="4edb72cd.html">Binder - 简介</a> </li>
@@ -142,12 +144,14 @@
 <li>分析应用开发中常见的 AIDL 原理，即匿名Binder ：<a href="2af50710.html">Binder - Java Framework</a></li>
 </ol>
 <hr>
+<h3 id="-2"><a href="#-2" class="headerlink" title=""></a></h3><hr>
 <h3 id="BufferQueue"><a href="#BufferQueue" class="headerlink" title="BufferQueue"></a>BufferQueue</h3><p>在学习 SurfaceFlinger 中的 Surface ，以及 Layer 时，建议先了解下 Framework 中的 生产消费队列，对后续的学习大有裨益。</p>
 <ol>
 <li>BufferQueue 简介，先对其牵扯到的接口类有个大概认识：<a href="98c274c6.html">BufferQueue 简介</a></li>
 <li>BufferQueue 源码分析，包括了生产者 BufferQueueProducer 和消费者 BufferQueueConsumer ：<a href="dff29dd0.html">BufferQueue 分析</a></li>
 </ol>
 <hr>
+<h3 id="-3"><a href="#-3" class="headerlink" title=""></a></h3><hr>
 <h3 id="Surface-amp-Layer"><a href="#Surface-amp-Layer" class="headerlink" title="Surface &amp; Layer"></a>Surface &amp; Layer</h3><p>在学习完 BufferQueue 之后，趁热打铁，看看 Surface 及其相关的 SurfaceControl 、ComposerService 、Layer 等知识。这里会从上层 Java Framework 讲到底层 Native Framework，打通上下层知识。</p>
 <ol>
 <li>预备知识，学习下怎么与 SurfaceFlinger 进程进程交互通讯：<a href="99318d8c.html">Surface学习(一)–ComposerService</a></li>
@@ -155,6 +159,7 @@
 <li>学习 Surface ，及其相关的属性，如 SurfaceSession、SurfaceControl 等：<a href="91da79fe.html">Surface学习(三)–Layer简介</a></li>
 </ol>
 <hr>
+<h3 id="-4"><a href="#-4" class="headerlink" title=""></a></h3><hr>
 <h3 id="EGL-amp-GLES"><a href="#EGL-amp-GLES" class="headerlink" title="EGL &amp; GLES"></a>EGL &amp; GLES</h3><p>学习它是为了更好的理解Android渲染系统，也是为后续  SurfaceFlinger 中 Layer 合成 以及 开机动画 BootAnimation 做铺垫。在学习EGL过程中，会让你对EGL，以及它和 GLES 的关系 有更深的认识，而不是永远停留在别人博客中的八股文介绍。</p>
 <ol>
 <li>简单介绍下 EGL 和 GLES 这俩的概念，让你对它有简单的认识：<a href="c4a594c7.html">GLES&amp;EGL-总述</a></li>
@@ -167,6 +172,7 @@
 <li>介绍 GLES 中最重要的一步，完成渲染工作的逻辑：<a href="60dbf32.html">GLES&amp;EGL-GLES-03</a></li>
 </ol>
 <hr>
+<h3 id="-5"><a href="#-5" class="headerlink" title=""></a></h3><hr>
 <h3 id="SurfaceFlinger"><a href="#SurfaceFlinger" class="headerlink" title="SurfaceFlinger"></a>SurfaceFlinger</h3><p>做久了应用层，对其底层的原理越来越感兴趣，在看完了 Java Frameworks 中的 ViewRootImpl 以及 Choreographer 之后，对 Vsync信号处理，以及屏幕刷新机制变得愈发好奇，因此开始了对 SurfaceFlinger 相关知识的学习。</p>
 <ol>
 <li>SurfaceFlinger 的初始化：<a href="2fa835ad.html">SurfaceFlinger - INIT</a></li>
@@ -180,6 +186,7 @@
 <li>持续学习，待续输出中…</li>
 </ol>
 <hr>
+<h3 id="-6"><a href="#-6" class="headerlink" title=""></a></h3><hr>
 <h3 id="Jetpack"><a href="#Jetpack" class="headerlink" title="Jetpack"></a>Jetpack</h3><p>介绍应用层 Jetpack 系列库的源码，这些都是在实际项目开发中使用到的，在使用时就对其感兴趣，所以就抽空都看了源码。有些Jetpack 中的库暂时还没有用到，所以先放着，等待后续补充…..</p>
 <ol>
 <li>Jetpack 中的 Lifecycle 库，它可以说是好多库的基础 ：<a href="8dd4bfe0.html">Jetpack- Lifecycle</a></li>
@@ -189,7 +196,8 @@
 <li>持续补充中….</li>
 </ol>
 <hr>
-<h3 id="Coroutine"><a href="#Coroutine" class="headerlink" title="Coroutine"></a>Coroutine</h3><p>实际在项目中使用 Kotlin 已经有两三年了(没错，练习时长两年半了)，它提供的协程库 Coroutine 也正式投产使用一年多了，使用起来确实很舒服。一开始对协程这个概念就有不同的理解，看了很多的博客都感觉各说各的，所以自己去看了一遍它的源码，对它和线程池有了新的认识，以及对Kotlin编译器黑魔法有了简单的认识。</p>
+<hr>
+<h3 id="-7"><a href="#-7" class="headerlink" title=""></a></h3><h3 id="Coroutine"><a href="#Coroutine" class="headerlink" title="Coroutine"></a>Coroutine</h3><p>实际在项目中使用 Kotlin 已经有两三年了(没错，练习时长两年半了)，它提供的协程库 Coroutine 也正式投产使用一年多了，使用起来确实很舒服。一开始对协程这个概念就有不同的理解，看了很多的博客都感觉各说各的，所以自己去看了一遍它的源码，对它和线程池有了新的认识，以及对Kotlin编译器黑魔法有了简单的认识。</p>
 <ol>
 <li>协程简介，以及对协程中的关键接口、类所起的作用，担任的角色做讲解：<a href="64b5b134.html">Kotlin协程 - 概述</a></li>
 <li>对协程中一些基础概念，基础类做源码分析，为后续正式学习做好铺垫：<a href="ec1be5bf.html">Kotlin协程 - 基础概念介绍</a></li>
@@ -198,6 +206,7 @@
 <li>介绍协程中的拦截器概念，及其原理分析：<a href="ff74222f.html">Kotlin协程 - 拦截器原理</a></li>
 </ol>
 <hr>
+<h3 id="-8"><a href="#-8" class="headerlink" title=""></a></h3><hr>
 <h3 id="其他优秀开源库"><a href="#其他优秀开源库" class="headerlink" title="其他优秀开源库"></a>其他优秀开源库</h3><p>在应用层开发中遇到了很多优秀的开源库，在平时对于他们的使用中，就会经常习惯性的点进源码看实现，有时候看着看着会陷入进去。有时候遇到一些厉害的、好用的库，总会想：这是怎么实现的？会不会是这样实现的？所以会情不自禁的看看别的怎么实现的，看完之后频频咂舌，拍掌叫好，这人代码写的真牛逼。当然看多了这些，对于自己的编程思路也会大有裨益。</p>
 <ol>
 <li>ARouter，解决模块间通讯、路由等能力，主要学习其思想：<a href="d414997b.html">ARouter 原理分析</a></li>
@@ -210,9 +219,16 @@
 </ol>
 <hr>
 <hr>
+<h3 id="-9"><a href="#-9" class="headerlink" title=""></a></h3><h3 id="其他零散的知识点"><a href="#其他零散的知识点" class="headerlink" title="其他零散的知识点"></a>其他零散的知识点</h3><p>在学习其他开源库时，总会遇到一些Java中我不太熟悉的知识点，所以会趁着看开源库的功夫，把它们也一起研究了，一是对自己算是查漏补缺，另外也有助于对开源库代码的学习，正所谓磨刀不误砍柴工。而这里主要讲这些零散的知识点整理汇总起来</p>
+<ol>
+<li>经常在开源库中遇到动态代理，比如 Retrofit；以及在后端 Spring 中的 AOP 等：<a href="4d381682.html">Java 动态代理原理分析</a></li>
+</ol>
 <hr>
-<p>当然，学习还是在进行中，对 Android 世界的探索还在继续中。</p>
-<p>另外：以上都是我学习过程中的记录，难免会有理解上的偏差和错误，因为毕竟是在分析别人的代码，猜测别人的意图还是不太容易的(ಥ﹏ಥ)，所以说如果有不对敬请见谅，敬请斧正 &#x3D;&#x3D;&gt; <a href="mailto:&#x79;&#111;&#117;&#110;&#x67;&#x6b;&#97;&#x61;&#97;&#x40;&#113;&#113;&#x2e;&#x63;&#111;&#109;">&#x79;&#111;&#117;&#110;&#x67;&#x6b;&#97;&#x61;&#97;&#x40;&#113;&#113;&#x2e;&#x63;&#111;&#109;</a> !</p>
+<hr>
+<hr>
+<hr>
+<h3 id="-10"><a href="#-10" class="headerlink" title=""></a></h3><p>当然，学习还是在进行中，对 Android 世界的探索还在继续中。</p>
+<p>另外：以上都是我学习过程中的记录，难免会有理解上的偏差和错误，因为毕竟是在分析别人的代码，猜测别人的意图还是不太容易的(ಥ﹏ಥ)，所以说如果有不对敬请见谅，敬请斧正 &#x3D;&#x3D;&gt; <a href="mailto:&#x79;&#x6f;&#117;&#x6e;&#103;&#x6b;&#x61;&#97;&#x61;&#64;&#113;&#113;&#x2e;&#99;&#111;&#109;">&#x79;&#x6f;&#117;&#x6e;&#103;&#x6b;&#x61;&#97;&#x61;&#64;&#113;&#113;&#x2e;&#99;&#111;&#109;</a> !</p>
 
             </div>
           
