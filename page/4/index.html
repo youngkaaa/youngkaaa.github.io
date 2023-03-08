@@ -109,6 +109,136 @@
     <header class="post-header">
       <h1 class="post-title">
         
+          <a class="post-link" href="/866c32fa.html">Ijkplayer-FrameQueue</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 22 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/e1139ab6.html">Ijkplayer-video_refresh_thread</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 22 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍位于ff_ffplay.c文件中的video_refresh_thread()方法。</p>
+<p>本方法的主要作用是实现视频帧刷新显示，主要逻辑为：从对应<a href="866c32fa.html">FrameQueue</a>中取出之前解码时存入的解码后数据，然后做相关播放同步操作之后(包括丢帧以加快播放或重复播放以减缓播放)，再做帧展示操作。主要是这三步。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/6093ab9f.html">Ijkplayer-SDL_Vout_Opaque</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 21 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍位于ijksdl_vout_android_nativewindow.c文件中的SDL_Vout_Opaque结构体。</p>
+<p>SDL_Vout_Opaque结构体主要是用来存储一些上层的有关视频输出的信息，比如对应着上层Surface的native_window、对应着上层MediaCodec的acodec等。而SDL_Vout_Opaque主要是对应着<a href="6c4c2c27.html">SDL_Vout</a>中的opaque字段。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/e0c53a8e.html">Ijkplayer-SDL_VoutOverlay</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 21 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要分析位于ijksdl_vout.h中的SDL_VoutOverlay结构体。</p>
+<p>该结构体主要作用是承载着视频帧的绘制数据，用其来完成帧的绘制。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
           <a class="post-link" href="/6c4c2c27.html">Ijkplayer-SDL_Vout</a>
         
       </h1>
@@ -642,143 +772,6 @@
   </article>
 
         
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/8876f557.html">Ijkplayer-func_run_sync</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 08 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的func_run_sync()方法。</p>
-<p>该方法是IJKFF_Pipenode结构体中func_run_sync指针函数的主要执行逻辑(前提是没有开启mediacodec_sync开关)。本方法主要逻辑为：在不同的线程中分别往视频解码器中填入待解码数据和从中读取出解码后数据。其中前者在新线程中执行。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/86c88415.html">ijkplayer-IJKFF_Pipenode</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 07 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍ijkplayer中位于ff_ffpipenode.h中的IJKFF_Pipenode结构体。</p>
-<p>IJKFF_Pipenode也是<code>ijkplayer</code>中才有的概念，其主要是依附于IJKFF_Pipeline而存在的，而关于IJKFF_Pipeline可以翻看前面的分析。</p>
-<p>IJKFF_Pipenode的存在主要是实现<code>视频解码</code>过程逻辑，其可能会有两种实现:<code>硬解码</code>和<code>软解码</code>，其中前者是使用<code>MediaCodec</code>类来实现的(针对<code>Android</code>平台而言)，后者则基本使用的<code>ffplay</code>中的解码方式。本文主要分析前者也就是<code>硬解码</code>方式的逻辑，相关的类为ffpipenode_android_mediacodec_vdec.c。而软解的相关实现本文暂不做分析，其相关的类为ffpipenode_ffplay_vdec.c。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/d2a3d8a6.html">ijkplayer-IJKFF_Pipeline</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 07 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍ijkplayer中位于ff_ffpipeline.h中的IJKFF_Pipeline结构体。</p>
-<p>关于IJKFF_Pipeline,它是ijkplayer独有的，区别于ffmpeg的一套音视频解码实现。该结构体的定义主要是用来实现对应的<code>视频解码器实现</code>以及<code>音频输出实现</code>。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/7f796fe4.html">ijkplayer之IjkMediaPlayer</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 07 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍ijkplayer中位于ijkplayer_internal.h中的IjkMediaPlayer结构体。</p>
-<p>关于IjkMediaPlayer结构体，它是IjkPlayer中最基本的结构体，存储着最基本的一些信息。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
         
   <nav class="pagination">
     
@@ -787,6 +780,11 @@
         <span class="prev-text">上一页</span>
       </a>
     
+    
+      <a class="next" href="/page/5/">
+        <span class="next-text">下一页</span>
+        <i class="iconfont icon-right"></i>
+      </a>
     
   </nav>
 

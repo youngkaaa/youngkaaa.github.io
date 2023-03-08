@@ -109,6 +109,118 @@
     <header class="post-header">
       <h1 class="post-title">
         
+          <a class="post-link" href="/a4b11ed8.html">OkHttp 连接缓存池</a>
+        
+      </h1>
+
+      <time class="post-time">
+          1月 21 2022
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/52da40ac.html">OkHttp 拦截器介绍</a>
+        
+      </h1>
+
+      <time class="post-time">
+          1月 21 2022
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/898ecc0a.html">OkHttp 请求创建</a>
+        
+      </h1>
+
+      <time class="post-time">
+          1月 21 2022
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/d414997b.html">ARouter 原理分析</a>
+        
+      </h1>
+
+      <time class="post-time">
+          1月 20 2022
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
           <a class="post-link" href="/a6d96fd1.html">Ijkplayer-SDL_AudioCallback</a>
         
       </h1>
@@ -611,136 +723,6 @@
             
               <p>本文主要介绍ijkplayer中的accurate_seek机制。</p>
 <p>首先accurate_seek是在ijkplayer中才有的概念，在ffplay中没有(ffmpeg中有，但是是用于剪切视频而不是播放视频)。主要作用就是使得seek更加精准，因为在ffplay中只能seek关键帧，如果关键帧少的话，跳转误差比较大，所以ijkplayer其引入了accurate_seek机制用以解决该问题。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/866c32fa.html">Ijkplayer-FrameQueue</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 22 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/e1139ab6.html">Ijkplayer-video_refresh_thread</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 22 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍位于ff_ffplay.c文件中的video_refresh_thread()方法。</p>
-<p>本方法的主要作用是实现视频帧刷新显示，主要逻辑为：从对应<a href="866c32fa.html">FrameQueue</a>中取出之前解码时存入的解码后数据，然后做相关播放同步操作之后(包括丢帧以加快播放或重复播放以减缓播放)，再做帧展示操作。主要是这三步。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/6093ab9f.html">Ijkplayer-SDL_Vout_Opaque</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 21 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍位于ijksdl_vout_android_nativewindow.c文件中的SDL_Vout_Opaque结构体。</p>
-<p>SDL_Vout_Opaque结构体主要是用来存储一些上层的有关视频输出的信息，比如对应着上层Surface的native_window、对应着上层MediaCodec的acodec等。而SDL_Vout_Opaque主要是对应着<a href="6c4c2c27.html">SDL_Vout</a>中的opaque字段。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/e0c53a8e.html">Ijkplayer-SDL_VoutOverlay</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 21 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要分析位于ijksdl_vout.h中的SDL_VoutOverlay结构体。</p>
-<p>该结构体主要作用是承载着视频帧的绘制数据，用其来完成帧的绘制。</p>
         </div>
             
           
