@@ -109,6 +109,72 @@
     <header class="post-header">
       <h1 class="post-title">
         
+          <a class="post-link" href="/a1824301.html">Ijkplayer-SDL_Aout</a>
+        
+      </h1>
+
+      <time class="post-time">
+          4月 12 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍位于ijksdl_aout.h文件中的SDL_Aout结构体。该结构体主要是负责音频的输出。与之对应的视频帧输出的相关结构体为<a href="6c4c2c27.html">SDL_Vout</a>。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/c0d7c607.html">Ijkplayer-audio_thread</a>
+        
+      </h1>
+
+      <time class="post-time">
+          4月 12 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文介绍位于ff_ffplay.c文件中的audio_thread()方法，该方法的主要作用是用来处理音频转码逻辑。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
           <a class="post-link" href="/15d1ed53.html">Ijkplayer-audio_open</a>
         
       </h1>
@@ -682,74 +748,6 @@
             
               <p>本文主要介绍位于ff_ffplay.c文件中的get_video_frame()方法。</p>
 <p>该方法的唯一调用就是在<a href="1c5ec8b9.html">ffplay_video_thread</a>中，也就是视频软解的逻辑。本方法的主要作用就是调用<a href="4dc50342.html">decoder_decode_frame</a>方法获取解码后数据，然后做相关丢帧操作。其实本方法的主要存在理由就是处理丢帧操作。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/4dc50342.html">Ijkplayer-decoder_decode_frame</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 14 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍位于ff_ffplay.c文件中的decoder_decode_frame()方法。</p>
-<p>该方法是视频软解、音频解码、字幕解码的主要执行逻辑，主要逻辑包括从解码器中读取出解码后的数据以及往解码器中放入下一个待解码数据。类似于视频硬解(异步)逻辑中<a href="17303abc">feed_input_buffer</a>的<a href="70ca7e71.html">drain_output_buffer</a>方法的逻辑总和。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/b99add2a.html">Ijkplayer-func_init_video_decoder</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 08 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍ijkplayer中位于ffpipeline_android.c中的func_init_video_decoder()方法。</p>
-<p>func_init_video_decoder()方法是<a href="d2a3d8a6.html">IJKFF_Pipeline</a>中func_init_video_decoder指针函数对应的硬解实现，而func_init_video_decoder主要是用于异步打开(初始化+配置)解码器的，详细分析可以翻看<a href="d2a3d8a6.html">IJKFF_Pipeline</a>中的分析。</p>
         </div>
             
           
