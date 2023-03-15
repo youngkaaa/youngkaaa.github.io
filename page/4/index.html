@@ -109,6 +109,72 @@
     <header class="post-header">
       <h1 class="post-title">
         
+          <a class="post-link" href="/289044cb.html">Ijkplayer-SDL_Aout-For-OpenSLES</a>
+        
+      </h1>
+
+      <time class="post-time">
+          4月 12 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍位于ijksdl_aout_android_opensles.c文件中SDL_Aout结构体的实现类(c中没有类的概念，但是这里方便叙述的话就用实现类来代替了，切勿抬杠)，即SDL_Aout结构体的OpenSLES版本。 </p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          <a class="post-link" href="/b8be9048.html">Ijkplayer-SDL_Aout-For-AudioTrack</a>
+        
+      </h1>
+
+      <time class="post-time">
+          4月 12 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍位于ijksdl_aout_android_audiotrack.c文件中SDL_Aout结构体的实现类(c中没有类的概念，但是这里方便叙述的话就用实现类来代替了，切勿抬杠)，即SDL_Aout结构体的Android AudioTrack版本。 </p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
           <a class="post-link" href="/a1824301.html">Ijkplayer-SDL_Aout</a>
         
       </h1>
@@ -680,74 +746,6 @@
             
               <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的drain_output_buffer2()方法。</p>
 <p>关于本方法呢？其实和<a href="70ca7e71.html">drain_output_buffer</a>是有差异的，最大的差异就是在<a href="70ca7e71.html">drain_output_buffer</a>方法中，其主要逻辑是从解码器中读取出解码后的数据并且填充到入参frame中，但是本方法不仅做了该工作，还包括了填充了数据的frame的入队工作，也就是说抢了<a href="64d79e1a.html">func_run_sync_loop</a>的工作。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/d8157190.html">Ijkplayer-feed_input_buffer2</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 14 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的feed_input_buffer2()方法。</p>
-<p>关于本方法，其实和<a href="17303abc.html">feed_input_buffer</a>方法是差不多一样的，只有略微的差异，所以详细分析在<a href="17303abc.html">feed_input_buffer</a>中，这里只介绍差异。</p>
-        </div>
-            
-          
-
-    
-  </article>
-
-        
-            
-  <article class="post">
-    <header class="post-header">
-      <h1 class="post-title">
-        
-          <a class="post-link" href="/33f55665.html">Ijkplayer-get_video_frame</a>
-        
-      </h1>
-
-      <time class="post-time">
-          3月 14 2020
-      </time>
-    </header>
-
-
-
-    
-        <div class="post-excerpt post-content">
-            
-            
-              
-            
-
-            
-              <p>本文主要介绍位于ff_ffplay.c文件中的get_video_frame()方法。</p>
-<p>该方法的唯一调用就是在<a href="1c5ec8b9.html">ffplay_video_thread</a>中，也就是视频软解的逻辑。本方法的主要作用就是调用<a href="4dc50342.html">decoder_decode_frame</a>方法获取解码后数据，然后做相关丢帧操作。其实本方法的主要存在理由就是处理丢帧操作。</p>
         </div>
             
           

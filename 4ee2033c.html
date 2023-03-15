@@ -41,7 +41,7 @@
 <meta property="og:description" content="断断续续的好几年，写了挺多，也比较杂，这里作为总的引导来将这些杂七杂八的文章分类下，方便查阅。   ijkplayer当时刚大学毕业，接到一个音视频相关的需求，组内没有其他人熟悉，所以就只能自己去学习。期间看完了 B站开源的 ijkplayer 开源项目 和 google的 ExoPlayer  中的部分源码。但是在后面需求做完之后就没有再往下看了，也算是烂尾了，不过对于音视频的理解还是有的，捡起">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2096-04-24T16:00:01.000Z">
-<meta property="article:modified_time" content="2023-03-13T12:49:20.856Z">
+<meta property="article:modified_time" content="2023-03-15T13:53:51.591Z">
 <meta property="article:author" content="咔咔咔">
 <meta name="twitter:card" content="summary">
 
@@ -231,8 +231,15 @@
 <hr>
 <h3 id="-9"><a href="#-9" class="headerlink" title=""></a></h3><h3 id="其他零散的Java知识点"><a href="#其他零散的Java知识点" class="headerlink" title="其他零散的Java知识点"></a>其他零散的Java知识点</h3><p>在学习其他开源库时，总会遇到一些Java中我不太熟悉的知识点，所以会趁着看开源库的功夫，把它们也一起研究了，一是对自己算是查漏补缺，另外也有助于对开源库代码的学习，正所谓磨刀不误砍柴工。而这里主要讲这些零散的知识点整理汇总起来</p>
 <ol>
-<li>经常在开源库中遇到动态代理，比如 Retrofit；以及在后端 Spring 中的 AOP 等：<a href="4d381682.html">Java 动态代理原理分析</a></li>
+<li><p>经常在开源库中遇到动态代理，比如 Retrofit；以及在后端 Spring 中的 AOP 等：<a href="4d381682.html">Java 动态代理原理分析</a></p>
+</li>
+<li><p>经常会在并发编程中遇到一些 Lock ，为了能更好的理解它们，所以学了了 JUC 包下的一些常用类：</p>
+</li>
 </ol>
+<ul>
+<li>通过 ReentrantLock  中的 Lock ，来学习 AbstractQueuedSynchronizer ： <a href="3fecc955.html">AQS-ReentrantLock-Lock-源码分析</a>  </li>
+<li>通过 ReentrantLock  中的 Condition，来学习 AbstractQueuedSynchronizer ： <a href="591e1c31.html">AQS-ReentrantLock-Condition-源码分析</a></li>
+</ul>
 <hr>
 <hr>
 <h3 id="其他零散的Android知识点"><a href="#其他零散的Android知识点" class="headerlink" title="其他零散的Android知识点"></a>其他零散的Android知识点</h3><p>在学习Android Framework 时，总会遇到一些不知道来由的知识点，有时候并不影响自己当时的源码学习，但总觉得缺点什么。所以遇到这种情况我一般会先去学习好这些知识点，再回来看源码，这样可以加深我后续的学习理解。当然这些知识点就跟小鸡啄米一样，东一块西一块，并不成体系，所以零散的把它们堆在这里吧。</p>
@@ -249,7 +256,7 @@
 <h3 id="-10"><a href="#-10" class="headerlink" title=""></a></h3><hr>
 <h3 id="-11"><a href="#-11" class="headerlink" title=""></a></h3><hr>
 <h3 id="-12"><a href="#-12" class="headerlink" title=""></a></h3><p>当然，学习还是在进行中，对 Android 世界的探索还在继续中。</p>
-<p>另外：以上都是我学习过程中的记录，难免会有理解上的偏差和错误，因为毕竟是在分析别人的代码，猜测别人的意图还是不太容易的(ಥ﹏ಥ)，所以说如果有不对敬请见谅，敬请斧正 &#x3D;&#x3D;&gt; <a href="mailto:&#x79;&#111;&#117;&#110;&#103;&#107;&#97;&#x61;&#x61;&#64;&#x71;&#x71;&#46;&#x63;&#111;&#109;">&#x79;&#111;&#117;&#110;&#103;&#107;&#97;&#x61;&#x61;&#64;&#x71;&#x71;&#46;&#x63;&#111;&#109;</a> !</p>
+<p>另外：以上都是我学习过程中的记录，难免会有理解上的偏差和错误，因为毕竟是在分析别人的代码，猜测别人的意图还是不太容易的(ಥ﹏ಥ)，所以说如果有不对敬请见谅，敬请斧正 &#x3D;&#x3D;&gt; <a href="mailto:&#121;&#x6f;&#117;&#x6e;&#103;&#x6b;&#97;&#97;&#x61;&#64;&#113;&#113;&#x2e;&#99;&#111;&#x6d;">&#121;&#x6f;&#117;&#x6e;&#103;&#x6b;&#97;&#97;&#x61;&#64;&#113;&#113;&#x2e;&#99;&#111;&#x6d;</a> !</p>
 
             </div>
           
