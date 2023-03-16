@@ -109,6 +109,40 @@
     <header class="post-header">
       <h1 class="post-title">
         
+          <a class="post-link" href="/3da735d9.html">Ijkplayer-drain_output_buffer2</a>
+        
+      </h1>
+
+      <time class="post-time">
+          3月 14 2020
+      </time>
+    </header>
+
+
+
+    
+        <div class="post-excerpt post-content">
+            
+            
+              
+            
+
+            
+              <p>本文主要介绍ijkplayer中位于ffpipenode_android_mediacodec_vdec.c中的drain_output_buffer2()方法。</p>
+<p>关于本方法呢？其实和<a href="70ca7e71.html">drain_output_buffer</a>是有差异的，最大的差异就是在<a href="70ca7e71.html">drain_output_buffer</a>方法中，其主要逻辑是从解码器中读取出解码后的数据并且填充到入参frame中，但是本方法不仅做了该工作，还包括了填充了数据的frame的入队工作，也就是说抢了<a href="64d79e1a.html">func_run_sync_loop</a>的工作。</p>
+        </div>
+            
+          
+
+    
+  </article>
+
+        
+            
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
           <a class="post-link" href="/d8157190.html">Ijkplayer-feed_input_buffer2</a>
         
       </h1>

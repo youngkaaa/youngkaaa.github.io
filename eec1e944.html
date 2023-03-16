@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="AQS-CountDownLatch"/>
+
+
+
+
+  <meta name="keywords" content="Java," />
+
+
+
+
+
+  <link rel="alternate" href="/default" title="咔咔咔" >
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1" />
+
+
+
+<link rel="canonical" href="https://youngkaaa.github.io/eec1e944.html"/>
+
+
+<meta name="description" content="前面简单学习了 ReentrantLock 类的原理，也顺便学习其 AbstractQueuedSynchronizer 类的源码。而对于AbstractQueuedSynchronizer 来说，它的作用并不是给 ReentrantLock 来用的，它还有其他的子类实现，比如另外一个常见的 CountDownLatch 。 使用示例还是先使用一个示例来介绍下 CountDownLatch 的使用">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AQS-CountDownLatch">
+<meta property="og:url" content="https://youngkaaa.github.io/eec1e944.html">
+<meta property="og:site_name" content="咔咔咔">
+<meta property="og:description" content="前面简单学习了 ReentrantLock 类的原理，也顺便学习其 AbstractQueuedSynchronizer 类的源码。而对于AbstractQueuedSynchronizer 来说，它的作用并不是给 ReentrantLock 来用的，它还有其他的子类实现，比如另外一个常见的 CountDownLatch 。 使用示例还是先使用一个示例来介绍下 CountDownLatch 的使用">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://youngkaaa.github.io/null/pic_01.png">
+<meta property="og:image" content="https://youngkaaa.github.io/null/pic_02.png">
+<meta property="og:image" content="https://youngkaaa.github.io/null/pic_02.png">
+<meta property="og:image" content="https://youngkaaa.github.io/null/pic_03.png">
+<meta property="og:image" content="https://youngkaaa.github.io/null/pic_05.png">
+<meta property="article:published_time" content="2021-05-05T13:48:58.000Z">
+<meta property="article:modified_time" content="2023-03-16T12:39:19.000Z">
+<meta property="article:author" content="咔咔咔">
+<meta property="article:tag" content="Java">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://youngkaaa.github.io/null/pic_01.png">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'>
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+    <title> AQS-CountDownLatch - 咔咔咔 </title>
+  <meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">咔咔咔</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/archives">
+                            
+                            
+                                Archives
+                            
+                        </a>
+                    </li>
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          AQS-CountDownLatch
+        
+      </h1>
+
+      <time class="post-time">
+          5月 05 2021
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <p>前面简单学习了 ReentrantLock 类的原理，也顺便学习其 AbstractQueuedSynchronizer 类的源码。而对于AbstractQueuedSynchronizer 来说，它的作用并不是给 ReentrantLock 来用的，它还有其他的子类实现，比如另外一个常见的 CountDownLatch 。</p>
+<h2 id="使用示例"><a href="#使用示例" class="headerlink" title="使用示例"></a>使用示例</h2><p>还是先使用一个示例来介绍下 CountDownLatch 的使用，以及其作用，示例还是使用源码中的例子。但在其基础上改了改：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException &#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">count</span> <span class="operator">=</span> <span class="number">5</span>;</span><br><span class="line">    <span class="type">CountDownLatch</span> <span class="variable">doneSignal</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CountDownLatch</span>(count);</span><br><span class="line">    <span class="type">Executor</span> <span class="variable">e</span> <span class="operator">=</span> Executors.newFixedThreadPool(count);</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; count; ++i) <span class="comment">// create and start threads</span></span><br><span class="line">        e.execute(<span class="keyword">new</span> <span class="title class_">WorkerRunnable</span>(doneSignal, i));</span><br><span class="line"></span><br><span class="line">    System.out.println(<span class="string">&quot;main await start ....&quot;</span>);</span><br><span class="line">    <span class="type">long</span> <span class="variable">timeMillis</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 阻塞等待，直到前面启动的些线程都执行完毕</span></span><br><span class="line">    doneSignal.await();           <span class="comment">// wait for all to finish</span></span><br><span class="line">    System.out.println(<span class="string">&quot;main await finish, cost:&quot;</span> + (System.currentTimeMillis() - timeMillis));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">WorkerRunnable</span> <span class="keyword">implements</span> <span class="title class_">Runnable</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> CountDownLatch doneSignal;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">int</span> i;</span><br><span class="line"></span><br><span class="line">    WorkerRunnable(CountDownLatch doneSignal, <span class="type">int</span> i) &#123;</span><br><span class="line">        <span class="built_in">this</span>.doneSignal = doneSignal;</span><br><span class="line">        <span class="built_in">this</span>.i = i;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="comment">// 执行耗时的操作</span></span><br><span class="line">        doWork(i);</span><br><span class="line">        <span class="comment">// 执行完一个就通知一次</span></span><br><span class="line">        doneSignal.countDown();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">doWork</span><span class="params">(<span class="type">int</span> i)</span> &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="type">int</span> <span class="variable">cost</span> <span class="operator">=</span> i * <span class="number">1000</span>;</span><br><span class="line">            System.out.println(<span class="string">&quot;【&quot;</span> + i + <span class="string">&quot;】=&gt; start do work,maybe cost:&quot;</span> + cost);</span><br><span class="line">            Thread.sleep(cost);</span><br><span class="line">            System.out.println(<span class="string">&quot;【&quot;</span> + i + <span class="string">&quot;】=&gt; finish   work!!!&quot;</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在这个例子中，共启动了5个线程去同时执行自己的耗时操作。然后在 main() 方法的线程中，会调用 CountDownLatch 实例的 await() 方法来阻塞等待那5个线程中的任务都执行完毕。</p>
+<p>同时在新启动的5个线程中都会去执行各自不同耗时时长的任务，并且每执行完一个任务，都会调用 countDown() 方法，当耗时最长的那个线程执行完毕调用了 countDown() 方法之后，main() 方法中之前 await() 方法处的阻塞等待会被唤醒。</p>
+<p>这种场景还算是比较常见的了， 比如将一些耗时任务拆分成多个子任务去执行，等子任务都执行完毕再拿到最终的结果。</p>
+<p>接下来我们挨个来看其源码吧，在后续源码分析中，我会经常使用到上面的这个示例，所以我们在此先约定好一些关键词，假设：上面main() 方法中调用 await() 方法的线程Thread &#x3D; main ，另外五个线程分别是：thread1，thread2 ….. thread5。</p>
+<h2 id="CountDownLatch"><a href="#CountDownLatch" class="headerlink" title="CountDownLatch"></a>CountDownLatch</h2><p>先看看 CountDownLatch 的创建：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// CountDownLatch.java</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">Sync</span> <span class="keyword">extends</span> <span class="title class_">AbstractQueuedSynchronizer</span> &#123;</span><br><span class="line"></span><br><span class="line">    Sync(<span class="type">int</span> count) &#123;</span><br><span class="line">        <span class="comment">// 直接调用 setState 来修改内部 state 的值为 count</span></span><br><span class="line">        setState(count);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 省略其他代码</span></span><br><span class="line">   </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Sync sync;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="title function_">CountDownLatch</span><span class="params">(<span class="type">int</span> count)</span> &#123;</span><br><span class="line">    <span class="comment">// 入参 count 必须大于0</span></span><br><span class="line">    <span class="keyword">if</span> (count &lt; <span class="number">0</span>) <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;count &lt; 0&quot;</span>);</span><br><span class="line">    <span class="comment">// 创建 Sync 实例</span></span><br><span class="line">    <span class="built_in">this</span>.sync = <span class="keyword">new</span> <span class="title class_">Sync</span>(count);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在创建 CountDownLatch 实例时，必须要指定一个入参 count ，它表示后续要恢复 await() 方法执行，所需要 countDown() 的次数。比如上面的示例中，会创建五个子线程去执行任务，那么 CountDownLatch 创建时传入的就是 5 ，后续在这个五个子线程中依次调用了五次 countDown() 方法，才将外部  await() 方法处的阻塞结束，从而恢复执行。</p>
+<p>而在 CountDownLatch 构造方法内部，会创建一个 Sync 实例，Sync 类同样是继承自 AbstractQueuedSynchronizer 的，在 Sync 类内部会将入参传进来的 count 直接设置给内部的 state 。而这个 state 的值前面 <a href="3fecc955.html">AQS-ReentrantLock-Lock-源码分析</a> 中讲过了，它在 ReentrantLock 中代表的是线程重入持有锁的次数，而在这里目前它只是存储了入参 count 的值，后续会怎么用接着往后看吧。</p>
+<h2 id="await"><a href="#await" class="headerlink" title="await"></a>await</h2><p>正如前面示例中所看到的，在调用当前 await() 方法之后，main() 方法所在的线程就会陷入阻塞，接下来我们看看它是怎么陷入阻塞的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// CountDownLatch.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">await</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException &#123;</span><br><span class="line">    sync.acquireSharedInterruptibly(<span class="number">1</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// AbstractQueuedSynchronizer.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">acquireSharedInterruptibly</span><span class="params">(<span class="type">int</span> arg)</span></span><br><span class="line">        <span class="keyword">throws</span> InterruptedException &#123;</span><br><span class="line">    <span class="comment">// 还是先检查当前是否已被中断，是的话则直接抛出异常</span></span><br><span class="line">    <span class="keyword">if</span> (Thread.interrupted())</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">InterruptedException</span>();</span><br><span class="line">    <span class="comment">// 尝试获取共享锁，如果获取成功则返回值大于0，失败则返回值小于0</span></span><br><span class="line">    <span class="keyword">if</span> (tryAcquireShared(arg) &lt; <span class="number">0</span>)</span><br><span class="line">        doAcquireSharedInterruptibly(arg);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// CountDownLatch.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">protected</span> <span class="type">int</span> <span class="title function_">tryAcquireShared</span><span class="params">(<span class="type">int</span> acquires)</span> &#123;</span><br><span class="line">    <span class="comment">// 如果当前 state 为 0 则表示获取锁成功，返回1，否则返回-1</span></span><br><span class="line">    <span class="keyword">return</span> (getState() == <span class="number">0</span>) ? <span class="number">1</span> : -<span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>在 await() 方法中，会调用到 Sync 中，也就是调用到 AbstractQueuedSynchronizer 中的 acquireSharedInterruptibly() 方法内。在该方法内，会首先判断当前现成的中断状态，如果此时已中断，则抛出 InterruptedException 异常。</p>
+<p>如果没有中断则调用 tryAcquireShared() 方法尝试去获取共享。而此时由于前面在 CountDownLatch() 构造方法中传入了参数5，此时 state 是5，不满足等于0的条件，所以会返回-1。</p>
+<p>外部判断返回值是 -1 小于 0 ，表示当前线程此时尝试共享锁失败了，那么就需要休眠等待，此时会执行 doAcquireSharedInterruptibly() 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// AbstractQueuedSynchronizer.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">doAcquireSharedInterruptibly</span><span class="params">(<span class="type">int</span> arg)</span></span><br><span class="line">        <span class="keyword">throws</span> InterruptedException &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 独占锁放入的是 Node.EXCLUSIVE ，而共享锁放入的是 Node.SHARED</span></span><br><span class="line">    <span class="keyword">final</span> <span class="type">Node</span> <span class="variable">node</span> <span class="operator">=</span> addWaiter(Node.SHARED);</span><br><span class="line"></span><br><span class="line">    <span class="type">boolean</span> <span class="variable">failed</span> <span class="operator">=</span> <span class="literal">true</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">for</span> (; ; ) &#123;</span><br><span class="line">            <span class="comment">// 拿到当前节点在阻塞队列中的前一个</span></span><br><span class="line">            <span class="keyword">final</span> <span class="type">Node</span> <span class="variable">p</span> <span class="operator">=</span> node.predecessor();</span><br><span class="line">            <span class="comment">// 如果当前节点的前一个节点是阻塞队列的头结点，则当前节点有机会去试试获取锁</span></span><br><span class="line">            <span class="keyword">if</span> (p == head) &#123;</span><br><span class="line">                <span class="comment">// 尝试获取锁</span></span><br><span class="line">                <span class="type">int</span> <span class="variable">r</span> <span class="operator">=</span> tryAcquireShared(arg);</span><br><span class="line">                <span class="comment">// 本次获取锁成功了，那么修改其 head ，轮到我们来执行了</span></span><br><span class="line">                <span class="keyword">if</span> (r &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">                    setHeadAndPropagate(node, r);</span><br><span class="line">                    p.next = <span class="literal">null</span>; <span class="comment">// help GC</span></span><br><span class="line">                    failed = <span class="literal">false</span>;</span><br><span class="line">                    <span class="keyword">return</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// 如果上面的条件中没有获取到锁，走到这里去修改前一个节点的状态之后陷入休眠</span></span><br><span class="line">            <span class="keyword">if</span> (shouldParkAfterFailedAcquire(p, node) &amp;&amp; parkAndCheckInterrupt())</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">InterruptedException</span>();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (failed)</span><br><span class="line">            cancelAcquire(node);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 doAcquireSharedInterruptibly() 方法中，首先会调用 addWaiter() 方法来为当前线程创建一个 Node 实例，并且将其插入到同步队列中去。这个操作在前面 <a href="3fecc955.html">AQS-ReentrantLock-Lock-源码分析</a> 中讲 lock() 方法时遇到过了。</p>
+<p>执行完 addWaiter() 方法之后，当前线程对应的 Node 节点就已经放入到阻塞队列中了。那么接下来就进入一个 for 循环中。</p>
+<p>在循环中，首先会判断当前节点在阻塞队列中的前一个节点是不是头结点，是的话，则会调用 tryAcquireShared() 方法尝试去获取共享锁，为为什么呢？</p>
+<p>正如前面 <a href="3fecc955.html">AQS-ReentrantLock-Lock-源码分析</a> 中所说的，头结点 head 在严格意义上来说，并不属于阻塞队列，因为它对应线程目前正持有锁，而它后面的第一个节点才是阻塞队列中的第一个，因此说如果某个节点的前一个节点是 head ，那么它就有可能，有资格去尝试获取锁。他如果都获取不到锁，它后面的那些更不可能了。</p>
+<p>当然，尝试去获取锁不一定成功，对应到这里就是 tryAcquireShared() 方法的返回值是否大于0，如果大于0 表示获取锁成功，如果小于0 则获取锁失败。</p>
+<p>而针对上面的示例来说，当前线程对应的节点插入之后，目前阻塞队列中的情况应该是：</p>
+<p><img src="/null/pic_01.png" alt="image.png"></p>
+<p>所以说，当前节点的前一个节点是 head ，此时会去调用  tryAcquireShared() 方法尝试获取锁，但是由于 state 目前是 5，那么 tryAcquireShared() 肯定返回 -1，获取锁失败，此时我们走到下面的 shouldParkAfterFailedAcquire() 方法中去判断是否要阻塞当前线程，它内部的代码逻辑在前面的 <a href="3fecc955.html">AQS-ReentrantLock-Lock-源码分析</a> 中分析  lock() 方法时讲过了，内部会将当前节点的前一个节点，也就是头结点中的 waitStatus 从 0 修改为 Node.SIGNAL ，修改成功后返回 true ，所以说修改之后的阻塞队列中的节点是这样的：</p>
+<p><img src="/null/pic_02.png" alt="image.png"></p>
+<p>此时 shouldParkAfterFailedAcquire() 方法返回 true  之后，执行下一个 parkAndCheckInterrupt() 方法去将当前线程挂起休眠。</p>
+<blockquote>
+<p>这些方法在前面的 <a href="3fecc955.html">AQS-ReentrantLock-Lock-源码分析</a> 中分析都讲过了。所以我偷个懒跳过分析。</p>
+</blockquote>
+<p>至此，调用 await() 方法的线程main 此时就陷入阻塞了，一直等着另外那五个线程都执行完成之后把自己唤醒。它就这样一直等啊等啊等…..</p>
+<h2 id="countDown"><a href="#countDown" class="headerlink" title="countDown"></a>countDown</h2><p>接着就该那些分析那五个线程中的逻辑了。他们在启动之后，会依次去执行自己的耗时任务，正如上面示例代码中所写的：这五个线程内部的耗时任务依次是递增的，所以我们假设：这五个线程是依次执行完毕的，即从 thread1 到 thread5 ，是依次调用 countDown() 方法的。</p>
+<p>接下来是先在第一个线程 thread1 中调用了 countDown() 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// CountDownLatch.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">countDown</span><span class="params">()</span> &#123;</span><br><span class="line">    sync.releaseShared(<span class="number">1</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// AbstractQueuedSynchronizer.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="type">boolean</span> <span class="title function_">releaseShared</span><span class="params">(<span class="type">int</span> arg)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (tryReleaseShared(arg)) &#123;</span><br><span class="line">        doReleaseShared();</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// CountDownLatch.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">protected</span> <span class="type">boolean</span> <span class="title function_">tryReleaseShared</span><span class="params">(<span class="type">int</span> releases)</span> &#123;</span><br><span class="line">    <span class="comment">// CAS 自旋修改 state 的值</span></span><br><span class="line">    <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">        <span class="type">int</span> <span class="variable">c</span> <span class="operator">=</span> getState();</span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">         * 如果目前 state 已经减少为0了，表示当前共享锁早已释放，本次释放失败</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="keyword">if</span> (c == <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">        <span class="type">int</span> <span class="variable">nextc</span> <span class="operator">=</span> c-<span class="number">1</span>;</span><br><span class="line">        <span class="comment">// 将减去入参之后的值更新到 state 中，最终返回 state 是否等于0</span></span><br><span class="line">        <span class="comment">// 即返回本次操作之后，锁是不是已被完全释放</span></span><br><span class="line">        <span class="keyword">if</span> (compareAndSetState(c, nextc))</span><br><span class="line">            <span class="keyword">return</span> nextc == <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当前 state 等于5，而 countDown() 方法中会调用 releaseShared() 方法去尝试释放共享锁，传入的参数是 1，此时其内部会执行 tryReleaseShared() 方法，内部会将 state 从 5 修改为 4，然后由于修改后的 state 是 4 不是 0，所以返回 false 。</p>
+<p>所以本次 countDown() 方法执行完毕，内部没有做额外的操作，仅仅只是将 state 值从5 减少为 4了。</p>
+<p>等一会儿，第二个线程 thread2 执行完毕，会调用 countDown() 方法，此时代码执行和上面差不多，会将 state 从 4 修改为 3 ；</p>
+<p>等一会儿，第三个线程 thread3 执行完毕，会调用 countDown() 方法，此时代码执行和上面差不多，会将 state 从 3 修改为 2 ；</p>
+<p>等一会儿，第四个线程 thread4 执行完毕，会调用 countDown() 方法，此时代码执行和上面差不多，会将 state 从 2 修改为 1 ；</p>
+<p>等一会儿，第五个线程 thread5 执行完毕，会调用 countDown() 方法，~~此时代码执行和上面差不多…. ~~</p>
+<p>呸呸呸，说错了，thread 5 执行完毕调用的  countDown() 方法执行逻辑是根前面不一样的，我们来看看它是怎么执行的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// CountDownLatch.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">countDown</span><span class="params">()</span> &#123;</span><br><span class="line">    sync.releaseShared(<span class="number">1</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// AbstractQueuedSynchronizer.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="type">boolean</span> <span class="title function_">releaseShared</span><span class="params">(<span class="type">int</span> arg)</span> &#123;</span><br><span class="line">    <span class="comment">// 内部已经将 state 从 1修改为 0 了，返回 true</span></span><br><span class="line">    <span class="keyword">if</span> (tryReleaseShared(arg)) &#123;</span><br><span class="line">        doReleaseShared();</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// CountDownLatch.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">protected</span> <span class="type">boolean</span> <span class="title function_">tryReleaseShared</span><span class="params">(<span class="type">int</span> releases)</span> &#123;</span><br><span class="line">    <span class="comment">// CAS 自旋修改 state 的值</span></span><br><span class="line">    <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">        <span class="comment">// 此时 c 是 1</span></span><br><span class="line">        <span class="type">int</span> <span class="variable">c</span> <span class="operator">=</span> getState();</span><br><span class="line">    </span><br><span class="line">        <span class="keyword">if</span> (c == <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    </span><br><span class="line">        <span class="comment">// 将其减一之后，变为 0</span></span><br><span class="line">        <span class="type">int</span> <span class="variable">nextc</span> <span class="operator">=</span> c-<span class="number">1</span>;</span><br><span class="line">        <span class="comment">// 将最终的值 0 更新到 state 中去，更新成功的话则返回 true</span></span><br><span class="line">        <span class="keyword">if</span> (compareAndSetState(c, nextc))</span><br><span class="line">            <span class="keyword">return</span> nextc == <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>此时， state 会从 1 被减少为 0，所以 tryReleaseShared() 方法会返回 true ，表示当前共享锁已完全释放，接着往下会去 doReleaseShared() 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// AbstractQueuedSynchronizer.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">doReleaseShared</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="comment">// 同样是 CAS 自旋操作</span></span><br><span class="line">    <span class="keyword">for</span> (; ; ) &#123;</span><br><span class="line">        <span class="comment">// 拿到当前的头结点信息</span></span><br><span class="line">        <span class="type">Node</span> <span class="variable">h</span> <span class="operator">=</span> head;</span><br><span class="line">        <span class="comment">// 此时阻塞队列中有存在阻塞的线程正在等待</span></span><br><span class="line">        <span class="keyword">if</span> (h != <span class="literal">null</span> &amp;&amp; h != tail) &#123;</span><br><span class="line">            <span class="comment">// 那么去判断当前 head 中的  waitStatus 的值</span></span><br><span class="line">            <span class="type">int</span> <span class="variable">ws</span> <span class="operator">=</span> h.waitStatus;</span><br><span class="line">            <span class="comment">// 如果 head 的 waitStatus 状态是  Node.SIGNAL，则它需要唤醒阻塞队列中下一个节点</span></span><br><span class="line">            <span class="keyword">if</span> (ws == Node.SIGNAL) &#123;</span><br><span class="line"></span><br><span class="line">                <span class="comment">// 在唤醒下一个节点之前，需要先将当前 head 的 waitStatus 置为 0</span></span><br><span class="line">                <span class="comment">// 可以理解为消费掉这个 waitStatus 了，如果修改失败则自旋下次再试</span></span><br><span class="line">                <span class="keyword">if</span> (!compareAndSetWaitStatus(h, Node.SIGNAL, <span class="number">0</span>))</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line"></span><br><span class="line">                <span class="comment">// 修改 waitStatus 成功之后，开始唤醒下一个节点</span></span><br><span class="line">                unparkSuccessor(h);</span><br><span class="line">            </span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (ws == <span class="number">0</span> &amp;&amp; !compareAndSetWaitStatus(h, <span class="number">0</span>, Node.PROPAGATE))</span><br><span class="line">                <span class="comment">// 如果 head 的 waitStatus 目前是 0，则尝试将其修改为 Node.PROPAGATE</span></span><br><span class="line">                <span class="keyword">continue</span>;                <span class="comment">// loop on failed CAS</span></span><br><span class="line">        &#125;</span><br><span class="line">    </span><br><span class="line">        <span class="comment">// 如果当前 head 没有发生变化，则终止循环、如果head 发生变化则接着循环下一次</span></span><br><span class="line">        <span class="keyword">if</span> (h == head)                   <span class="comment">// loop if head changed</span></span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 doReleaseShared() 方法中，又存在一个自旋CAS 的操作。但是在看其自逻辑之前，先回顾下目前阻塞队列中的节点情况吧，由于前面四次 countDown() 方法都没修改阻塞队列，所以此时阻塞队列跟前面 await() 方法执行完是一样的：</p>
+<p><img src="/null/pic_02.png" alt="image.png"></p>
+<p>接着我们往后接着看，在循环中，首先会判断当前阻塞队列中是否存在正在阻塞等待的节点，也就是判断当前 head 后面还有没有节点正在等待锁。当前情况下肯定是有的，因为线程main 之前调用过 await() 方法目前正在阻塞等待。</p>
+<p>此时会判断 head 的 waitStatus ，它此时是 Node.SIGNAL ，那么会使用 CAS 来将其修改为 0 ，由于没有其他线程竞争，本次修改成功了，那么会去调用 unparkSuccessor() 方法来将当前 h ，也就是 head 的下一个节点唤醒，也就是线程main会被唤醒。然后它那边就从之前的休眠地点接着往后执行：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// AbstractQueuedSynchronizer.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">doAcquireSharedInterruptibly</span><span class="params">(<span class="type">int</span> arg)</span></span><br><span class="line">        <span class="keyword">throws</span> InterruptedException &#123;</span><br><span class="line">  </span><br><span class="line">    <span class="keyword">final</span> <span class="type">Node</span> <span class="variable">node</span> <span class="operator">=</span> addWaiter(Node.SHARED);</span><br><span class="line">    <span class="type">boolean</span> <span class="variable">failed</span> <span class="operator">=</span> <span class="literal">true</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">for</span> (; ; ) &#123;</span><br><span class="line">            <span class="keyword">final</span> <span class="type">Node</span> <span class="variable">p</span> <span class="operator">=</span> node.predecessor();</span><br><span class="line">            <span class="keyword">if</span> (p == head) &#123;</span><br><span class="line">                <span class="type">int</span> <span class="variable">r</span> <span class="operator">=</span> tryAcquireShared(arg);</span><br><span class="line">                <span class="keyword">if</span> (r &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">                    setHeadAndPropagate(node, r);</span><br><span class="line">                    p.next = <span class="literal">null</span>; </span><br><span class="line">                    failed = <span class="literal">false</span>;</span><br><span class="line">                    <span class="keyword">return</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// 从这里 parkAndCheckInterrupt() 方法中被唤醒开始执行，处理中断</span></span><br><span class="line">            <span class="keyword">if</span> (shouldParkAfterFailedAcquire(p, node) &amp;&amp; parkAndCheckInterrupt())</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">InterruptedException</span>();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (failed)</span><br><span class="line">            cancelAcquire(node);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>c此时从 parkAndCheckInterrupt() 方法中被唤醒接着执行，处理中断，这些前面讲过了就不讲了。假设没有发生中断，然后开始下一次循环，再去调用 tryAcquireShared() 方法去获取锁，此时由于 state &#x3D; 0 所以肯定获取锁成功，接着会调用 setHeadAndPropagate() 方法去修改 head 为当前 Node ：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// AbstractQueuedSynchronizer.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">setHeadAndPropagate</span><span class="params">(Node node, <span class="type">int</span> propagate)</span> &#123;</span><br><span class="line">    <span class="comment">// 保存前一个 head</span></span><br><span class="line">    <span class="type">Node</span> <span class="variable">h</span> <span class="operator">=</span> head;</span><br><span class="line">   <span class="comment">// 将 head 修改为当前 node</span></span><br><span class="line">    setHead(node);</span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 判断此时之前 head 和当前新 head 的 waitStatus 是否小于0 ，是的话则唤醒它后面的节点</span></span><br><span class="line">    <span class="keyword">if</span> (propagate &gt; <span class="number">0</span> || h == <span class="literal">null</span> || h.waitStatus &lt; <span class="number">0</span> ||</span><br><span class="line">            (h = head) == <span class="literal">null</span> || h.waitStatus &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="type">Node</span> <span class="variable">s</span> <span class="operator">=</span> node.next;</span><br><span class="line">        <span class="keyword">if</span> (s == <span class="literal">null</span> || s.isShared())</span><br><span class="line">            doReleaseShared();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>setHeadAndPropagate() 方法中存在两个 head ，一个老的head ，一个是新的 head 。老的head 在前面 doReleaseShared() 方法中早已将 waitStatus 修改为 0 了，而新的 head 它的 waitStatus 也是 0（从前面图中也能看出来，此时新head 就是线程main 的那个Node），所以setHeadAndPropagate() 方法中就只是修改了 head ，其他逻辑都没执行。</p>
+<p>至此，main线程中的  await() 方法就停止阻塞，接着往后执行了。</p>
+<p>至此，就完成了 countDown() 逻辑的分析。是不是很简单，那是针对当前这个示例。我们下面换个示例来分析试试。</p>
+<p>在原来代码的基础上做一点点修改，之前 await() 方法只会在 main线程中执行，此时假设再引入一个线程，它也会去调用 await() 方法等待那五个线程执行完毕再去执行自己的逻辑，假设这个线程是 main2 ，方便避免你和那些 thread1 … 等线程名混淆。</p>
+<p>所以说，一开始 main线程和 main2 线程都会调用 await() 进入到阻塞队列中等待，此时阻塞队列中的情况是：</p>
+<p><img src="/null/pic_03.png" alt="image.png"></p>
+<p>那么位于阻塞队列中的这俩 thread &#x3D; main 的 Node 和 thread &#x3D; main2 的 Node 就一直在等啊等啊等…</p>
+<p>往后又是 thread1、thread2 … 他们挨个调用 countDown() 了，等到 thread5 调用 countDown() 时，它最终还是会调用到 doReleaseShared() 方法中来：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// AbstractQueuedSynchronizer.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">doReleaseShared</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="comment">// CAS 自旋</span></span><br><span class="line">    <span class="keyword">for</span> (; ; ) &#123;</span><br><span class="line">        <span class="comment">// 拿到当前队列 head </span></span><br><span class="line">        <span class="type">Node</span> <span class="variable">h</span> <span class="operator">=</span> head;</span><br><span class="line">        <span class="comment">// 此时它肯定满足</span></span><br><span class="line">        <span class="keyword">if</span> (h != <span class="literal">null</span> &amp;&amp; h != tail) &#123;</span><br><span class="line">            <span class="type">int</span> <span class="variable">ws</span> <span class="operator">=</span> h.waitStatus;</span><br><span class="line">            <span class="comment">// 此时其 waitStatus 肯定是 Node.SIGNAL</span></span><br><span class="line">            <span class="keyword">if</span> (ws == Node.SIGNAL) &#123;</span><br><span class="line">            </span><br><span class="line">                <span class="comment">// 将 head 的 waitStatus 从 Node.SIGNAL 修改为 0</span></span><br><span class="line">                <span class="keyword">if</span> (!compareAndSetWaitStatus(h, Node.SIGNAL, <span class="number">0</span>))</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line">            </span><br><span class="line">                <span class="comment">// 唤醒下一个Node ，也就是 thread = main 的 Node</span></span><br><span class="line">                unparkSuccessor(h);</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (ws == <span class="number">0</span> &amp;&amp; !compareAndSetWaitStatus(h, <span class="number">0</span>, AbstractQueuedSynchronizer.Node.PROPAGATE))</span><br><span class="line">                <span class="keyword">continue</span>;          </span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (h == head)             </span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>此时 head 的 waitStatus 被修改为0 了，同时会将 main线程唤醒，但是注意，这里存在两种情况：</p>
+<p>① main 线程立马唤醒开始执行了，并且此时这边 thread5 可能被挂起了（因为当前是 thread5 中调用 countDown() 方法执行到这里的）。</p>
+<p>那么此时我们把 thread5 先阻塞放着，去去看看先被执行的 main线程中的逻辑：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// AbstractQueuedSynchronizer.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">doAcquireSharedInterruptibly</span><span class="params">(<span class="type">int</span> arg)</span></span><br><span class="line">        <span class="keyword">throws</span> InterruptedException &#123;</span><br><span class="line">    <span class="comment">// 独占锁放入的是 Node.EXCLUSIVE ，共享锁放入的是 Node.SHARED</span></span><br><span class="line">    <span class="keyword">final</span> <span class="type">Node</span> <span class="variable">node</span> <span class="operator">=</span> addWaiter(Node.SHARED);</span><br><span class="line">    <span class="type">boolean</span> <span class="variable">failed</span> <span class="operator">=</span> <span class="literal">true</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">for</span> (; ; ) &#123;</span><br><span class="line">            <span class="keyword">final</span> <span class="type">Node</span> <span class="variable">p</span> <span class="operator">=</span> node.predecessor();</span><br><span class="line">            <span class="keyword">if</span> (p == head) &#123;</span><br><span class="line">                <span class="type">int</span> <span class="variable">r</span> <span class="operator">=</span> tryAcquireShared(arg);</span><br><span class="line">                <span class="keyword">if</span> (r &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">                    setHeadAndPropagate(node, r);</span><br><span class="line">                    p.next = <span class="literal">null</span>;</span><br><span class="line">                    failed = <span class="literal">false</span>;</span><br><span class="line">                    <span class="keyword">return</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// 从这里 parkAndCheckInterrupt() 方法被唤醒接着往后执行</span></span><br><span class="line">            <span class="keyword">if</span> (shouldParkAfterFailedAcquire(p, node) &amp;&amp; parkAndCheckInterrupt())</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">InterruptedException</span>();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (failed)</span><br><span class="line">            cancelAcquire(node);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>还是从 parkAndCheckInterrupt() 方法中被唤醒接着执行，忽略中断。</p>
+<p>接着在 doAcquireSharedInterruptibly() 方法中开始下一次循环，再次调用 tryAcquireShared() 方法尝试获取锁，本次获取会成功，因为 state &#x3D; 0。所以它会去调用 setHeadAndPropagate() 方法修改head的值：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// AbstractQueuedSynchronizer.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">setHeadAndPropagate</span><span class="params">(Node node, <span class="type">int</span> propagate)</span> &#123;</span><br><span class="line">    <span class="comment">// 保存前一个 head</span></span><br><span class="line">    <span class="type">Node</span> <span class="variable">h</span> <span class="operator">=</span> head;</span><br><span class="line">   <span class="comment">// 将 head 修改为当前 node</span></span><br><span class="line">    setHead(node);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 此时老的 head 的 waitStatus 已经是 0 了</span></span><br><span class="line"><span class="comment">     * 新的head 的 waitStatus 是 Node.SIGNAL 也是小于 0 的，则这里会自动触发doReleaseShared() 方法</span></span><br><span class="line"><span class="comment">     * 去唤醒其后面下一个线程节点</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">if</span> (propagate &gt; <span class="number">0</span> || h == <span class="literal">null</span> || h.waitStatus &lt; <span class="number">0</span> ||</span><br><span class="line">            (h = head) == <span class="literal">null</span> || h.waitStatus &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="type">Node</span> <span class="variable">s</span> <span class="operator">=</span> node.next;</span><br><span class="line">        <span class="keyword">if</span> (s == <span class="literal">null</span> || s.isShared())</span><br><span class="line">            doReleaseShared();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果你看不懂上面的注释，那我这里再补上一张当前阻塞队列的图解吧：</p>
+<p><img src="/null/pic_05.png" alt="image.png"></p>
+<p>该方法内部会调用 setHead() 来修改 head 的值，在修改之前会保存老 head 的值，因此当前方法内部会检查 新老head 的 waitStatus ，如果有一个是小于 0  的，比如这里新 head 的 waitStatus &#x3D; Node.SIGNAL  -1 &lt; 0 ,所以会自动再去调用 doReleaseShared() 方法去释放下一个节点，也就是 thread &#x3D; main2 的节点，因为此时最新的 head 值已经是 thread&#x3D; main 的那个Node了，即 head 发生了变化。</p>
+<p>如此往复，如果 thread &#x3D; main2 的Node 后续还有节点的话，那么它的 waitStatus 肯定也是 Node.SIGNAL，所以会一直将其后续的节点都唤醒完。</p>
+<p>当然这只是第一种情况，下面看看第二种情况。</p>
+<p>② main 线程被unpark之后，但是还没有真正醒来去执行后续逻辑，那么当前 thread5 线程接着往下执行，判断 h &#x3D;&#x3D; head ，则终止掉循环，thread5 中逻辑执行完毕，后续就等 main 真正醒来之后再去一个唤醒其他的吧。</p>
+<p>③ main 线程被 unpark 之后，确实立马醒来了，但是只是执行到了  setHeadAndPropagate() 方法中修改了head的值，那么此时head 值发生变化了，这边的 thread 5 中判断到 h !&#x3D; head 了，此时它会去尝试再循环一次，此时阻塞队列中只有 thread &#x3D; main2 一个Node了，而head 此时却是 thread&#x3D;main的Node实例，这里会再次将 thread &#x3D; main2 的Node唤醒。</p>
+<p>也就是说，我在 thread5 中完成了两个 Node 的唤醒工作。</p>
+<p>在前面第①种情况中说过：在 setHeadAndPropagate() 方法中唤醒下一个 Node 时也是调用的 doReleaseShared() 方法，而 countDown() 方法中最终也是调用的 doReleaseShared() 方法方法，这俩的区别就是运行在不同的线程。即：</p>
+<ol>
+<li>第①种情况时，在 <strong>thread5</strong> 中运行了 doReleaseShared() 方法来将 main 线程唤醒，然后在 <strong>main线程</strong> 中又执行了 doReleaseShared() 方法来将 main2线程唤醒了，而由于main2线程是阻塞队列中的最后一个了，所以在 main2线程中不会去唤醒其他的了。</li>
+<li>第③种情况时，在 <strong>thread5</strong> 中运行了 doReleaseShared() 方法来将 main 线程唤醒，然后在main线程中修改了 head 但是还没有唤醒下一个main2呢，就在那一个微妙的时刻，被 thread5 抢先了，在 <strong>thread5</strong> 中完成了对 main2 线程的唤醒。</li>
+</ol>
+<p>所以总的来说，就是 thread5 和后续被他唤醒的线程之间去竞争，争着去唤醒阻塞队列中剩余的那些 Node ，直到所有Node 都被唤醒完，这便是一个并发过程。并且在这个并发过程中会修改 waitStatus 的值，所以需要有 CAS 自旋。那同样的肯定会存在 waitStatus 修改失败的情况，此时竞争失败的那个，会将其置为 Node.PROPAGATE ，当然它也是小于0 的，因此在setHeadAndPropagate() 方法中判断唤醒下一个的条件是判断的小于0，而不是直接判断它是否等于 Node.SIGNAL。</p>
+<p>至此，你肯定就理解了 CountDownLatch 了吧，它是 AbstractQueuedSynchronizer 共享锁的一种实现，而前面例子中的 main线程 和 main2 线程就同时共享该锁，当该锁被释放时，他俩都会被唤醒，也就是都会”持有锁”。</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+		
+		<div class="post-tags">
+		  
+			<a href="/tags/Java/">Java</a>
+		  
+		</div>
+		
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/d663666b.html">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Android 系统服务加载启动</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    
+    
+      <a class="next" href="/591e1c31.html">
+        <span class="next-text nav-default">AQS-ReentrantLock-Condition-源码分析</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2020 -
+    
+    2023
+    <span class="footer-author">咔咔咔.</span>
+    <span class="power-by">
+        由 <a class="hexo-link" target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> and <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/frostfan/hexo-theme-polarbear">Polar Bear</a> 强力驱动
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>
